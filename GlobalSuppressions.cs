@@ -6,4 +6,6 @@
 [assembly: SuppressMessage("StyleCop.CSharp.SpacingRules", "SA1005:Single line comments must begin with single space", Justification = "Prevents quick edits during development")]
 [assembly: SuppressMessage("StyleCop.CSharp.LayoutRules", "SA1515:Single-line comment must be preceded by blank line", Justification = "Prevents quick edits during development")]
 
+[assembly: SuppressMessage("Design", "CA1040:Avoid empty interfaces", Justification = "Necessary for DI injection of generic interfaces.")]
 [assembly: SuppressMessage("Globalization", "CA1303:Do not pass literals as localized parameters", Justification = "No Localization support.")]
+[assembly: SuppressMessage("Naming", "CA1710:Identifiers should have correct suffix", Justification = "Often wrong.")]

@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Pantry.Exceptions;
+using Pantry.Queries;
 using Pantry.Traits;
 using Xunit;
 using Xunit.Abstractions;
@@ -121,6 +122,36 @@ namespace Pantry.Azure.TableStorage.Tests
             act = async () => await repository.UpdateAsync(entity);
 
             act.Should().Throw<NotFoundException>().Which.TargetId.Should().Be(entity.Id);
+        }
+
+        [Fact]
+        public async Task ItShouldQueryAll()
+        {
+            var repository = ServiceProvider.GetRequiredService<IRepository<SimpleEntity>>();
+            var entities = SimpleEntityGenerator.Generate(10);
+            foreach (var entity in entities)
+            {
+                await repository.AddAsync(entity);
+            }
+
+            var query = new AllQuery<SimpleEntity>
+            {
+                Limit = 3,
+            };
+            var result = await repository.FindAsync(query);
+            result.Should().HaveCount(3);
+            result.ContinuationToken.Should().NotBeNullOrEmpty();
+
+            query = new AllQuery<SimpleEntity>
+            {
+                Limit = 3,
+                ContinuationToken = result.ContinuationToken,
+            };
+            var secondResult = await repository.FindAsync(query);
+            secondResult.Should().HaveCount(3);
+            secondResult.ContinuationToken.Should().NotBeNullOrEmpty();
+
+            secondResult.First().Id.Should().NotBe(result.First().Id);
         }
     }
 }

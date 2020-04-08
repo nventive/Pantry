@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Pantry;
 using Pantry.Azure.TableStorage;
+using Pantry.Azure.TableStorage.Queries;
 using Pantry.DependencyInjection;
 using Pantry.Mapping;
 
@@ -42,6 +43,8 @@ namespace Microsoft.Extensions.DependencyInjection
             });
             services.TryAddSingleton<ITableStorageKeysResolver<T>, DefaultTableStorageKeysResolver<T>>();
             services.TryAddSingleton<IMapper<T, DynamicTableEntity>, DynamicTableEntityMapper<T>>();
+
+            services.TryAddEnumerable(ServiceDescriptor.Singleton<IAzureTableStorageQueryHandler, AzureTableStorageAllQueryHandler<T>>());
 
             services.TryRegisterAsSelfAndAllInterfaces<AzureTableStorageRepository<T>>();
 
