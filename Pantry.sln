@@ -1,0 +1,56 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28922.388
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{FC6CD172-26FF-4B3E-93F2-5B7538B6F81E}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+		azure-pipelines.yml = azure-pipelines.yml
+		CHANGELOG.md = CHANGELOG.md
+		Directory.Build.props = Directory.Build.props
+		GitVersion.yml = GitVersion.yml
+		GlobalSuppressions.cs = GlobalSuppressions.cs
+		README.md = README.md
+		stylecop.json = stylecop.json
+		TestsSuppressions.cs = TestsSuppressions.cs
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pantry.Abstractions", "Pantry.Abstractions\Pantry.Abstractions.csproj", "{C7BDDC32-C6BA-4E0F-831E-D5C22A3F7D10}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pantry.Azure.TableStorage", "Pantry.Azure.TableStorage\Pantry.Azure.TableStorage.csproj", "{B46026E9-2F69-4DCB-B782-E8321EC555EA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pantry.Azure.TableStorage.Tests", "Pantry.Azure.TableStorage.Tests\Pantry.Azure.TableStorage.Tests.csproj", "{21116019-BBB1-4A51-B985-22B921B6DA23}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pantry", "Pantry\Pantry.csproj", "{37AA25A5-D0C7-4CCD-A439-2F5FF96A4CED}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C7BDDC32-C6BA-4E0F-831E-D5C22A3F7D10}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C7BDDC32-C6BA-4E0F-831E-D5C22A3F7D10}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C7BDDC32-C6BA-4E0F-831E-D5C22A3F7D10}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C7BDDC32-C6BA-4E0F-831E-D5C22A3F7D10}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B46026E9-2F69-4DCB-B782-E8321EC555EA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B46026E9-2F69-4DCB-B782-E8321EC555EA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B46026E9-2F69-4DCB-B782-E8321EC555EA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B46026E9-2F69-4DCB-B782-E8321EC555EA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{21116019-BBB1-4A51-B985-22B921B6DA23}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{21116019-BBB1-4A51-B985-22B921B6DA23}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{21116019-BBB1-4A51-B985-22B921B6DA23}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{21116019-BBB1-4A51-B985-22B921B6DA23}.Release|Any CPU.Build.0 = Release|Any CPU
+		{37AA25A5-D0C7-4CCD-A439-2F5FF96A4CED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{37AA25A5-D0C7-4CCD-A439-2F5FF96A4CED}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{37AA25A5-D0C7-4CCD-A439-2F5FF96A4CED}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{37AA25A5-D0C7-4CCD-A439-2F5FF96A4CED}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {7188783E-71B0-444C-BB96-53ADB142F380}
+	EndGlobalSection
+EndGlobal

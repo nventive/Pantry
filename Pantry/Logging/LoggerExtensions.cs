@@ -1,0 +1,273 @@
+﻿using System;
+using System.Runtime.CompilerServices;
+using Microsoft.Extensions.Logging;
+
+namespace Pantry.Logging
+{
+    /// <summary>
+    /// <see cref="ILogger"/> extension methods.
+    /// </summary>
+    public static class LoggerExtensions
+    {
+        private const int EventIdBase = 10000;
+        private const int EventIdWarningBase = 11000;
+
+        private static readonly Action<ILogger, string?, string?, string?, string?, object?, Exception?> _logMapped =
+            LoggerMessage.Define<string?, string?, string?, string?, object?>(
+                LogLevel.Trace,
+                new EventId(EventIdBase + 1, "PantryMapped"),
+                "{Method}() {EntityType}.{EntityId}.{PropertyName}={PropertyValue}");
+
+        private static readonly Action<ILogger, string?, string?, string?, object?, Exception?> _logGetById =
+            LoggerMessage.Define<string?, string?, string?, object?>(
+                LogLevel.Trace,
+                new EventId(EventIdBase + 2, "PantryGetById"),
+                "{Method}() = {EntityType}.{EntityId} {Entity}");
+
+        private static readonly Action<ILogger, string?, string?, string?, object?, Exception?> _logAdded =
+            LoggerMessage.Define<string?, string?, string?, object?>(
+                LogLevel.Debug,
+                new EventId(EventIdBase + 3, "PantryAdded"),
+                "{Method}() = {EntityType}.{EntityId} {Entity}");
+
+        private static readonly Action<ILogger, string?, string?, string?, object?, string?, Exception?> _logAddedWarning =
+            LoggerMessage.Define<string?, string?, string?, object?, string?>(
+                LogLevel.Warning,
+                new EventId(EventIdWarningBase + 3, "PantryAddedWarning"),
+                "{Method}() = {EntityType}.{EntityId} {Entity} {Warning}");
+
+        private static readonly Action<ILogger, string?, string?, string?, object?, Exception?> _logUpdated =
+            LoggerMessage.Define<string?, string?, string?, object?>(
+                LogLevel.Debug,
+                new EventId(EventIdBase + 4, "PantryUpdated"),
+                "{Method}() = {EntityType}.{EntityId} {Entity}");
+
+        private static readonly Action<ILogger, string?, string?, string?, object?, string?, Exception?> _logUpdatedWarning =
+            LoggerMessage.Define<string?, string?, string?, object?, string?>(
+                LogLevel.Warning,
+                new EventId(EventIdWarningBase + 4, "PantryUpdatedWarning"),
+                "{Method}() = {EntityType}.{EntityId} {Entity} {Warning}");
+
+        private static readonly Action<ILogger, string?, string?, string?, object?, Exception?> _logDeleted =
+            LoggerMessage.Define<string?, string?, string?, object?>(
+                LogLevel.Debug,
+                new EventId(EventIdBase + 5, "PantryDeleted"),
+                "{Method}() = {EntityType}.{EntityId} {Entity}");
+
+        private static readonly Action<ILogger, string?, string?, string?, object?, string?, Exception?> _logDeletedWarning =
+            LoggerMessage.Define<string?, string?, string?, object?, string?>(
+                LogLevel.Warning,
+                new EventId(EventIdWarningBase + 5, "PantryDeletedWarning"),
+                "{Method}() = {EntityType}.{EntityId} {Entity} {Warning}");
+
+        /// <summary>
+        /// Logs a mapping operation.
+        /// </summary>
+        /// <param name="logger">The <see cref="ILogger"/>.</param>
+        /// <param name="entityType">The destination entity type.</param>
+        /// <param name="entityId">The destination entity id.</param>
+        /// <param name="propertyName">The property name.</param>
+        /// <param name="propertyValue">The property value.</param>
+        /// <param name="methodName">The method name, taken from <see cref="CallerMemberNameAttribute"/>.</param>
+        public static void LogMapped(
+            this ILogger logger,
+            Type? entityType,
+            string entityId,
+            string propertyName,
+            object propertyValue,
+            [CallerMemberName] string? methodName = null)
+        {
+            _logMapped(
+                logger,
+                methodName,
+                entityType?.Name,
+                entityId,
+                propertyName,
+                propertyValue,
+                null);
+        }
+
+        /// <summary>
+        /// Logs a get by id operation.
+        /// </summary>
+        /// <param name="logger">The <see cref="ILogger"/>.</param>
+        /// <param name="entityType">The destination entity type.</param>
+        /// <param name="entityId">The destination entity id.</param>
+        /// <param name="entity">The entity.</param>
+        /// <param name="methodName">The method name, taken from <see cref="CallerMemberNameAttribute"/>.</param>
+        public static void LogGetById(
+            this ILogger logger,
+            Type? entityType,
+            string entityId,
+            object? entity,
+            [CallerMemberName] string? methodName = null)
+        {
+            _logGetById(
+                logger,
+                methodName,
+                entityType?.Name,
+                entityId,
+                entity,
+                null);
+        }
+
+        /// <summary>
+        /// Logs an added operation.
+        /// </summary>
+        /// <param name="logger">The <see cref="ILogger"/>.</param>
+        /// <param name="entityType">The destination entity type.</param>
+        /// <param name="entityId">The destination entity id.</param>
+        /// <param name="entity">The entity.</param>
+        /// <param name="methodName">The method name, taken from <see cref="CallerMemberNameAttribute"/>.</param>
+        public static void LogAdded(
+            this ILogger logger,
+            Type? entityType,
+            string entityId,
+            object entity,
+            [CallerMemberName] string? methodName = null)
+        {
+            _logAdded(
+                logger,
+                methodName,
+                entityType?.Name,
+                entityId,
+                entity,
+                null);
+        }
+
+        /// <summary>
+        /// Logs an added operation.
+        /// </summary>
+        /// <param name="logger">The <see cref="ILogger"/>.</param>
+        /// <param name="entityType">The destination entity type.</param>
+        /// <param name="entityId">The destination entity id.</param>
+        /// <param name="warning">The warning message.</param>
+        /// <param name="entity">The entity.</param>
+        /// <param name="exception">The <see cref="Exception"/>.</param>
+        /// <param name="methodName">The method name, taken from <see cref="CallerMemberNameAttribute"/>.</param>
+        public static void LogAddedWarning(
+            this ILogger logger,
+            Type? entityType,
+            string entityId,
+            string warning,
+            object? entity = null,
+            Exception? exception = null,
+            [CallerMemberName] string? methodName = null)
+        {
+            _logAddedWarning(
+                logger,
+                methodName,
+                entityType?.Name,
+                entityId,
+                entity,
+                warning,
+                exception);
+        }
+
+        /// <summary>
+        /// Logs an updated operation.
+        /// </summary>
+        /// <param name="logger">The <see cref="ILogger"/>.</param>
+        /// <param name="entityType">The destination entity type.</param>
+        /// <param name="entityId">The destination entity id.</param>
+        /// <param name="entity">The entity.</param>
+        /// <param name="methodName">The method name, taken from <see cref="CallerMemberNameAttribute"/>.</param>
+        public static void LogUpdated(
+            this ILogger logger,
+            Type? entityType,
+            string entityId,
+            object entity,
+            [CallerMemberName] string? methodName = null)
+        {
+            _logUpdated(
+                logger,
+                methodName,
+                entityType?.Name,
+                entityId,
+                entity,
+                null);
+        }
+
+        /// <summary>
+        /// Logs an updated operation.
+        /// </summary>
+        /// <param name="logger">The <see cref="ILogger"/>.</param>
+        /// <param name="entityType">The destination entity type.</param>
+        /// <param name="entityId">The destination entity id.</param>
+        /// <param name="warning">The warning message.</param>
+        /// <param name="entity">The entity.</param>
+        /// <param name="exception">The <see cref="Exception"/>.</param>
+        /// <param name="methodName">The method name, taken from <see cref="CallerMemberNameAttribute"/>.</param>
+        public static void LogUpdatedWarning(
+            this ILogger logger,
+            Type? entityType,
+            string entityId,
+            string warning,
+            object? entity = null,
+            Exception? exception = null,
+            [CallerMemberName] string? methodName = null)
+        {
+            _logUpdatedWarning(
+                logger,
+                methodName,
+                entityType?.Name,
+                entityId,
+                entity,
+                warning,
+                exception);
+        }
+
+        /// <summary>
+        /// Logs a deleted operation.
+        /// </summary>
+        /// <param name="logger">The <see cref="ILogger"/>.</param>
+        /// <param name="entityType">The destination entity type.</param>
+        /// <param name="entityId">The destination entity id.</param>
+        /// <param name="entity">The entity.</param>
+        /// <param name="methodName">The method name, taken from <see cref="CallerMemberNameAttribute"/>.</param>
+        public static void LogDeleted(
+            this ILogger logger,
+            Type? entityType,
+            string entityId,
+            object? entity = null,
+            [CallerMemberName] string? methodName = null)
+        {
+            _logDeleted(
+                logger,
+                methodName,
+                entityType?.Name,
+                entityId,
+                entity,
+                null);
+        }
+
+        /// <summary>
+        /// Logs a deleted operation.
+        /// </summary>
+        /// <param name="logger">The <see cref="ILogger"/>.</param>
+        /// <param name="entityType">The destination entity type.</param>
+        /// <param name="entityId">The destination entity id.</param>
+        /// <param name="warning">The warning message.</param>
+        /// <param name="entity">The entity.</param>
+        /// <param name="exception">The <see cref="Exception"/>.</param>
+        /// <param name="methodName">The method name, taken from <see cref="CallerMemberNameAttribute"/>.</param>
+        public static void LogDeletedWarning(
+            this ILogger logger,
+            Type? entityType,
+            string entityId,
+            string warning,
+            object? entity = null,
+            Exception? exception = null,
+            [CallerMemberName] string? methodName = null)
+        {
+            _logDeletedWarning(
+                logger,
+                methodName,
+                entityType?.Name,
+                entityId,
+                entity,
+                warning,
+                exception);
+        }
+    }
+}
