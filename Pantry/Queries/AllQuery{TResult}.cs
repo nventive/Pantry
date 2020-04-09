@@ -4,7 +4,7 @@
     /// Query for the whole set of elements.
     /// </summary>
     /// <typeparam name="TResult">The result element types.</typeparam>
-    public class AllQuery<TResult> : Query<TResult>
+    public abstract class AllQuery<TResult> : Query<TResult>
     {
     }
 }

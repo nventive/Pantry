@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Azure.Cosmos.Table;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Pantry.Mapping;
 using Pantry.Queries;
 
@@ -15,6 +17,7 @@ namespace Pantry.Azure.TableStorage.Queries
         where TEntity : class, IIdentifiable, new()
     {
         private readonly IAzureTableStorageKeysResolver<TEntity> _keysResolver;
+        private readonly ILogger _logger;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AzureTableStorageMirrorQueryHandler{TEntity}"/> class.
@@ -22,13 +25,16 @@ namespace Pantry.Azure.TableStorage.Queries
         /// <param name="cloudTableFor">The <see cref="CloudTableFor{T}"/>.</param>
         /// <param name="tableEntityMapper">The <see cref="IMapper{TSource, TDestination}"/>.</param>
         /// <param name="keysResolver">The <see cref="IAzureTableStorageKeysResolver{T}"/>.</param>
+        /// <param name="logger">The <see cref="ILogger"/>.</param>
         public AzureTableStorageMirrorQueryHandler(
             CloudTableFor<TEntity> cloudTableFor,
             IMapper<TEntity, DynamicTableEntity> tableEntityMapper,
-            IAzureTableStorageKeysResolver<TEntity> keysResolver)
+            IAzureTableStorageKeysResolver<TEntity> keysResolver,
+            ILogger<AzureTableStorageMirrorQueryHandler<TEntity>>? logger = null)
             : base(cloudTableFor, tableEntityMapper)
         {
             _keysResolver = keysResolver ?? throw new ArgumentNullException(nameof(keysResolver));
+            _logger = logger ?? NullLogger<AzureTableStorageMirrorQueryHandler<TEntity>>.Instance;
         }
 
         /// <inheritdoc/>
@@ -88,6 +94,8 @@ namespace Pantry.Azure.TableStorage.Queries
             {
                 tableQuery.FilterString = string.Join(" AND ", filters.Select(x => $"({x})"));
             }
+
+            _logger.LogTrace("ApplyQueryToTableQuery(): {FilterString}", tableQuery.FilterString);
         }
     }
 }

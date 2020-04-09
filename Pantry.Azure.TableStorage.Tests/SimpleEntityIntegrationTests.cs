@@ -133,7 +133,7 @@ namespace Pantry.Azure.TableStorage.Tests
                 await repository.AddAsync(entity);
             }
 
-            var query = new AllQuery<SimpleEntity>
+            var query = new QueryAllSimpleEntities
             {
                 Limit = 3,
             };
@@ -141,7 +141,7 @@ namespace Pantry.Azure.TableStorage.Tests
             result.Should().HaveCount(3);
             result.ContinuationToken.Should().NotBeNullOrEmpty();
 
-            query = new AllQuery<SimpleEntity>
+            query = new QueryAllSimpleEntities
             {
                 Limit = 3,
                 ContinuationToken = result.ContinuationToken,
@@ -151,12 +151,6 @@ namespace Pantry.Azure.TableStorage.Tests
             secondResult.ContinuationToken.Should().NotBeNullOrEmpty();
 
             secondResult.First().Id.Should().NotBe(result.First().Id);
-
-            var withBaseClassSupport = await repository.FindAsync(new QueryAllSimpleEntities
-            {
-                Limit = 5,
-            });
-            withBaseClassSupport.Should().HaveCount(5);
         }
 
         [Fact]
@@ -169,7 +163,7 @@ namespace Pantry.Azure.TableStorage.Tests
                 await repository.AddAsync(entity);
             }
 
-            var query = new MirrorQuery<SimpleEntity>
+            var query = new QuerySimpleEntities
             {
                 Limit = 3,
             };
@@ -177,17 +171,26 @@ namespace Pantry.Azure.TableStorage.Tests
             result.Should().HaveCount(3);
             result.ContinuationToken.Should().NotBeNullOrEmpty();
 
-            query.Mirror.Name = entities.First().Name;
+            query.NameEq = entities.First().Name;
             result = await repository.FindAsync(query);
             result.Count().Should().BeGreaterOrEqualTo(1);
 
-            query.Mirror.Name = Guid.NewGuid().ToString();
+            query.NameEq = Guid.NewGuid().ToString();
             result = await repository.FindAsync(query);
             result.Should().HaveCount(0);
         }
 
         private class QueryAllSimpleEntities : AllQuery<SimpleEntity>
         {
+        }
+
+        private class QuerySimpleEntities : MirrorQuery<SimpleEntity>
+        {
+            public string? NameEq
+            {
+                get => Mirror.Name;
+                set { (Mirror ??= new SimpleEntity()).Name = value; }
+            }
         }
     }
 }
