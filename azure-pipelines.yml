@@ -23,6 +23,8 @@ steps:
 
 - script: dotnet test --no-build --configuration $(buildConfiguration) --logger:trx
   displayName: Test
+  env:
+    ConnectionStrings__StorageConnectionString: $(ConnectionStrings__StorageConnectionString)
 
 - task: PublishTestResults@2
   displayName: Publish Tests Results
