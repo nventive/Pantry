@@ -82,7 +82,7 @@ namespace Pantry.Azure.TableStorage.Queries
                 var value = property.GetValue(query.Mirror);
                 if (value != null)
                 {
-                    var defaultValueType = property.PropertyType == typeof(string) ? null : Activator.CreateInstance(property.PropertyType);
+                    var defaultValueType = property.PropertyType.IsValueType ? Activator.CreateInstance(property.PropertyType) : null;
                     if (value != defaultValueType)
                     {
                         filters.Add(TableQuery.GenerateFilterCondition(property.Name, QueryComparisons.Equal, $"{value}"));

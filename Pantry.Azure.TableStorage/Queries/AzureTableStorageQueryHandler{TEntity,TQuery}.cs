@@ -44,7 +44,7 @@ namespace Pantry.Azure.TableStorage.Queries
 
         /// <inheritdoc />
         public virtual async Task<IContinuationEnumerable<TEntity>> ExecuteAsync(
-            IQuery<TEntity> query,
+            TQuery query,
             CancellationToken cancellationToken = default)
         {
             if (query is null)
@@ -54,7 +54,7 @@ namespace Pantry.Azure.TableStorage.Queries
 
             var tableQuery = new TableQuery<DynamicTableEntity>();
             tableQuery.Take(query.Limit);
-            ApplyQueryToTableQuery((TQuery)query, tableQuery);
+            ApplyQueryToTableQuery(query, tableQuery);
 
             var operationResult = await CloudTableFor.CloudTable.ExecuteQuerySegmentedAsync(
                 tableQuery,

@@ -21,7 +21,7 @@ namespace Pantry.Queries
         /// <param name="cancellationToken">The <see cref="CancellationToken"/>.</param>
         /// <returns>The query execution results.</returns>
         Task<IContinuationEnumerable<TResult>> ExecuteAsync(
-            IQuery<TResult> query,
+            TQuery query,
             CancellationToken cancellationToken = default);
     }
 }

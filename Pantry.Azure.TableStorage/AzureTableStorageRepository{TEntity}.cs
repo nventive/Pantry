@@ -71,7 +71,7 @@ namespace Pantry.Azure.TableStorage
         protected IQueryHandlerExecutor<TEntity, IAzureTableStorageQueryHandler> QueryHandlerExecutor { get; }
 
         /// <summary>
-        /// Gets the <see cref="ILogger{T}"/>.
+        /// Gets the <see cref="ILogger"/>.
         /// </summary>
         protected ILogger Logger { get; }
 

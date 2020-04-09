@@ -18,6 +18,7 @@ namespace Pantry.Traits
         /// <param name="cancellationToken">The <see cref="CancellationToken"/>.</param>
         /// <returns>The updated entity.</returns>
         /// <exception cref="NotFoundException">If the entity was not found in the repository.</exception>
+        /// <exception cref="ConcurrencyException">If the updates result in a concurrency issue.</exception>
         Task<T> UpdateAsync(T entity, CancellationToken cancellationToken = default);
     }
 }

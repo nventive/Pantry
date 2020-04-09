@@ -20,9 +20,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pantry.Abstractions", "Pant
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pantry.Azure.TableStorage", "Pantry.Azure.TableStorage\Pantry.Azure.TableStorage.csproj", "{B46026E9-2F69-4DCB-B782-E8321EC555EA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pantry.Azure.TableStorage.Tests", "Pantry.Azure.TableStorage.Tests\Pantry.Azure.TableStorage.Tests.csproj", "{21116019-BBB1-4A51-B985-22B921B6DA23}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pantry.Azure.TableStorage.Tests", "Pantry.Azure.TableStorage.Tests\Pantry.Azure.TableStorage.Tests.csproj", "{21116019-BBB1-4A51-B985-22B921B6DA23}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pantry", "Pantry\Pantry.csproj", "{37AA25A5-D0C7-4CCD-A439-2F5FF96A4CED}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pantry", "Pantry\Pantry.csproj", "{37AA25A5-D0C7-4CCD-A439-2F5FF96A4CED}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pantry.InMemory", "Pantry.InMemory\Pantry.InMemory.csproj", "{FCEDCC43-AFE0-415F-B330-7036132581D7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pantry.InMemory.Tests", "Pantry.InMemory.Tests\Pantry.InMemory.Tests.csproj", "{FFEDA73E-C8E3-458E-AF89-892654E15A84}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -46,6 +50,14 @@ Global
 		{37AA25A5-D0C7-4CCD-A439-2F5FF96A4CED}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{37AA25A5-D0C7-4CCD-A439-2F5FF96A4CED}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{37AA25A5-D0C7-4CCD-A439-2F5FF96A4CED}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FCEDCC43-AFE0-415F-B330-7036132581D7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FCEDCC43-AFE0-415F-B330-7036132581D7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FCEDCC43-AFE0-415F-B330-7036132581D7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FCEDCC43-AFE0-415F-B330-7036132581D7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FFEDA73E-C8E3-458E-AF89-892654E15A84}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FFEDA73E-C8E3-458E-AF89-892654E15A84}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FFEDA73E-C8E3-458E-AF89-892654E15A84}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FFEDA73E-C8E3-458E-AF89-892654E15A84}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
