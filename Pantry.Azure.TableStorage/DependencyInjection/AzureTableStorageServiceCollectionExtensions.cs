@@ -6,6 +6,7 @@ using Pantry.Azure.TableStorage.DependencyInjection;
 using Pantry.Azure.TableStorage.Queries;
 using Pantry.DependencyInjection;
 using Pantry.Mapping;
+using Pantry.Queries;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -37,6 +38,9 @@ namespace Microsoft.Extensions.DependencyInjection
             services.TryAddSingleton<IIdGenerator<TEntity>, IdGenerator<TEntity>>();
             services.TryAddSingleton<IAzureTableStorageKeysResolver<TEntity>, AzureTableStorageKeysResolver<TEntity>>();
             services.TryAddSingleton<IMapper<TEntity, DynamicTableEntity>, DynamicTableEntityMapper<TEntity>>();
+
+            // Default query handlers
+            services.TryAddSingleton<IQueryHandlerExecutor<TEntity, IAzureTableStorageQueryHandler>, ServiceProviderQueryHandlerExecutor<TEntity, IAzureTableStorageQueryHandler>>();
             services.TryAddEnumerable(ServiceDescriptor.Singleton<IAzureTableStorageQueryHandler, AzureTableStorageAllQueryHandler<TEntity>>());
 
             services.TryRegisterAsSelfAndAllInterfaces<TRepository>();

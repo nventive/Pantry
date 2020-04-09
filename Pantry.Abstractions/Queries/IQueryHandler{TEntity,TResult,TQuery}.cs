@@ -5,11 +5,13 @@ using Pantry.Continuation;
 namespace Pantry.Queries
 {
     /// <summary>
-    /// Handles <typeparamref name="TQuery"/>.
+    /// Handles query execution.
     /// </summary>
-    /// <typeparam name="TResult">The type of results to return.</typeparam>
-    /// <typeparam name="TQuery">The type of query.</typeparam>
-    public interface IQueryHandler<TResult, TQuery>
+    /// <typeparam name="TEntity">The entity repository type.</typeparam>
+    /// <typeparam name="TResult">The query result type.</typeparam>
+    /// <typeparam name="TQuery">The query type.</typeparam>
+    public interface IQueryHandler<TEntity, TResult, TQuery>
+        where TEntity : class, IIdentifiable
         where TQuery : IQuery<TResult>
     {
         /// <summary>
@@ -18,6 +20,8 @@ namespace Pantry.Queries
         /// <param name="query">The query to execute.</param>
         /// <param name="cancellationToken">The <see cref="CancellationToken"/>.</param>
         /// <returns>The query execution results.</returns>
-        Task<IContinuationEnumerable<TResult>> Execute(IQuery<TResult> query, CancellationToken cancellationToken = default);
+        Task<IContinuationEnumerable<TResult>> ExecuteAsync(
+            IQuery<TResult> query,
+            CancellationToken cancellationToken = default);
     }
 }

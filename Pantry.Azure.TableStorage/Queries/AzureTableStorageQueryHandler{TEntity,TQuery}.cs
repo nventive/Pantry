@@ -19,11 +19,32 @@ namespace Pantry.Azure.TableStorage.Queries
         where TEntity : class, IIdentifiable
         where TQuery : IQuery<TEntity>
     {
-        /// <inheritdoc />
-        public virtual async Task<IContinuationEnumerable<TEntity>> Execute(
-            IQuery<TEntity> query,
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AzureTableStorageQueryHandler{TEntity, TQuery}"/> class.
+        /// </summary>
+        /// <param name="cloudTableFor">The <see cref="CloudTableFor{T}"/>.</param>
+        /// <param name="tableEntityMapper">The <see cref="IMapper{TSource, TDestination}"/>.</param>
+        protected AzureTableStorageQueryHandler(
             CloudTableFor<TEntity> cloudTableFor,
-            IMapper<TEntity, DynamicTableEntity> tableEntityMapper,
+            IMapper<TEntity, DynamicTableEntity> tableEntityMapper)
+        {
+            CloudTableFor = cloudTableFor ?? throw new ArgumentNullException(nameof(cloudTableFor));
+            TableEntityMapper = tableEntityMapper ?? throw new ArgumentNullException(nameof(tableEntityMapper));
+        }
+
+        /// <summary>
+        /// Gets the <see cref="CloudTableFor{T}"/>.
+        /// </summary>
+        protected CloudTableFor<TEntity> CloudTableFor { get; }
+
+        /// <summary>
+        /// Gets the <see cref="IMapper{TSource, TDestination}"/>.
+        /// </summary>
+        protected IMapper<TEntity, DynamicTableEntity> TableEntityMapper { get; }
+
+        /// <inheritdoc />
+        public virtual async Task<IContinuationEnumerable<TEntity>> ExecuteAsync(
+            IQuery<TEntity> query,
             CancellationToken cancellationToken = default)
         {
             if (query is null)
@@ -31,22 +52,17 @@ namespace Pantry.Azure.TableStorage.Queries
                 throw new ArgumentNullException(nameof(query));
             }
 
-            if (cloudTableFor is null)
-            {
-                throw new ArgumentNullException(nameof(cloudTableFor));
-            }
-
             var tableQuery = new TableQuery<DynamicTableEntity>();
             tableQuery.Take(query.Limit);
             ApplyQueryToTableQuery(query, tableQuery);
 
-            var operationResult = await cloudTableFor.CloudTable.ExecuteQuerySegmentedAsync(
+            var operationResult = await CloudTableFor.CloudTable.ExecuteQuerySegmentedAsync(
                 tableQuery,
                 ContinuationToken.FromContinuationToken<TableContinuationToken>(query.ContinuationToken),
                 cancellationToken).ConfigureAwait(false);
 
             var results = operationResult.Results
-                .Select(x => tableEntityMapper.MapToSource(x))
+                .Select(x => TableEntityMapper.MapToSource(x))
                 .ToContinuationEnumerable(ContinuationToken.ToContinuationToken(operationResult.ContinuationToken));
 
             return results;
