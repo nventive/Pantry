@@ -11,7 +11,14 @@ steps:
   inputs:
     updateAssemblyInfo: false
 
-- script: dotnet build --configuration $(buildConfiguration) -p:Version=$(GitVersion.NuGetVersionV2) -p:FileVersion=$(GitVersion.AssemblySemVer) -p:InformationalVersion=$(GitVersion.InformationalVersion)
+- task: NuGetCommand@2
+  displayName: Nuget restore
+  inputs:
+    command: 'restore'
+    restoreSolution: '**/*.sln'
+    feedsToUse: 'select'
+
+- script: dotnet build --no-restore --configuration $(buildConfiguration) -p:Version=$(GitVersion.NuGetVersionV2) -p:FileVersion=$(GitVersion.AssemblySemVer) -p:InformationalVersion=$(GitVersion.InformationalVersion)
   displayName: Build
 
 - script: dotnet test --no-build --configuration $(buildConfiguration) --logger:trx
