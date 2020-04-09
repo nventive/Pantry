@@ -159,6 +159,33 @@ namespace Pantry.Azure.TableStorage.Tests
             withBaseClassSupport.Should().HaveCount(5);
         }
 
+        [Fact]
+        public async Task ItShouldQueryMirror()
+        {
+            var repository = ServiceProvider.GetRequiredService<IRepository<SimpleEntity>>();
+            var entities = SimpleEntityGenerator.Generate(10);
+            foreach (var entity in entities)
+            {
+                await repository.AddAsync(entity);
+            }
+
+            var query = new MirrorQuery<SimpleEntity>
+            {
+                Limit = 3,
+            };
+            var result = await repository.FindAsync(query);
+            result.Should().HaveCount(3);
+            result.ContinuationToken.Should().NotBeNullOrEmpty();
+
+            query.Mirror.Name = entities.First().Name;
+            result = await repository.FindAsync(query);
+            result.Count().Should().BeGreaterOrEqualTo(1);
+
+            query.Mirror.Name = Guid.NewGuid().ToString();
+            result = await repository.FindAsync(query);
+            result.Should().HaveCount(0);
+        }
+
         private class QueryAllSimpleEntities : AllQuery<SimpleEntity>
         {
         }

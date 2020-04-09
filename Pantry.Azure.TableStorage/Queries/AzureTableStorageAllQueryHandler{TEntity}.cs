@@ -24,7 +24,7 @@ namespace Pantry.Azure.TableStorage.Queries
         }
 
         /// <inheritdoc/>
-        protected override void ApplyQueryToTableQuery(IQuery<TEntity> query, TableQuery<DynamicTableEntity> tableQuery)
+        protected override void ApplyQueryToTableQuery(AllQuery<TEntity> query, TableQuery<DynamicTableEntity> tableQuery)
         {
             // No-op, we select all.
         }

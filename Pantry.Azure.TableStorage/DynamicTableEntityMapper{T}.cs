@@ -18,26 +18,6 @@ namespace Pantry.Azure.TableStorage
     public class DynamicTableEntityMapper<T> : IMapper<T, DynamicTableEntity>
         where T : class, IIdentifiable, new()
     {
-        private static readonly HashSet<Type> SupportedPropertyTypes = new HashSet<Type>
-        {
-            typeof(string),
-            typeof(byte[]),
-            typeof(bool),
-            typeof(bool?),
-            typeof(DateTime),
-            typeof(DateTime?),
-            typeof(DateTimeOffset),
-            typeof(DateTimeOffset?),
-            typeof(double),
-            typeof(double?),
-            typeof(Guid),
-            typeof(Guid?),
-            typeof(int),
-            typeof(int?),
-            typeof(long),
-            typeof(long?),
-        };
-
         private readonly IAzureTableStorageKeysResolver<T> _keysResolver;
         private readonly ILogger _logger;
 
@@ -68,7 +48,7 @@ namespace Pantry.Azure.TableStorage
             foreach (var property in GetSerializableProperties())
             {
                 var value = property.GetValue(source);
-                if (!IsNativelySupportedAsProperty(property.PropertyType))
+                if (!DynamicTableEntityMapper.IsNativelySupportedAsProperty(property.PropertyType))
                 {
                     value = JsonSerializer.Serialize(value);
                 }
@@ -104,7 +84,7 @@ namespace Pantry.Azure.TableStorage
                     var dynamicValue = destination[property.Name].PropertyAsObject;
                     if (dynamicValue != null)
                     {
-                        if (!IsNativelySupportedAsProperty(property.PropertyType))
+                        if (!DynamicTableEntityMapper.IsNativelySupportedAsProperty(property.PropertyType))
                         {
                             dynamicValue = JsonSerializer.Deserialize(destination[property.Name].StringValue, property.PropertyType);
                         }
@@ -132,12 +112,5 @@ namespace Pantry.Azure.TableStorage
                 .Where(x => x.CanRead && x.CanWrite)
                 .Where(x => x.Name != nameof(IIdentifiable.Id));
         }
-
-        /// <summary>
-        /// Returns true if <paramref name="type"/> is supported as a table property natively.
-        /// </summary>
-        /// <param name="type">The type to check.</param>
-        /// <returns>true is it is, false otherwise.</returns>
-        protected bool IsNativelySupportedAsProperty(Type type) => SupportedPropertyTypes.Contains(type);
     }
 }

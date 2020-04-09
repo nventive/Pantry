@@ -6,13 +6,8 @@
     /// <typeparam name="TResult">The result element types.</typeparam>
     public abstract class Query<TResult> : IQuery<TResult>
     {
-        /// <summary>
-        /// Gets the default limit to apply when none provided.
-        /// </summary>
-        public static readonly int DefaultLimit = 50;
-
         /// <inheritdoc />
-        public int Limit { get; set; } = DefaultLimit;
+        public int Limit { get; set; } = Query.DefaultLimit;
 
         /// <inheritdoc />
         public string? ContinuationToken { get; set; }

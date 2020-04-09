@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Pantry;
 using Pantry.Azure.TableStorage;
 using Pantry.Azure.TableStorage.DependencyInjection;
+using Pantry.Mapping;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -70,6 +71,27 @@ namespace Microsoft.Extensions.DependencyInjection
                 return new CloudTableFor<T>(table);
             });
 
+            return builder;
+        }
+
+        /// <summary>
+        /// Sets a custom mapper for table entities (as a Singleton).
+        /// </summary>
+        /// <typeparam name="TEntity">The repository entity type.</typeparam>
+        /// <typeparam name="TMapper">The custom mapper type.</typeparam>
+        /// <param name="builder">The <see cref="IAzureTableStorageRepositoryBuilder{T}"/>.</param>
+        /// <returns>The updated <see cref="IAzureTableStorageRepositoryBuilder{T}"/>.</returns>
+        public static IAzureTableStorageRepositoryBuilder<TEntity> WithTableEntityMapper<TEntity, TMapper>(
+            this IAzureTableStorageRepositoryBuilder<TEntity> builder)
+            where TEntity : class, IIdentifiable
+            where TMapper : class, IMapper<TEntity, DynamicTableEntity>
+        {
+            if (builder is null)
+            {
+                throw new ArgumentNullException(nameof(builder));
+            }
+
+            builder.Services.AddSingleton<IMapper<TEntity, DynamicTableEntity>, TMapper>();
             return builder;
         }
     }

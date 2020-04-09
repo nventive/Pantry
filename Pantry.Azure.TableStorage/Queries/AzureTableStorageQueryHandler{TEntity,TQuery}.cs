@@ -54,7 +54,7 @@ namespace Pantry.Azure.TableStorage.Queries
 
             var tableQuery = new TableQuery<DynamicTableEntity>();
             tableQuery.Take(query.Limit);
-            ApplyQueryToTableQuery(query, tableQuery);
+            ApplyQueryToTableQuery((TQuery)query, tableQuery);
 
             var operationResult = await CloudTableFor.CloudTable.ExecuteQuerySegmentedAsync(
                 tableQuery,
@@ -73,6 +73,6 @@ namespace Pantry.Azure.TableStorage.Queries
         /// </summary>
         /// <param name="query">The original query.</param>
         /// <param name="tableQuery">The Table Entity query.</param>
-        protected abstract void ApplyQueryToTableQuery(IQuery<TEntity> query, TableQuery<DynamicTableEntity> tableQuery);
+        protected abstract void ApplyQueryToTableQuery(TQuery query, TableQuery<DynamicTableEntity> tableQuery);
     }
 }
