@@ -3,10 +3,10 @@
 namespace Pantry.Azure.TableStorage
 {
     /// <summary>
-    /// <see cref="ITableStorageKeysResolver{T}"/> default implementation.
+    /// <see cref="IAzureTableStorageKeysResolver{T}"/> default implementation.
     /// </summary>
     /// <typeparam name="T">The entity type.</typeparam>
-    public class DefaultTableStorageKeysResolver<T> : ITableStorageKeysResolver<T>
+    public class AzureTableStorageKeysResolver<T> : IAzureTableStorageKeysResolver<T>
     {
         /// <inheritdoc/>
         public (string partitionKey, string rowKey) GetStorageKeys(string id)

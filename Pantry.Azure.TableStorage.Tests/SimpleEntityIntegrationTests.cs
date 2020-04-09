@@ -42,10 +42,9 @@ namespace Pantry.Azure.TableStorage.Tests
                 })
                 .ConfigureServices((context, services) =>
                 {
-                    services.AddAzureTableStorageRepository<SimpleEntity>(
-                        context.Configuration,
-                        StorageConnectionString,
-                        nameof(SimpleEntity));
+                    services
+                        .AddAzureTableStorageRepository<SimpleEntity>()
+                        .WithConnectionStringNamed(StorageConnectionString);
                 })
                 .Build();
         }

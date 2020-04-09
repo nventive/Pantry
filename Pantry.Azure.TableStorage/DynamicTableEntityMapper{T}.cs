@@ -38,16 +38,16 @@ namespace Pantry.Azure.TableStorage
             typeof(long?),
         };
 
-        private readonly ITableStorageKeysResolver<T> _keysResolver;
+        private readonly IAzureTableStorageKeysResolver<T> _keysResolver;
         private readonly ILogger _logger;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DynamicTableEntityMapper{T}"/> class.
         /// </summary>
-        /// <param name="keysResolver">The <see cref="ITableStorageKeysResolver{T}"/>.</param>
+        /// <param name="keysResolver">The <see cref="IAzureTableStorageKeysResolver{T}"/>.</param>
         /// <param name="logger">The <see cref="ILogger"/>.</param>
         public DynamicTableEntityMapper(
-            ITableStorageKeysResolver<T> keysResolver,
+            IAzureTableStorageKeysResolver<T> keysResolver,
             ILogger<DynamicTableEntityMapper<T>>? logger = null)
         {
             _keysResolver = keysResolver ?? throw new ArgumentNullException(nameof(keysResolver));

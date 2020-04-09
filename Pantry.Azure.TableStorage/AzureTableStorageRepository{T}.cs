@@ -24,7 +24,7 @@ namespace Pantry.Azure.TableStorage
     {
         private readonly CloudTableFor<T> _cloudTableFor;
         private readonly IIdGenerator<T> _idGenerator;
-        private readonly ITableStorageKeysResolver<T> _keysResolver;
+        private readonly IAzureTableStorageKeysResolver<T> _keysResolver;
         private readonly IMapper<T, DynamicTableEntity> _tableEntityMapper;
         private readonly IEnumerable<IAzureTableStorageQueryHandler> _queryHandlers;
         private readonly ILogger _logger;
@@ -36,12 +36,12 @@ namespace Pantry.Azure.TableStorage
         /// <param name="idGenerator">The <see cref="IIdGenerator{T}"/>.</param>
         /// <param name="tableEntityMapper">The mapper to <see cref="ITableEntity"/>.</param>
         /// <param name="queryHandlers">The available query handlers.</param>
-        /// <param name="keysResolver">The <see cref="ITableStorageKeysResolver{T}"/> to use.</param>
+        /// <param name="keysResolver">The <see cref="IAzureTableStorageKeysResolver{T}"/> to use.</param>
         /// <param name="logger">The <see cref="ILogger"/>.</param>
         public AzureTableStorageRepository(
             CloudTableFor<T> cloudTableFor,
             IIdGenerator<T> idGenerator,
-            ITableStorageKeysResolver<T> keysResolver,
+            IAzureTableStorageKeysResolver<T> keysResolver,
             IMapper<T, DynamicTableEntity> tableEntityMapper,
             IEnumerable<IAzureTableStorageQueryHandler> queryHandlers,
             ILogger<AzureTableStorageRepository<T>>? logger = null)
