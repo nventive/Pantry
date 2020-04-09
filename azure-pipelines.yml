@@ -1,12 +1,12 @@
 
 pool:
-  vmImage: 'windows-2019'
+  vmImage: 'windows-latest'
 
 variables:
   buildConfiguration: 'Release'
 
 steps:
-- task: GitVersion@4
+- task: GitVersion@5
   displayName: Git Version
   inputs:
     updateAssemblyInfo: false
