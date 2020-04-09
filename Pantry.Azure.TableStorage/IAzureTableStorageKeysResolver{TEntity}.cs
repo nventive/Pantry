@@ -3,8 +3,8 @@
     /// <summary>
     /// Resolve Table Storage Key based on the entity Id.
     /// </summary>
-    /// <typeparam name="T">The type of entity.</typeparam>
-    public interface IAzureTableStorageKeysResolver<T>
+    /// <typeparam name="TEntity">The type of entity.</typeparam>
+    public interface IAzureTableStorageKeysResolver<TEntity>
     {
         /// <summary>
         /// Gets the partitionKey and rowKey from the <paramref name="id"/>.

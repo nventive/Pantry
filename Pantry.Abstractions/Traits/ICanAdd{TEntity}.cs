@@ -7,9 +7,9 @@ namespace Pantry.Traits
     /// <summary>
     /// Add Repository Methods.
     /// </summary>
-    /// <typeparam name="T">The entity type.</typeparam>
-    public interface ICanAdd<T>
-        where T : IIdentifiable
+    /// <typeparam name="TEntity">The entity type.</typeparam>
+    public interface ICanAdd<TEntity>
+        where TEntity : IIdentifiable
     {
         /// <summary>
         /// Adds the <paramref name="entity"/> to the repository.
@@ -18,6 +18,6 @@ namespace Pantry.Traits
         /// <param name="cancellationToken">The <see cref="CancellationToken"/>.</param>
         /// <returns>The added entity.</returns>
         /// <exception cref="ConflictException">If the entity already exists.</exception>
-        Task<T> AddAsync(T entity, CancellationToken cancellationToken = default);
+        Task<TEntity> AddAsync(TEntity entity, CancellationToken cancellationToken = default);
     }
 }

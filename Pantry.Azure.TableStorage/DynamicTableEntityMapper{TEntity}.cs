@@ -14,11 +14,11 @@ namespace Pantry.Azure.TableStorage
     /// <summary>
     /// Maps entities to and from <see cref="DynamicTableEntity"/>.
     /// </summary>
-    /// <typeparam name="T">The entity type.</typeparam>
-    public class DynamicTableEntityMapper<T> : IMapper<T, DynamicTableEntity>
-        where T : class, IIdentifiable, new()
+    /// <typeparam name="TEntity">The entity type.</typeparam>
+    public class DynamicTableEntityMapper<TEntity> : IMapper<TEntity, DynamicTableEntity>
+        where TEntity : class, IIdentifiable, new()
     {
-        private readonly IAzureTableStorageKeysResolver<T> _keysResolver;
+        private readonly IAzureTableStorageKeysResolver<TEntity> _keysResolver;
         private readonly ILogger _logger;
 
         /// <summary>
@@ -27,15 +27,15 @@ namespace Pantry.Azure.TableStorage
         /// <param name="keysResolver">The <see cref="IAzureTableStorageKeysResolver{T}"/>.</param>
         /// <param name="logger">The <see cref="ILogger"/>.</param>
         public DynamicTableEntityMapper(
-            IAzureTableStorageKeysResolver<T> keysResolver,
-            ILogger<DynamicTableEntityMapper<T>>? logger = null)
+            IAzureTableStorageKeysResolver<TEntity> keysResolver,
+            ILogger<DynamicTableEntityMapper<TEntity>>? logger = null)
         {
             _keysResolver = keysResolver ?? throw new ArgumentNullException(nameof(keysResolver));
-            _logger = logger ?? NullLogger<DynamicTableEntityMapper<T>>.Instance;
+            _logger = logger ?? NullLogger<DynamicTableEntityMapper<TEntity>>.Instance;
         }
 
         /// <inheritdoc/>
-        public virtual DynamicTableEntity MapToDestination(T source)
+        public virtual DynamicTableEntity MapToDestination(TEntity source)
         {
             if (source is null)
             {
@@ -65,14 +65,14 @@ namespace Pantry.Azure.TableStorage
         }
 
         /// <inheritdoc/>
-        public virtual T MapToSource(DynamicTableEntity destination)
+        public virtual TEntity MapToSource(DynamicTableEntity destination)
         {
             if (destination is null)
             {
                 throw new ArgumentNullException(nameof(destination));
             }
 
-            var result = new T
+            var result = new TEntity
             {
                 Id = _keysResolver.GetEntityId(destination.PartitionKey, destination.RowKey),
             };
@@ -103,12 +103,12 @@ namespace Pantry.Azure.TableStorage
         }
 
         /// <summary>
-        /// Returns the list of serializable properties in <typeparamref name="T"/>.
+        /// Returns the list of serializable properties in <typeparamref name="TEntity"/>.
         /// </summary>
         /// <returns>The list of properties.</returns>
         protected IEnumerable<PropertyInfo> GetSerializableProperties()
         {
-            return typeof(T).GetProperties()
+            return typeof(TEntity).GetProperties()
                 .Where(x => x.CanRead && x.CanWrite)
                 .Where(x => x.Name != nameof(IIdentifiable.Id));
         }

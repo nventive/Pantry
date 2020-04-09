@@ -5,8 +5,8 @@ namespace Pantry.Azure.TableStorage
     /// <summary>
     /// <see cref="IAzureTableStorageKeysResolver{T}"/> default implementation.
     /// </summary>
-    /// <typeparam name="T">The entity type.</typeparam>
-    public class AzureTableStorageKeysResolver<T> : IAzureTableStorageKeysResolver<T>
+    /// <typeparam name="TEntity">The entity type.</typeparam>
+    public class AzureTableStorageKeysResolver<TEntity> : IAzureTableStorageKeysResolver<TEntity>
     {
         /// <inheritdoc/>
         public (string partitionKey, string rowKey) GetStorageKeys(string id)
