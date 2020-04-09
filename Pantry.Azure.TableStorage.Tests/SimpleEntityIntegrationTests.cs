@@ -151,6 +151,16 @@ namespace Pantry.Azure.TableStorage.Tests
             secondResult.ContinuationToken.Should().NotBeNullOrEmpty();
 
             secondResult.First().Id.Should().NotBe(result.First().Id);
+
+            var withBaseClassSupport = await repository.FindAsync(new QueryAllSimpleEntities
+            {
+                Limit = 5,
+            });
+            withBaseClassSupport.Should().HaveCount(5);
+        }
+
+        private class QueryAllSimpleEntities : AllQuery<SimpleEntity>
+        {
         }
     }
 }

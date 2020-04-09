@@ -39,10 +39,8 @@ namespace Microsoft.Extensions.DependencyInjection
             services.TryAddSingleton<IAzureTableStorageKeysResolver<TEntity>, AzureTableStorageKeysResolver<TEntity>>();
             services.TryAddSingleton<IMapper<TEntity, DynamicTableEntity>, DynamicTableEntityMapper<TEntity>>();
 
-            // Default query handlers
             services.TryAddSingleton<IQueryHandlerExecutor<TEntity, IAzureTableStorageQueryHandler>, ServiceProviderQueryHandlerExecutor<TEntity, IAzureTableStorageQueryHandler>>();
-            services.TryAddEnumerable(ServiceDescriptor.Singleton<IAzureTableStorageQueryHandler, AzureTableStorageAllQueryHandler<TEntity>>());
-
+            services.AddQueryHandler<AzureTableStorageAllQueryHandler<TEntity>, IAzureTableStorageQueryHandler>();
             services.TryRegisterAsSelfAndAllInterfaces<TRepository>();
 
             return new AzureTableStorageRepositoryBuilder<TEntity>(services);
