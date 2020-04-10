@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Pantry.Continuation;
 using Pantry.Exceptions;
+using Pantry.Generators;
 using Pantry.Logging;
 using Pantry.Mapping;
 using Pantry.Queries;

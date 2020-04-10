@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Pantry.Exceptions;
+using Pantry.Generators;
 using Pantry.Traits;
 using Xunit;
 using Xunit.Abstractions;

@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace Pantry
+namespace Pantry.Generators
 {
     /// <summary>
     /// Generates ETags.
