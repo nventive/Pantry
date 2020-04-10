@@ -184,7 +184,7 @@ namespace Pantry.InMemory
         }
 
         /// <inheritdoc/>
-        public virtual async Task<bool> TryDeleteAsync(string id, CancellationToken cancellationToken = default)
+        public virtual async Task<bool> TryRemoveAsync(string id, CancellationToken cancellationToken = default)
         {
             if (Storage.TryRemove(id, out var _))
             {

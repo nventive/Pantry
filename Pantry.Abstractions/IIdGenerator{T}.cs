@@ -14,6 +14,6 @@ namespace Pantry
         /// </summary>
         /// <param name="value">The value to generate an id for, eventually.</param>
         /// <returns>The generated id.</returns>
-        ValueTask<string> Generate(T? value);
+        ValueTask<string> Generate(T? value = null);
     }
 }

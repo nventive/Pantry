@@ -44,7 +44,7 @@ namespace Pantry.Traits
                 .Select(async id => (id, entity: await TryGetByIdAsync(id, cancellationToken).ConfigureAwait(false))))
                 .ConfigureAwait(false);
 
-            return results.ToDictionary(x => x.id, x => x.entity);
+            return results.Where(x => x.entity != null).ToDictionary(x => x.id, x => x.entity);
         }
 
         /// <summary>

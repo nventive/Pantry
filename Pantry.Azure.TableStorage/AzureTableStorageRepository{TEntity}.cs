@@ -146,9 +146,11 @@ namespace Pantry.Azure.TableStorage
                 throw new ArgumentNullException(nameof(entity));
             }
 
+            string? sentEtag = null; // To properly catch ETag format exceptions.
             try
             {
                 var targetUpdatedTableEntity = TableEntityMapper.MapToDestination(entity);
+                sentEtag = targetUpdatedTableEntity.ETag;
                 if (string.IsNullOrEmpty(targetUpdatedTableEntity.ETag))
                 {
                     targetUpdatedTableEntity.ETag = "*";
@@ -199,10 +201,21 @@ namespace Pantry.Azure.TableStorage
 
                 throw exception;
             }
+            catch (StorageException storageException) when (storageException.Message.Contains(sentEtag, StringComparison.InvariantCultureIgnoreCase))
+            {
+                var exception = new ConcurrencyException(typeof(TEntity).Name, entity.Id, storageException.Message);
+                Logger.LogUpdatedWarning(
+                    entityType: typeof(TEntity),
+                    entityId: entity.Id,
+                    warning: "Concurrency",
+                    exception: exception);
+
+                throw exception;
+            }
         }
 
         /// <inheritdoc/>
-        public virtual async Task<bool> TryDeleteAsync(string id, CancellationToken cancellationToken = default)
+        public virtual async Task<bool> TryRemoveAsync(string id, CancellationToken cancellationToken = default)
         {
             var (partitionKey, rowKey) = KeysResolver.GetStorageKeys(id);
             var result = await CloudTableFor.CloudTable.ExecuteAsync(
@@ -234,6 +247,11 @@ namespace Pantry.Azure.TableStorage
         /// <inheritdoc/>
         public Task<IContinuationEnumerable<TEntity>> FindAllAsync(string? continuationToken, int limit = Query.DefaultLimit, CancellationToken cancellationToken = default)
         {
+            if (limit <= 0)
+            {
+                return Task.FromResult(ContinuationEnumerable.Empty<TEntity>());
+            }
+
             return PrepareQueryAndExecuteAsync(
                 new FindAllQuery<TEntity> { ContinuationToken = continuationToken, Limit = limit },
                 _ => { },
