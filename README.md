@@ -1,10 +1,10 @@
 # Pantry
 
-{Project tag line}
-
-{Small description of the purpose of the project}
+Repositories for Root Aggregates.
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+[![Build Status](https://dev.azure.com/nventive-public/nventive/_apis/build/status/nventive.Pantry?branchName=master)](https://dev.azure.com/nventive-public/nventive/_build/latest?definitionId=11&branchName=master)
+[![Nuget](https://img.shields.io/nuget/v/Pantry)](https://www.nuget.org/packages/Pantry/)
 
 ## Getting Started
 
