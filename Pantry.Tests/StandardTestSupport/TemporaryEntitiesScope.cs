@@ -9,7 +9,7 @@ namespace Pantry.Tests.StandardTestSupport
     /// </summary>
     /// <typeparam name="TEntity">The entity type.</typeparam>
     public class TemporaryEntitiesScope<TEntity> : IDisposable
-        where TEntity : class, IIdentifiable, IETaggable
+        where TEntity : class, IIdentifiable, IETaggable, ITimestamped
     {
         private readonly ICrudRepository<TEntity> _repository;
         private readonly IEnumerable<TEntity> _entitySet;
@@ -29,6 +29,7 @@ namespace Pantry.Tests.StandardTestSupport
                     var result = _repository.AddAsync(entity).ConfigureAwait(false).GetAwaiter().GetResult();
                     entity.Id = result.Id;
                     entity.ETag = result.ETag;
+                    entity.Timestamp = result.Timestamp;
                 }
             }
         }

@@ -21,7 +21,7 @@ namespace Pantry.Tests.StandardTestSupport
     /// </summary>
     /// <typeparam name="TTestEntity">The type of test entities to use.</typeparam>
     public abstract class StandardRepositoryImplementationTests<TTestEntity>
-        where TTestEntity : class, IIdentifiable, IETaggable, new()
+        where TTestEntity : class, IIdentifiable, IETaggable, ITimestamped, new()
     {
         private readonly Lazy<IHost> _lazyHost;
 
@@ -71,7 +71,8 @@ namespace Pantry.Tests.StandardTestSupport
 
             result.Id.Should().NotBeNullOrEmpty();
             result.ETag.Should().NotBeNullOrEmpty();
-            result.Should().BeEquivalentTo(entity, opt => opt.Excluding(x => x.Id).Excluding(x => x.ETag));
+            result.Timestamp.Should().NotBeNull();
+            result.Should().BeEquivalentTo(entity, opt => opt.Excluding(x => x.Id).Excluding(x => x.ETag).Excluding(x => x.Timestamp));
         }
 
         [SkippableFact(typeof(UnsupportedFeatureException))]
@@ -96,6 +97,8 @@ namespace Pantry.Tests.StandardTestSupport
             var result = await Repo.AddAsync(entity);
 
             result.Id.Should().Be(existingId);
+            result.ETag.Should().NotBeNull();
+            result.Timestamp.Should().NotBeNull();
         }
 
         [SkippableFact(typeof(UnsupportedFeatureException))]
@@ -125,7 +128,8 @@ namespace Pantry.Tests.StandardTestSupport
 
             result.Id.Should().NotBeNullOrEmpty();
             result.ETag.Should().NotBeNullOrEmpty();
-            result.Should().BeEquivalentTo(entity, opt => opt.Excluding(x => x.Id).Excluding(x => x.ETag));
+            result.Timestamp.Should().NotBeNull();
+            result.Should().BeEquivalentTo(entity, opt => opt.Excluding(x => x.Id).Excluding(x => x.ETag).Excluding(x => x.Timestamp));
         }
 
         [SkippableFact(typeof(UnsupportedFeatureException))]
@@ -140,8 +144,9 @@ namespace Pantry.Tests.StandardTestSupport
             var result = await Repo.UpdateAsync(updatedEntity);
 
             result.ETag.Should().NotBeNullOrEmpty();
-            result.Should().BeEquivalentTo(updatedEntity, opt => opt.Excluding(x => x.ETag));
-            result.Should().NotBeEquivalentTo(existingEntity, opt => opt.Excluding(x => x.ETag));
+            result.Timestamp.Should().NotBeNull();
+            result.Should().BeEquivalentTo(updatedEntity, opt => opt.Excluding(x => x.ETag).Excluding(x => x.Timestamp));
+            result.Should().NotBeEquivalentTo(existingEntity, opt => opt.Excluding(x => x.ETag).Excluding(x => x.Timestamp));
         }
 
         [SkippableFact(typeof(UnsupportedFeatureException))]
@@ -156,8 +161,9 @@ namespace Pantry.Tests.StandardTestSupport
             var result = await Repo.AddOrUpdateAsync(updatedEntity);
 
             result.ETag.Should().NotBeNullOrEmpty();
-            result.Should().BeEquivalentTo(updatedEntity, opt => opt.Excluding(x => x.ETag));
-            result.Should().NotBeEquivalentTo(existingEntity, opt => opt.Excluding(x => x.ETag));
+            result.Timestamp.Should().NotBeNull();
+            result.Should().BeEquivalentTo(updatedEntity, opt => opt.Excluding(x => x.ETag).Excluding(x => x.Timestamp));
+            result.Should().NotBeEquivalentTo(existingEntity, opt => opt.Excluding(x => x.ETag).Excluding(x => x.Timestamp));
         }
 
         [SkippableFact(typeof(UnsupportedFeatureException))]
@@ -190,7 +196,7 @@ namespace Pantry.Tests.StandardTestSupport
 
             var result = await Repo.TryGetByIdAsync(referenceEntity.Id);
 
-            result.Should().BeEquivalentTo(referenceEntity, opt => opt.Excluding(x => x.ETag));
+            result.Should().BeEquivalentTo(referenceEntity, opt => opt.Excluding(x => x.ETag).Excluding(x => x.Timestamp));
         }
 
         [SkippableFact(typeof(UnsupportedFeatureException))]
@@ -214,7 +220,7 @@ namespace Pantry.Tests.StandardTestSupport
 
             var result = await Repo.GetByIdAsync(referenceEntity.Id);
 
-            result.Should().BeEquivalentTo(referenceEntity, opt => opt.Excluding(x => x.ETag));
+            result.Should().BeEquivalentTo(referenceEntity, opt => opt.Excluding(x => x.ETag).Excluding(x => x.Timestamp));
         }
 
         [SkippableFact(typeof(UnsupportedFeatureException))]
@@ -239,7 +245,7 @@ namespace Pantry.Tests.StandardTestSupport
 
             result.Should().HaveSameCount(entities);
             result.Keys.Should().Contain(entities.Select(x => x.Id));
-            result[entities.First().Id].Should().BeEquivalentTo(entities.First(), opt => opt.Excluding(x => x.ETag));
+            result[entities.First().Id].Should().BeEquivalentTo(entities.First(), opt => opt.Excluding(x => x.ETag).Excluding(x => x.Timestamp));
         }
 
         [SkippableFact(typeof(UnsupportedFeatureException))]
@@ -255,7 +261,7 @@ namespace Pantry.Tests.StandardTestSupport
             result.Keys.Should().Contain(entities.Select(x => x.Id));
             result.Keys.Should().NotContain(notExistingId);
             result.Keys.Should().NotContainNulls();
-            result[entities.First().Id].Should().BeEquivalentTo(entities.First(), opt => opt.Excluding(x => x.ETag));
+            result[entities.First().Id].Should().BeEquivalentTo(entities.First(), opt => opt.Excluding(x => x.ETag).Excluding(x => x.Timestamp));
         }
 
         [SkippableFact(typeof(UnsupportedFeatureException))]
@@ -294,8 +300,9 @@ namespace Pantry.Tests.StandardTestSupport
             var result = await Repo.UpdateAsync(updatedEntity);
 
             result.ETag.Should().NotBeNullOrEmpty();
-            result.Should().BeEquivalentTo(updatedEntity, opt => opt.Excluding(x => x.ETag));
-            result.Should().NotBeEquivalentTo(existingEntity, opt => opt.Excluding(x => x.ETag));
+            result.Timestamp.Should().NotBeNull();
+            result.Should().BeEquivalentTo(updatedEntity, opt => opt.Excluding(x => x.ETag).Excluding(x => x.Timestamp));
+            result.Should().NotBeEquivalentTo(existingEntity, opt => opt.Excluding(x => x.ETag).Excluding(x => x.Timestamp));
         }
 
         [SkippableFact(typeof(UnsupportedFeatureException))]
@@ -312,8 +319,10 @@ namespace Pantry.Tests.StandardTestSupport
 
             result.ETag.Should().NotBeNullOrEmpty();
             result.ETag.Should().NotBe(existingEntity.ETag);
-            result.Should().BeEquivalentTo(updatedEntity, opt => opt.Excluding(x => x.ETag));
-            result.Should().NotBeEquivalentTo(existingEntity, opt => opt.Excluding(x => x.ETag));
+            result.Timestamp.Should().NotBeNull();
+            result.Timestamp.Should().NotBe(existingEntity.Timestamp!.Value);
+            result.Should().BeEquivalentTo(updatedEntity, opt => opt.Excluding(x => x.ETag).Excluding(x => x.Timestamp));
+            result.Should().NotBeEquivalentTo(existingEntity, opt => opt.Excluding(x => x.ETag).Excluding(x => x.Timestamp));
         }
 
         [SkippableFact(typeof(UnsupportedFeatureException))]

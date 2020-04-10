@@ -10,6 +10,7 @@ using Pantry.Continuation;
 using Pantry.Exceptions;
 using Pantry.Generators;
 using Pantry.Logging;
+using Pantry.Providers;
 using Pantry.Queries;
 
 namespace Pantry.InMemory
@@ -27,18 +28,21 @@ namespace Pantry.InMemory
         /// <param name="storage">The storage.</param>
         /// <param name="idGenerator">The <see cref="IIdGenerator{T}"/>.</param>
         /// <param name="etagGenerator">The <see cref="IETagGenerator{T}"/>.</param>
+        /// <param name="timestampProvider">The <see cref="ITimestampProvider"/>.</param>
         /// <param name="continuationTokenEncoder">The <see cref="IContinuationTokenEncoder{TContinuationToken}"/>.</param>
         /// <param name="logger">The <see cref="ILogger"/>.</param>
         public ConcurrentDictionaryRepository(
             ConcurrentDictionary<string, TEntity> storage,
             IIdGenerator<TEntity> idGenerator,
             IETagGenerator<TEntity> etagGenerator,
+            ITimestampProvider timestampProvider,
             IContinuationTokenEncoder<LimitOffsetContinuationToken> continuationTokenEncoder,
             ILogger<ConcurrentDictionaryRepository<TEntity>>? logger = null)
         {
             Storage = storage;
             IdGenerator = idGenerator ?? throw new ArgumentNullException(nameof(idGenerator));
             EtagGenerator = etagGenerator ?? throw new ArgumentNullException(nameof(etagGenerator));
+            TimestampProvider = timestampProvider ?? throw new ArgumentNullException(nameof(timestampProvider));
             ContinuationTokenEncoder = continuationTokenEncoder ?? throw new ArgumentNullException(nameof(continuationTokenEncoder));
             Logger = logger ?? NullLogger<ConcurrentDictionaryRepository<TEntity>>.Instance;
         }
@@ -57,6 +61,11 @@ namespace Pantry.InMemory
         /// Gets the <see cref="IETagGenerator{T}"/>.
         /// </summary>
         protected IETagGenerator<TEntity> EtagGenerator { get; }
+
+        /// <summary>
+        /// Gets the <see cref="ITimestampProvider"/>.
+        /// </summary>
+        protected ITimestampProvider TimestampProvider { get; }
 
         /// <summary>
         /// Gets the <see cref="IContinuationTokenEncoder{LimitOffsetContinuationToken}"/>.
@@ -84,6 +93,11 @@ namespace Pantry.InMemory
             if (entity is IETaggable taggableEntity && string.IsNullOrEmpty(taggableEntity.ETag))
             {
                 taggableEntity.ETag = await EtagGenerator.Generate(entity);
+            }
+
+            if (entity is ITimestamped timestampedEntity && timestampedEntity.Timestamp is null)
+            {
+                timestampedEntity.Timestamp = TimestampProvider.CurrentTimestamp();
             }
 
             if (Storage.TryAdd(entity.Id, entity))
@@ -182,6 +196,11 @@ namespace Pantry.InMemory
             if (entity is IETaggable taggableEntityUpdate)
             {
                 taggableEntityUpdate.ETag = await EtagGenerator.Generate(entity);
+            }
+
+            if (entity is ITimestamped timestampedEntity && timestampedEntity.Timestamp is null)
+            {
+                timestampedEntity.Timestamp = TimestampProvider.CurrentTimestamp();
             }
 
             if (Storage.TryUpdate(entity.Id, entity, existing))

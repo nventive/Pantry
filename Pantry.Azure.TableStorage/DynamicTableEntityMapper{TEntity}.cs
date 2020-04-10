@@ -50,6 +50,11 @@ namespace Pantry.Azure.TableStorage
                 dynamicTableEntity.ETag = taggableEntity.ETag;
             }
 
+            if (source is ITimestamped timestampedEntity && timestampedEntity.Timestamp.HasValue)
+            {
+                dynamicTableEntity.Timestamp = timestampedEntity.Timestamp.Value;
+            }
+
             foreach (var property in GetSerializableProperties())
             {
                 var value = property.GetValue(source);
@@ -87,6 +92,11 @@ namespace Pantry.Azure.TableStorage
                 taggableEntity.ETag = destination.ETag;
             }
 
+            if (result is ITimestamped timestampedEntity)
+            {
+                timestampedEntity.Timestamp = destination.Timestamp;
+            }
+
             foreach (var property in GetSerializableProperties())
             {
                 if (destination.Properties.ContainsKey(property.Name))
@@ -97,6 +107,12 @@ namespace Pantry.Azure.TableStorage
                         if (!DynamicTableEntityMapper.IsNativelySupportedAsProperty(property.PropertyType))
                         {
                             dynamicValue = JsonSerializer.Deserialize(destination[property.Name].StringValue, property.PropertyType);
+                        }
+
+                        if ((property.PropertyType == typeof(DateTimeOffset) || property.PropertyType == typeof(DateTimeOffset?))
+                            && dynamicValue is DateTime dateTimeValue)
+                        {
+                            dynamicValue = new DateTimeOffset(dateTimeValue);
                         }
 
                         property.SetValue(result, dynamicValue);
@@ -120,7 +136,7 @@ namespace Pantry.Azure.TableStorage
         {
             return typeof(TEntity).GetProperties()
                 .Where(x => x.CanRead && x.CanWrite)
-                .Where(x => x.Name != nameof(IIdentifiable.Id) && x.Name != nameof(IETaggable.ETag));
+                .Where(x => x.Name != nameof(IIdentifiable.Id) && x.Name != nameof(IETaggable.ETag) && x.Name != nameof(ITimestamped.Timestamp));
         }
     }
 }

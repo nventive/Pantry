@@ -33,6 +33,7 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             services.TryAddIdGeneratorFor<TEntity>();
             services.TryAddETagGeneratorFor<TEntity>();
+            services.TryAddTimestampProvider();
             services.TryAddContinuationTokenEncoderFor<LimitOffsetContinuationToken>();
 
             services.AddSingleton<ConcurrentDictionary<string, TEntity>>();

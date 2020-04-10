@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Pantry.Continuation;
 using Pantry.Generators;
+using Pantry.Providers;
 
 namespace Pantry.DependencyInjection
 {
@@ -46,6 +47,23 @@ namespace Pantry.DependencyInjection
             {
                 services.TryAdd(new ServiceDescriptor(iface, sp => sp.GetService(implementationType), lifetime));
             }
+
+            return services;
+        }
+
+        /// <summary>
+        /// Tries to add an <see cref="ITimestampProvider"/>.
+        /// </summary>
+        /// <param name="services">The <see cref="IServiceCollection"/>.</param>
+        /// <returns>The updated <see cref="IServiceCollection"/>.</returns>
+        public static IServiceCollection TryAddTimestampProvider(this IServiceCollection services)
+        {
+            if (services is null)
+            {
+                throw new ArgumentNullException(nameof(services));
+            }
+
+            services.TryAddSingleton<ITimestampProvider, SystemClockTimestampProvider>();
 
             return services;
         }

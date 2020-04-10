@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Pantry.Tests.StandardTestSupport
 {
@@ -7,6 +8,8 @@ namespace Pantry.Tests.StandardTestSupport
         public string? Name { get; set; }
 
         public int Age { get; set; }
+
+        public DateTimeOffset? NotarizedAt { get; set; }
 
         public SubStandardEntity? Related { get; set; }
 
