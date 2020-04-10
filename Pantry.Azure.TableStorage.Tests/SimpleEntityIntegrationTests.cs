@@ -95,7 +95,7 @@ namespace Pantry.Azure.TableStorage.Tests
         public async Task ItShouldThrowOnAddConflicts()
         {
             var entity = SimpleEntityGenerator.Generate();
-            var repository = ServiceProvider.GetRequiredService<ICanAdd<SimpleEntity>>();
+            var repository = ServiceProvider.GetRequiredService<IRepositoryAdd<SimpleEntity>>();
 
             entity = await repository.AddAsync(entity);
 

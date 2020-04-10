@@ -6,7 +6,7 @@ namespace Pantry
     /// Create Read Update Delete Repository.
     /// </summary>
     /// <typeparam name="TEntity">The entity type.</typeparam>
-    public interface ICrudRepository<TEntity> : ICanAdd<TEntity>, ICanGet<TEntity>, ICanUpdate<TEntity>, ICanDelete<TEntity>
+    public interface ICrudRepository<TEntity> : IRepositoryAdd<TEntity>, IRepositoryGet<TEntity>, IRepositoryUpdate<TEntity>, IRepositoryDelete<TEntity>
         where TEntity : class, IIdentifiable
     {
     }

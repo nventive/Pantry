@@ -32,6 +32,7 @@ namespace Pantry.Continuation
         /// <typeparam name="T">The continuation token decoded type.</typeparam>
         /// <param name="continuationToken">The encoded continuation token.</param>
         /// <returns>The decoded continuation token, or default if no continuation token,.</returns>
+        /// <exception cref="BadInputException">When the token is malformed.</exception>
         public static T? FromContinuationToken<T>(string? continuationToken)
             where T : class
         {
@@ -48,7 +49,7 @@ namespace Pantry.Continuation
             {
                 if (ex is FormatException || ex is JsonException)
                 {
-                    throw new PantryException($"Malformed continuation token {continuationToken}", ex);
+                    throw new BadInputException($"Malformed continuation token {continuationToken}", ex);
                 }
 
                 throw;

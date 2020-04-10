@@ -20,10 +20,10 @@ namespace Pantry.DependencyInjection
         /// <param name="services">The <see cref="IServiceCollection"/>.</param>
         /// <param name="lifetime">The <see cref="ServiceLifetime"/>.</param>
         /// <returns>The updated <see cref="IServiceCollection"/>.</returns>
-        public static IServiceCollection TryRegisterAsSelfAndAllInterfaces<T>(
+        public static IServiceCollection TryAddAsSelfAndAllInterfaces<T>(
             this IServiceCollection services,
             ServiceLifetime lifetime = ServiceLifetime.Transient)
-            => services.TryRegisterAsSelfAndAllInterfaces(typeof(T), lifetime);
+            => services.TryAddAsSelfAndAllInterfaces(typeof(T), lifetime);
 
         /// <summary>
         /// Tries to register <paramref name="implementationType"/> as self and all its interfaces.
@@ -32,7 +32,7 @@ namespace Pantry.DependencyInjection
         /// <param name="implementationType">The implementation type to register.</param>
         /// <param name="lifetime">The <see cref="ServiceLifetime"/>.</param>
         /// <returns>The updated <see cref="IServiceCollection"/>.</returns>
-        public static IServiceCollection TryRegisterAsSelfAndAllInterfaces(
+        public static IServiceCollection TryAddAsSelfAndAllInterfaces(
             this IServiceCollection services,
             Type implementationType,
             ServiceLifetime lifetime = ServiceLifetime.Transient)

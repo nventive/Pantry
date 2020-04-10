@@ -8,7 +8,7 @@ namespace Pantry.Traits
     /// Update Repository Methods.
     /// </summary>
     /// <typeparam name="TEntity">The entity type.</typeparam>
-    public interface ICanUpdate<TEntity>
+    public interface IRepositoryUpdate<TEntity>
         where TEntity : IIdentifiable
     {
         /// <summary>

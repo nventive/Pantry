@@ -8,7 +8,9 @@ namespace Pantry.Traits
     /// <summary>
     /// Find Repository Methods.
     /// </summary>
-    public interface ICanQuery
+    /// <typeparam name="TEntity">The entity type.</typeparam>
+    public interface IRepositoryFind<TEntity>
+        where TEntity : IIdentifiable
     {
         /// <summary>
         /// Find <typeparamref name="TResult"/> elements using the <paramref name="query"/>.

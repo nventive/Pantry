@@ -42,7 +42,7 @@ namespace Microsoft.Extensions.DependencyInjection
             services.TryAddSingleton<IQueryHandlerExecutor<TEntity, IAzureTableStorageQueryHandler>, ServiceProviderQueryHandlerExecutor<TEntity, IAzureTableStorageQueryHandler>>();
             services.AddQueryHandler<AzureTableStorageAllQueryHandler<TEntity>, IAzureTableStorageQueryHandler>();
             services.AddQueryHandler<AzureTableStorageMirrorQueryHandler<TEntity>, IAzureTableStorageQueryHandler>();
-            services.TryRegisterAsSelfAndAllInterfaces<TRepository>();
+            services.TryAddAsSelfAndAllInterfaces<TRepository>();
 
             return new AzureTableStorageRepositoryBuilder<TEntity>(services);
         }

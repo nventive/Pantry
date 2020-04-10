@@ -24,9 +24,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pantry.Azure.TableStorage.T
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pantry", "Pantry\Pantry.csproj", "{37AA25A5-D0C7-4CCD-A439-2F5FF96A4CED}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pantry.InMemory", "Pantry.InMemory\Pantry.InMemory.csproj", "{FCEDCC43-AFE0-415F-B330-7036132581D7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pantry.InMemory", "Pantry.InMemory\Pantry.InMemory.csproj", "{FCEDCC43-AFE0-415F-B330-7036132581D7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pantry.InMemory.Tests", "Pantry.InMemory.Tests\Pantry.InMemory.Tests.csproj", "{FFEDA73E-C8E3-458E-AF89-892654E15A84}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pantry.InMemory.Tests", "Pantry.InMemory.Tests\Pantry.InMemory.Tests.csproj", "{FFEDA73E-C8E3-458E-AF89-892654E15A84}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pantry.Tests", "Pantry.Tests\Pantry.Tests.csproj", "{9FC6CE8C-2AED-4753-8865-545C6F118F1F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -58,6 +60,10 @@ Global
 		{FFEDA73E-C8E3-458E-AF89-892654E15A84}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FFEDA73E-C8E3-458E-AF89-892654E15A84}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FFEDA73E-C8E3-458E-AF89-892654E15A84}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9FC6CE8C-2AED-4753-8865-545C6F118F1F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9FC6CE8C-2AED-4753-8865-545C6F118F1F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9FC6CE8C-2AED-4753-8865-545C6F118F1F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9FC6CE8C-2AED-4753-8865-545C6F118F1F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

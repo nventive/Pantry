@@ -80,7 +80,7 @@ namespace Pantry.InMemory.Tests
         public async Task ItShouldThrowOnAddConflicts()
         {
             var entity = TestEntityGenerator.Generate();
-            var repository = ServiceProvider.GetRequiredService<ICanAdd<TestEntity>>();
+            var repository = ServiceProvider.GetRequiredService<IRepositoryAdd<TestEntity>>();
 
             entity = await repository.AddAsync(entity);
 

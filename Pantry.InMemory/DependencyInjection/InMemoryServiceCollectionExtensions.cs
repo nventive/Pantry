@@ -43,7 +43,7 @@ namespace Microsoft.Extensions.DependencyInjection
             services.AddQueryHandler<ConcurrentDictionaryMirrorQueryHandler<TEntity>, IConcurrentDictionaryQueryHandler>();
 
             services.AddSingleton<ConcurrentDictionary<string, TEntity>>();
-            services.TryRegisterAsSelfAndAllInterfaces<TRepository>();
+            services.TryAddAsSelfAndAllInterfaces<TRepository>();
 
             return new RepositoryBuilder(services, typeof(TEntity));
         }

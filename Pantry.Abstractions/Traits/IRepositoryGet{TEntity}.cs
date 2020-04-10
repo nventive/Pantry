@@ -10,7 +10,7 @@ namespace Pantry.Traits
     /// Get Repository Methods.
     /// </summary>
     /// <typeparam name="TEntity">The entity type.</typeparam>
-    public interface ICanGet<TEntity>
+    public interface IRepositoryGet<TEntity>
         where TEntity : class, IIdentifiable
     {
         /// <summary>

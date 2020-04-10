@@ -9,7 +9,7 @@ namespace Pantry.Traits
     /// Delete Repository Methods.
     /// </summary>
     /// <typeparam name="TEntity">The entity type.</typeparam>
-    public interface ICanDelete<TEntity>
+    public interface IRepositoryDelete<TEntity>
         where TEntity : IIdentifiable
     {
         /// <summary>

@@ -8,7 +8,7 @@ namespace Pantry.Traits
     /// Add Repository Methods.
     /// </summary>
     /// <typeparam name="TEntity">The entity type.</typeparam>
-    public interface ICanAdd<TEntity>
+    public interface IRepositoryAdd<TEntity>
         where TEntity : IIdentifiable
     {
         /// <summary>
