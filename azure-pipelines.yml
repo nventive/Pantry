@@ -6,7 +6,7 @@ variables:
   buildConfiguration: 'Release'
 
 steps:
-- task: GitVersion@5
+- task: GitVersion@4
   displayName: Git Version
   inputs:
     updateAssemblyInfo: false
