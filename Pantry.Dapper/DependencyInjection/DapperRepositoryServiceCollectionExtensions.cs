@@ -15,8 +15,8 @@ namespace Microsoft.Extensions.DependencyInjection
         /// </summary>
         /// <typeparam name="TEntity">The entity type.</typeparam>
         /// <param name="services">The <see cref="IServiceCollection"/>.</param>
-        /// <returns>The <see cref="IDapperRepositoryBuilder"/>.</returns>
-        public static IDapperRepositoryBuilder AddDapperRepository<TEntity>(this IServiceCollection services)
+        /// <returns>The <see cref="IDapperRepositoryBuilder{TEntity}"/>.</returns>
+        public static IDapperRepositoryBuilder<TEntity> AddDapperRepository<TEntity>(this IServiceCollection services)
             where TEntity : class, IIdentifiable, new()
             => services.AddDapperRepository<TEntity, DapperRepository<TEntity>>();
 
@@ -26,16 +26,18 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <typeparam name="TEntity">The entity type.</typeparam>
         /// <typeparam name="TRepository">The repository type.</typeparam>
         /// <param name="services">The <see cref="IServiceCollection"/>.</param>
-        /// <returns>The <see cref="IDapperRepositoryBuilder"/>.</returns>
-        public static IDapperRepositoryBuilder AddDapperRepository<TEntity, TRepository>(this IServiceCollection services)
+        /// <returns>The <see cref="IDapperRepositoryBuilder{TEntity}"/>.</returns>
+        public static IDapperRepositoryBuilder<TEntity> AddDapperRepository<TEntity, TRepository>(this IServiceCollection services)
             where TEntity : class, IIdentifiable, new()
             where TRepository : DapperRepository<TEntity>
         {
             services.TryAddIdGeneratorFor<TEntity>();
+            services.TryAddETagGeneratorFor<TEntity>();
+            services.TryAddTimestampProvider();
 
             services.TryAddAsSelfAndAllInterfaces<TRepository>();
 
-            return new DapperRepositoryBuilder(services, typeof(TEntity));
+            return new DapperRepositoryBuilder<TEntity>(services);
         }
     }
 }
