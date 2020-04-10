@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Pantry.Continuation;
 using Pantry.Exceptions;
-using Pantry.InMemory.Queries;
 using Pantry.Logging;
 using Pantry.Queries;
 
@@ -25,19 +26,19 @@ namespace Pantry.InMemory
         /// <param name="storage">The storage.</param>
         /// <param name="idGenerator">The <see cref="IIdGenerator{T}"/>.</param>
         /// <param name="etagGenerator">The <see cref="IETagGenerator{T}"/>.</param>
-        /// <param name="queryHandlerExecutor">The query handler executor.</param>
+        /// <param name="continuationTokenEncoder">The <see cref="IContinuationTokenEncoder{TContinuationToken}"/>.</param>
         /// <param name="logger">The <see cref="ILogger"/>.</param>
         public ConcurrentDictionaryRepository(
             ConcurrentDictionary<string, TEntity> storage,
             IIdGenerator<TEntity> idGenerator,
             IETagGenerator<TEntity> etagGenerator,
-            IQueryHandlerExecutor<TEntity, IConcurrentDictionaryQueryHandler> queryHandlerExecutor,
+            IContinuationTokenEncoder<LimitOffsetContinuationToken> continuationTokenEncoder,
             ILogger<ConcurrentDictionaryRepository<TEntity>>? logger = null)
         {
             Storage = storage;
             IdGenerator = idGenerator ?? throw new ArgumentNullException(nameof(idGenerator));
             EtagGenerator = etagGenerator ?? throw new ArgumentNullException(nameof(etagGenerator));
-            QueryHandlerExecutor = queryHandlerExecutor;
+            ContinuationTokenEncoder = continuationTokenEncoder ?? throw new ArgumentNullException(nameof(continuationTokenEncoder));
             Logger = logger ?? NullLogger<ConcurrentDictionaryRepository<TEntity>>.Instance;
         }
 
@@ -57,9 +58,9 @@ namespace Pantry.InMemory
         protected IETagGenerator<TEntity> EtagGenerator { get; }
 
         /// <summary>
-        /// Gets the <see cref="IQueryHandlerExecutor{TEntity, IConcurrentDictionaryQueryHandler}"/>.
+        /// Gets the <see cref="IContinuationTokenEncoder{LimitOffsetContinuationToken}"/>.
         /// </summary>
-        protected IQueryHandlerExecutor<TEntity, IConcurrentDictionaryQueryHandler> QueryHandlerExecutor { get; }
+        protected IContinuationTokenEncoder<LimitOffsetContinuationToken> ContinuationTokenEncoder { get; }
 
         /// <summary>
         /// Gets the <see cref="ILogger"/>.
@@ -202,14 +203,14 @@ namespace Pantry.InMemory
         }
 
         /// <inheritdoc/>
-        public virtual Task<IContinuationEnumerable<TResult>> FindAsync<TResult>(IQuery<TResult> query, CancellationToken cancellationToken = default)
+        public async Task<IContinuationEnumerable<TEntity>> FindAllAsync(string? continuationToken, int limit = Query.DefaultLimit, CancellationToken cancellationToken = default)
         {
-            if (query is null)
-            {
-                throw new ArgumentNullException(nameof(query));
-            }
-
-            return QueryHandlerExecutor.ExecuteAsync<TResult, IQuery<TResult>>(query);
+            var result = await ContinuationTokenEncoder.ToContinuationEnumerable(
+                Storage.Values,
+                continuationToken,
+                limit);
+            Logger.LogFind($"(ct: {continuationToken ?? "<no-ct>"}, limit: {limit})", result);
+            return result;
         }
     }
 }

@@ -6,8 +6,8 @@
     public static class Query
     {
         /// <summary>
-        /// Gets the default limit to apply when none provided.
+        /// Gets the default query limit to apply when none provided.
         /// </summary>
-        public static readonly int DefaultLimit = 50;
+        public const int DefaultLimit = 50;
     }
 }

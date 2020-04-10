@@ -1,10 +1,10 @@
 ﻿using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.Cosmos.Table;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using Pantry.Azure.TableStorage.Queries;
 using Pantry.Continuation;
 using Pantry.Exceptions;
 using Pantry.Logging;
@@ -26,7 +26,7 @@ namespace Pantry.Azure.TableStorage
         /// <param name="cloudTableFor">The <see cref="CloudTableFor{T}"/> instance to use.</param>
         /// <param name="idGenerator">The <see cref="IIdGenerator{T}"/>.</param>
         /// <param name="tableEntityMapper">The mapper to <see cref="ITableEntity"/>.</param>
-        /// <param name="queryHandlerExecutor">The query handler executor.</param>
+        /// <param name="continuationTokenEncoder">The <see cref="IContinuationTokenEncoder{TableContinuationToken}"/>.</param>
         /// <param name="keysResolver">The <see cref="IAzureTableStorageKeysResolver{T}"/> to use.</param>
         /// <param name="logger">The <see cref="ILogger"/>.</param>
         public AzureTableStorageRepository(
@@ -34,14 +34,14 @@ namespace Pantry.Azure.TableStorage
             IIdGenerator<TEntity> idGenerator,
             IAzureTableStorageKeysResolver<TEntity> keysResolver,
             IMapper<TEntity, DynamicTableEntity> tableEntityMapper,
-            IQueryHandlerExecutor<TEntity, IAzureTableStorageQueryHandler> queryHandlerExecutor,
+            IContinuationTokenEncoder<TableContinuationToken> continuationTokenEncoder,
             ILogger<AzureTableStorageRepository<TEntity>>? logger = null)
         {
             CloudTableFor = cloudTableFor ?? throw new ArgumentNullException(nameof(cloudTableFor));
             IdGenerator = idGenerator ?? throw new ArgumentNullException(nameof(idGenerator));
             KeysResolver = keysResolver ?? throw new ArgumentNullException(nameof(keysResolver));
             TableEntityMapper = tableEntityMapper ?? throw new ArgumentNullException(nameof(tableEntityMapper));
-            QueryHandlerExecutor = queryHandlerExecutor ?? throw new ArgumentNullException(nameof(queryHandlerExecutor));
+            ContinuationTokenEncoder = continuationTokenEncoder ?? throw new ArgumentNullException(nameof(continuationTokenEncoder));
             Logger = logger ?? NullLogger<AzureTableStorageRepository<TEntity>>.Instance;
         }
 
@@ -66,9 +66,9 @@ namespace Pantry.Azure.TableStorage
         protected IMapper<TEntity, DynamicTableEntity> TableEntityMapper { get; }
 
         /// <summary>
-        /// Gets the <see cref="IQueryHandlerExecutor{TEntity, IAzureTableStorageQueryHandler}"/>.
+        /// Gets the <see cref="IContinuationTokenEncoder{TableContinuationToken}"/>.
         /// </summary>
-        protected IQueryHandlerExecutor<TEntity, IAzureTableStorageQueryHandler> QueryHandlerExecutor { get; }
+        protected IContinuationTokenEncoder<TableContinuationToken> ContinuationTokenEncoder { get; }
 
         /// <summary>
         /// Gets the <see cref="ILogger"/>.
@@ -232,14 +232,54 @@ namespace Pantry.Azure.TableStorage
         }
 
         /// <inheritdoc/>
-        public virtual Task<IContinuationEnumerable<TResult>> FindAsync<TResult>(IQuery<TResult> query, CancellationToken cancellationToken = default)
+        public Task<IContinuationEnumerable<TEntity>> FindAllAsync(string? continuationToken, int limit = Query.DefaultLimit, CancellationToken cancellationToken = default)
+        {
+            return PrepareQueryAndExecuteAsync(
+                new FindAllQuery<TEntity> { ContinuationToken = continuationToken, Limit = limit },
+                _ => { },
+                cancellationToken);
+        }
+
+        /// <summary>
+        /// Prepares a <see cref="TableQuery{DynamicTableEntity}"/> for execution,
+        /// allows its customization trough <paramref name="apply"/>, and then
+        /// executes it and map out the result.
+        /// </summary>
+        /// <param name="query">The original query.</param>
+        /// <param name="apply">Applies customization to the table query.</param>
+        /// <param name="cancellationToken">the <see cref="CancellationToken"/>.</param>
+        /// <returns>The mapped out results.</returns>
+        protected virtual async Task<IContinuationEnumerable<TEntity>> PrepareQueryAndExecuteAsync(
+            IQuery<TEntity> query,
+            Action<TableQuery<DynamicTableEntity>> apply,
+            CancellationToken cancellationToken)
         {
             if (query is null)
             {
                 throw new ArgumentNullException(nameof(query));
             }
 
-            return QueryHandlerExecutor.ExecuteAsync<TResult, IQuery<TResult>>(query);
+            if (apply is null)
+            {
+                throw new ArgumentNullException(nameof(apply));
+            }
+
+            var tableQuery = new TableQuery<DynamicTableEntity>();
+            tableQuery.Take(query.Limit);
+            apply(tableQuery);
+
+            var operationResult = await CloudTableFor.CloudTable.ExecuteQuerySegmentedAsync(
+                tableQuery,
+                await ContinuationTokenEncoder.Decode(query.ContinuationToken),
+                cancellationToken).ConfigureAwait(false);
+
+            var result = operationResult.Results
+                .Select(x => TableEntityMapper.MapToSource(x))
+                .ToContinuationEnumerable(await ContinuationTokenEncoder.Encode(operationResult.ContinuationToken));
+
+            Logger.LogFind(query, result);
+
+            return result;
         }
     }
 }

@@ -60,6 +60,12 @@ namespace Pantry.Logging
                 new EventId(EventIdWarningBase + 5, "PantryDeletedWarning"),
                 "{Method}() = {EntityType}.{EntityId} {Entity} {Warning}");
 
+        private static readonly Action<ILogger, string?, object?, object?, Exception?> _logFind =
+            LoggerMessage.Define<string?, object?, object?>(
+                LogLevel.Trace,
+                new EventId(EventIdBase + 6, "PantryFind"),
+                "{Method}() = {Query} {Result}");
+
         /// <summary>
         /// Logs a mapping operation.
         /// </summary>
@@ -268,6 +274,27 @@ namespace Pantry.Logging
                 entity,
                 warning,
                 exception);
+        }
+
+        /// <summary>
+        /// Logs a Find operation.
+        /// </summary>
+        /// <param name="logger">The <see cref="ILogger"/>.</param>
+        /// <param name="query">The query.</param>
+        /// <param name="result">The result.</param>
+        /// <param name="methodName">The method name, taken from <see cref="CallerMemberNameAttribute"/>.</param>
+        public static void LogFind(
+            this ILogger logger,
+            object? query,
+            object? result,
+            [CallerMemberName] string? methodName = null)
+        {
+            _logFind(
+                logger,
+                methodName,
+                query,
+                result,
+                null);
         }
     }
 }

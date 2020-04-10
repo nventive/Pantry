@@ -1,14 +1,8 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Text;
-using Microsoft.Extensions.DependencyInjection.Extensions;
+﻿using System.Collections.Concurrent;
 using Pantry;
 using Pantry.Continuation;
 using Pantry.DependencyInjection;
 using Pantry.InMemory;
-using Pantry.InMemory.Queries;
-using Pantry.Queries;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -39,10 +33,7 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             services.TryAddIdGeneratorFor<TEntity>();
             services.TryAddETagGeneratorFor<TEntity>();
-            services.TryAddSingleton<IContinuationTokenEncoder<LimitOffsetContinuationToken>, Base64JsonContinuationTokenEncoder<LimitOffsetContinuationToken>>();
-
-            services.TryAddSingleton<IQueryHandlerExecutor<TEntity, IConcurrentDictionaryQueryHandler>, ServiceProviderQueryHandlerExecutor<TEntity, IConcurrentDictionaryQueryHandler>>();
-            services.AddQueryHandler<ConcurrentDictionaryAllQueryHandler<TEntity>, IConcurrentDictionaryQueryHandler>();
+            services.TryAddContinuationTokenEncoderFor<LimitOffsetContinuationToken>();
 
             services.AddSingleton<ConcurrentDictionary<string, TEntity>>();
             services.TryAddAsSelfAndAllInterfaces<TRepository>();

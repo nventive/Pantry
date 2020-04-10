@@ -12,18 +12,19 @@ namespace Pantry.Continuation
     public static class ContinuationTokenEncoderExtensions
     {
         /// <summary>
-        /// Gets a <see cref="IContinuationEnumerable{T}"/> from <paramref name="values"/>,
-        /// limited by the parameters set in <paramref name="query"/>.
+        /// Gets a <see cref="IContinuationEnumerable{T}"/> from <paramref name="values"/>.
         /// </summary>
         /// <typeparam name="TEntity">The entity type.</typeparam>
         /// <param name="encoder">The continuation token encoder.</param>
         /// <param name="values">The full list of values.</param>
-        /// <param name="query">The query to determine skip/take in the enumerable.</param>
+        /// <param name="continuationToken">The continuation token previously produced by the SAME encoder.</param>
+        /// <param name="limit">The limit.</param>
         /// <returns>The <see cref="IContinuationEnumerable{T}"/>.</returns>
         public static async ValueTask<IContinuationEnumerable<TEntity>> ToContinuationEnumerable<TEntity>(
             this IContinuationTokenEncoder<LimitOffsetContinuationToken> encoder,
             IEnumerable<TEntity> values,
-            IQuery<TEntity> query)
+            string? continuationToken,
+            int limit = Query.DefaultLimit)
         {
             if (encoder is null)
             {
@@ -35,12 +36,7 @@ namespace Pantry.Continuation
                 throw new ArgumentNullException(nameof(values));
             }
 
-            if (query is null)
-            {
-                throw new ArgumentNullException(nameof(query));
-            }
-
-            var pagination = (await encoder.Decode(query.ContinuationToken)) ?? new LimitOffsetContinuationToken { Limit = query.Limit };
+            var pagination = (await encoder.Decode(continuationToken)) ?? new LimitOffsetContinuationToken { Limit = limit };
 
             var paginatedResults = values
                 .Select(x => new

@@ -9,16 +9,17 @@ namespace Pantry.Traits
     /// Find Repository Methods.
     /// </summary>
     /// <typeparam name="TEntity">The entity type.</typeparam>
-    public interface IRepositoryFind<TEntity>
-        where TEntity : IIdentifiable
+    /// <typeparam name="TResult">The query return type.</typeparam>
+    /// <typeparam name="TQuery">The query type.</typeparam>
+    public interface IRepositoryFind<TEntity, TResult, TQuery>
+        where TQuery : IQuery<TEntity, TResult>
     {
         /// <summary>
         /// Find <typeparamref name="TResult"/> elements using the <paramref name="query"/>.
         /// </summary>
-        /// <typeparam name="TResult">The elements return types.</typeparam>
         /// <param name="query">The query to use.</param>
         /// <param name="cancellationToken">The <see cref="CancellationToken"/>.</param>
         /// <returns>The results.</returns>
-        Task<IContinuationEnumerable<TResult>> FindAsync<TResult>(IQuery<TResult> query, CancellationToken cancellationToken = default);
+        Task<IContinuationEnumerable<TResult>> FindAsync(TQuery query, CancellationToken cancellationToken = default);
     }
 }

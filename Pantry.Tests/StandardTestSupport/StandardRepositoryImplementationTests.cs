@@ -7,7 +7,7 @@ namespace Pantry.Tests.StandardTestSupport
     /// <summary>
     /// Base class for standard test suit that repository implementation can use & follow.
     /// </summary>
-    public abstract class StandardRepositoryImplementationTests : StandardRepositoryImplementationTests<StandardEntity, AllQueryStandardEntity>
+    public abstract class StandardRepositoryImplementationTests : StandardRepositoryImplementationTests<StandardEntity>
     {
         public StandardRepositoryImplementationTests(ITestOutputHelper outputHelper)
             : base(outputHelper)

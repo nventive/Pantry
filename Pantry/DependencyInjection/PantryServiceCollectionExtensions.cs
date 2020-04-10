@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Pantry.Continuation;
 using Pantry.Generators;
-using Pantry.Queries;
 
 namespace Pantry.DependencyInjection
 {
@@ -53,41 +51,6 @@ namespace Pantry.DependencyInjection
         }
 
         /// <summary>
-        /// Adds <typeparamref name="T"/> as a query handler. The lifetime is <see cref="ServiceLifetime.Transient"/>.
-        /// </summary>
-        /// <typeparam name="T">The query handler type.</typeparam>
-        /// <typeparam name="TQueryHandlerBaseType">The base handler type to register with.</typeparam>
-        /// <param name="services">The <see cref="IServiceCollection"/>.</param>
-        /// <returns>The updated <see cref="IServiceCollection"/>.</returns>
-        public static IServiceCollection AddQueryHandler<T, TQueryHandlerBaseType>(this IServiceCollection services)
-            => services.AddQueryHandler<TQueryHandlerBaseType>(typeof(T));
-
-        /// <summary>
-        /// Adds <paramref name="queryHandlerType"/> as a query handler. The lifetime is <see cref="ServiceLifetime.Transient"/>.
-        /// </summary>
-        /// <typeparam name="TQueryHandlerBaseType">The base handler type to register with.</typeparam>
-        /// <param name="services">The <see cref="IServiceCollection"/>.</param>
-        /// <param name="queryHandlerType">The query handler type.</param>
-        /// <returns>The updated <see cref="IServiceCollection"/>.</returns>
-        public static IServiceCollection AddQueryHandler<TQueryHandlerBaseType>(this IServiceCollection services, Type queryHandlerType)
-        {
-            if (services is null)
-            {
-                throw new ArgumentNullException(nameof(services));
-            }
-
-            if (queryHandlerType is null)
-            {
-                throw new ArgumentNullException(nameof(queryHandlerType));
-            }
-
-            services.Add(new ServiceDescriptor(queryHandlerType, queryHandlerType, ServiceLifetime.Transient));
-            services.TryAddEnumerable(new ServiceDescriptor(typeof(TQueryHandlerBaseType), queryHandlerType, ServiceLifetime.Transient));
-
-            return services;
-        }
-
-        /// <summary>
         /// Tries to add an <see cref="IIdGenerator{TEntity}"/>.
         /// </summary>
         /// <typeparam name="TEntity">The entity type.</typeparam>
@@ -121,6 +84,25 @@ namespace Pantry.DependencyInjection
             }
 
             services.TryAddSingleton<IETagGenerator<TEntity>, SHA1ETagGenerator<TEntity>>();
+
+            return services;
+        }
+
+        /// <summary>
+        /// Tries to add an <see cref="IContinuationTokenEncoder{TContinuationToken}"/>.
+        /// </summary>
+        /// <typeparam name="TContinuationToken">The continuation token type.</typeparam>
+        /// <param name="services">The <see cref="IServiceCollection"/>.</param>
+        /// <returns>The updated <see cref="IServiceCollection"/>.</returns>
+        public static IServiceCollection TryAddContinuationTokenEncoderFor<TContinuationToken>(this IServiceCollection services)
+            where TContinuationToken : class
+        {
+            if (services is null)
+            {
+                throw new ArgumentNullException(nameof(services));
+            }
+
+            services.TryAddSingleton<IContinuationTokenEncoder<TContinuationToken>, Base64JsonContinuationTokenEncoder<TContinuationToken>>();
 
             return services;
         }

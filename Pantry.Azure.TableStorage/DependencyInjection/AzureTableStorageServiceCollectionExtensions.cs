@@ -3,11 +3,8 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Pantry;
 using Pantry.Azure.TableStorage;
 using Pantry.Azure.TableStorage.DependencyInjection;
-using Pantry.Azure.TableStorage.Queries;
-using Pantry.Continuation;
 using Pantry.DependencyInjection;
 using Pantry.Mapping;
-using Pantry.Queries;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -37,12 +34,10 @@ namespace Microsoft.Extensions.DependencyInjection
             where TEntity : class, IIdentifiable, new()
         {
             services.TryAddIdGeneratorFor<TEntity>();
+            services.TryAddContinuationTokenEncoderFor<TableContinuationToken>();
             services.TryAddSingleton<IAzureTableStorageKeysResolver<TEntity>, AzureTableStorageKeysResolver<TEntity>>();
             services.TryAddSingleton<IMapper<TEntity, DynamicTableEntity>, DynamicTableEntityMapper<TEntity>>();
-            services.TryAddSingleton<IContinuationTokenEncoder<TableContinuationToken>, Base64JsonContinuationTokenEncoder<TableContinuationToken>>();
 
-            services.TryAddSingleton<IQueryHandlerExecutor<TEntity, IAzureTableStorageQueryHandler>, ServiceProviderQueryHandlerExecutor<TEntity, IAzureTableStorageQueryHandler>>();
-            services.AddQueryHandler<AzureTableStorageAllQueryHandler<TEntity>, IAzureTableStorageQueryHandler>();
             services.TryAddAsSelfAndAllInterfaces<TRepository>();
 
             return new AzureTableStorageRepositoryBuilder<TEntity>(services);

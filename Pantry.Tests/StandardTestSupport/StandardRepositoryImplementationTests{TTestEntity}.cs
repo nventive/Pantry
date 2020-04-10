@@ -9,7 +9,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Pantry.Exceptions;
-using Pantry.Queries;
 using Pantry.Traits;
 using Xunit;
 using Xunit.Abstractions;
@@ -20,10 +19,8 @@ namespace Pantry.Tests.StandardTestSupport
     /// Base class for standard test suit that repository implementation can use & follow.
     /// </summary>
     /// <typeparam name="TTestEntity">The type of test entities to use.</typeparam>
-    /// <typeparam name="TAllQuery">The type of <see cref="AllQuery{TTestEntity}"/> to use.</typeparam>
-    public abstract class StandardRepositoryImplementationTests<TTestEntity, TAllQuery>
+    public abstract class StandardRepositoryImplementationTests<TTestEntity>
         where TTestEntity : class, IIdentifiable, IETaggable, new()
-        where TAllQuery : AllQuery<TTestEntity>, new()
     {
         private readonly Lazy<IHost> _lazyHost;
 
@@ -126,7 +123,7 @@ namespace Pantry.Tests.StandardTestSupport
         }
 
         [Fact]
-        public virtual async Task ItShouldQueryAll()
+        public virtual async Task ItShouldFindAll()
         {
             var repository = ServiceProvider.GetRequiredService<IRepository<TTestEntity>>();
             var entities = TestEntityGenerator.Generate(10);
@@ -135,23 +132,12 @@ namespace Pantry.Tests.StandardTestSupport
                 await repository.AddAsync(entity);
             }
 
-            var query = new TAllQuery
-            {
-                Limit = 3,
-            };
-            var result = await repository.FindAsync(query);
-            result.Should().HaveCount(3);
+            var result = await repository.FindAllAsync(null, 5);
+            result.Should().HaveCount(5);
             result.ContinuationToken.Should().NotBeNullOrEmpty();
 
-            query = new TAllQuery
-            {
-                Limit = 3,
-                ContinuationToken = result.ContinuationToken,
-            };
-            var secondResult = await repository.FindAsync(query);
-            secondResult.Should().HaveCount(3);
-            secondResult.ContinuationToken.Should().NotBeNullOrEmpty();
-
+            var secondResult = await repository.FindAllAsync(result.ContinuationToken, 5);
+            secondResult.Should().HaveCount(5);
             secondResult.First().Id.Should().NotBe(result.First().Id);
         }
 
