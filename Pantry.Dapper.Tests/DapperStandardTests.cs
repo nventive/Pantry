@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using System.Data.SQLite;
+using System.Data.SqlClient;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Pantry.Tests.StandardTestSupport;
@@ -20,13 +20,13 @@ namespace Pantry.Dapper.Tests
         {
             services
                 .AddDapperRepository<TEntity>()
-                .WithConnectionStringNamed(SQLiteFactory.Instance, DapperConnectionString);
+                .WithConnectionStringNamed(SqlClientFactory.Instance, DapperConnectionString);
         }
 
         protected override IEnumerable<KeyValuePair<string, string>> AdditionalConfigurationValues()
             => new Dictionary<string, string>
             {
-                { $"ConnectionStrings:{DapperConnectionString}", "Data Source=:memory:;Version=3;New=True;" },
+                { $"ConnectionStrings:{DapperConnectionString}", "Data Source=(LocalDb)\\MSSQLLocalDB;Initial Catalog=PantryDapper;" },
             };
     }
 }
