@@ -1,6 +1,5 @@
 ﻿using System.Collections.Concurrent;
-using System.Threading;
-using System.Threading.Tasks;
+using System.Collections.Generic;
 using Pantry.Continuation;
 using Pantry.Queries;
 
@@ -17,14 +16,15 @@ namespace Pantry.InMemory.Queries
         /// Initializes a new instance of the <see cref="ConcurrentDictionaryAllQueryHandler{TEntity}"/> class.
         /// </summary>
         /// <param name="storage">The storage.</param>
+        /// <param name="tokenEncoder">The continuation token encoder.</param>
         public ConcurrentDictionaryAllQueryHandler(
-            ConcurrentDictionary<string, TEntity> storage)
-            : base(storage)
+            ConcurrentDictionary<string, TEntity> storage,
+            IContinuationTokenEncoder<LimitOffsetContinuationToken> tokenEncoder)
+            : base(storage, tokenEncoder)
         {
         }
 
         /// <inheritdoc/>
-        public override async Task<IContinuationEnumerable<TEntity>> ExecuteAsync(AllQuery<TEntity> query, CancellationToken cancellationToken = default)
-            => Storage.Values.ToContinuationEnumerable(query);
+        protected override IEnumerable<TEntity> GetFilteredEnumeration(AllQuery<TEntity> query) => Storage.Values;
     }
 }

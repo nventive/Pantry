@@ -24,12 +24,15 @@ namespace Pantry.Azure.TableStorage.Queries
         /// </summary>
         /// <param name="cloudTableFor">The <see cref="CloudTableFor{T}"/>.</param>
         /// <param name="tableEntityMapper">The <see cref="IMapper{TSource, TDestination}"/>.</param>
+        /// <param name="tokenEncoder">The continuation token encoder.</param>
         protected AzureTableStorageQueryHandler(
             CloudTableFor<TEntity> cloudTableFor,
-            IMapper<TEntity, DynamicTableEntity> tableEntityMapper)
+            IMapper<TEntity, DynamicTableEntity> tableEntityMapper,
+            IContinuationTokenEncoder<TableContinuationToken> tokenEncoder)
         {
             CloudTableFor = cloudTableFor ?? throw new ArgumentNullException(nameof(cloudTableFor));
             TableEntityMapper = tableEntityMapper ?? throw new ArgumentNullException(nameof(tableEntityMapper));
+            TokenEncoder = tokenEncoder ?? throw new ArgumentNullException(nameof(tokenEncoder));
         }
 
         /// <summary>
@@ -41,6 +44,11 @@ namespace Pantry.Azure.TableStorage.Queries
         /// Gets the <see cref="IMapper{TSource, TDestination}"/>.
         /// </summary>
         protected IMapper<TEntity, DynamicTableEntity> TableEntityMapper { get; }
+
+        /// <summary>
+        /// Gets the <see cref="IContinuationTokenEncoder{TableContinuationToken}"/>.
+        /// </summary>
+        protected IContinuationTokenEncoder<TableContinuationToken> TokenEncoder { get; }
 
         /// <inheritdoc />
         public virtual async Task<IContinuationEnumerable<TEntity>> ExecuteAsync(
@@ -58,12 +66,12 @@ namespace Pantry.Azure.TableStorage.Queries
 
             var operationResult = await CloudTableFor.CloudTable.ExecuteQuerySegmentedAsync(
                 tableQuery,
-                ContinuationToken.FromContinuationToken<TableContinuationToken>(query.ContinuationToken),
+                await TokenEncoder.Decode(query.ContinuationToken),
                 cancellationToken).ConfigureAwait(false);
 
             var results = operationResult.Results
                 .Select(x => TableEntityMapper.MapToSource(x))
-                .ToContinuationEnumerable(ContinuationToken.ToContinuationToken(operationResult.ContinuationToken));
+                .ToContinuationEnumerable(await TokenEncoder.Encode(operationResult.ContinuationToken));
 
             return results;
         }

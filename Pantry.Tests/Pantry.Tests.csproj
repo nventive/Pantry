@@ -32,8 +32,4 @@
     <ProjectReference Include="..\Pantry\Pantry.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Continuation\" />
-  </ItemGroup>
-
 </Project>

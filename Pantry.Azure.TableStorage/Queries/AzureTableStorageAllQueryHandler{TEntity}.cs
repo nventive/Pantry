@@ -1,4 +1,5 @@
 ﻿using Microsoft.Azure.Cosmos.Table;
+using Pantry.Continuation;
 using Pantry.Mapping;
 using Pantry.Queries;
 
@@ -16,10 +17,12 @@ namespace Pantry.Azure.TableStorage.Queries
         /// </summary>
         /// <param name="cloudTableFor">The <see cref="CloudTableFor{T}"/>.</param>
         /// <param name="tableEntityMapper">The <see cref="IMapper{TSource, TDestination}"/>.</param>
+        /// <param name="tokenEncoder">The continuation token encoder.</param>
         public AzureTableStorageAllQueryHandler(
             CloudTableFor<TEntity> cloudTableFor,
-            IMapper<TEntity, DynamicTableEntity> tableEntityMapper)
-            : base(cloudTableFor, tableEntityMapper)
+            IMapper<TEntity, DynamicTableEntity> tableEntityMapper,
+            IContinuationTokenEncoder<TableContinuationToken> tokenEncoder)
+            : base(cloudTableFor, tableEntityMapper, tokenEncoder)
         {
         }
 

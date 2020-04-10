@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Text;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Pantry;
+using Pantry.Continuation;
 using Pantry.DependencyInjection;
 using Pantry.InMemory;
 using Pantry.InMemory.Queries;
@@ -37,6 +38,7 @@ namespace Microsoft.Extensions.DependencyInjection
             where TEntity : class, IIdentifiable, new()
         {
             services.TryAddSingleton<IIdGenerator<TEntity>, IdGenerator<TEntity>>();
+            services.TryAddSingleton<IContinuationTokenEncoder<LimitOffsetContinuationToken>, Base64JsonContinuationTokenEncoder<LimitOffsetContinuationToken>>();
 
             services.TryAddSingleton<IQueryHandlerExecutor<TEntity, IConcurrentDictionaryQueryHandler>, ServiceProviderQueryHandlerExecutor<TEntity, IConcurrentDictionaryQueryHandler>>();
             services.AddQueryHandler<ConcurrentDictionaryAllQueryHandler<TEntity>, IConcurrentDictionaryQueryHandler>();

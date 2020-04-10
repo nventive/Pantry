@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Pantry.Queries;
 
 namespace Pantry.Continuation
@@ -29,8 +30,12 @@ namespace Pantry.Continuation
         /// <typeparam name="TEntity">The entity type.</typeparam>
         /// <param name="values">The full list of values.</param>
         /// <param name="query">The query to determine skip/take in the enumerable.</param>
+        /// <param name="encoder">The continuation token encoder.</param>
         /// <returns>The <see cref="IContinuationEnumerable{T}"/>.</returns>
-        public static IContinuationEnumerable<TEntity> ToContinuationEnumerable<TEntity>(this IEnumerable<TEntity> values, IQuery<TEntity> query)
+        public static async ValueTask<IContinuationEnumerable<TEntity>> ToContinuationEnumerable<TEntity>(
+            this IEnumerable<TEntity> values,
+            IQuery<TEntity> query,
+            IContinuationTokenEncoder<LimitOffsetContinuationToken> encoder)
         {
             if (values is null)
             {
@@ -42,7 +47,12 @@ namespace Pantry.Continuation
                 throw new ArgumentNullException(nameof(query));
             }
 
-            var pagination = LimitOffsetContinuationToken.FromContinuationQuery(query);
+            if (encoder is null)
+            {
+                throw new ArgumentNullException(nameof(encoder));
+            }
+
+            var pagination = (await encoder.Decode(query.ContinuationToken)) ?? new LimitOffsetContinuationToken { Limit = query.Limit };
 
             var paginatedResults = values
                 .Select(x => new
@@ -59,7 +69,14 @@ namespace Pantry.Continuation
 
             return new ContinuationEnumerable<TEntity>(
                 items,
-                (items.Count + pagination.Offset) < totalCount ? pagination.GetNextPageContinuationToken() : null);
+                (items.Count + pagination.Offset) < totalCount ? await GetNextPageContinuationToken(pagination, encoder) : null);
+        }
+
+        private static ValueTask<string?> GetNextPageContinuationToken(
+            LimitOffsetContinuationToken token,
+            IContinuationTokenEncoder<LimitOffsetContinuationToken> encoder)
+        {
+            return encoder.Encode(new LimitOffsetContinuationToken { Offset = token.Offset + token.Limit, Limit = token.Limit });
         }
     }
 }

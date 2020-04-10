@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Bogus;
 using FluentAssertions;
 using Pantry.Continuation;
@@ -7,15 +8,15 @@ using Xunit;
 
 namespace Pantry.Tests.Continuation
 {
-    public class ContinuationTokenTests
+    public class Base64JsonContinuationTokenEncoderTests
     {
         [Fact]
-        public void ItShouldConvertTokens()
+        public async Task ItShouldConvertTokens()
         {
-            var source = new DeserializedToken { Limit = 50, Page = 2 };
+            var encoder = new Base64JsonContinuationTokenEncoder<TestToken>();
+            var source = new TestToken { Limit = 50, Page = 2 };
 
-            var result = ContinuationToken.FromContinuationToken<DeserializedToken>(
-                ContinuationToken.ToContinuationToken(source));
+            var result = await encoder.Decode(await encoder.Encode(source));
 
             result.Should().BeEquivalentTo(source);
         }
@@ -23,13 +24,14 @@ namespace Pantry.Tests.Continuation
         [Fact]
         public void ItShouldThrowBadInputExceptionOnMalformedTokens()
         {
+            var encoder = new Base64JsonContinuationTokenEncoder<TestToken>();
             var malformedToken = new Faker().Random.Hash();
-            Action act = () => ContinuationToken.FromContinuationToken<DeserializedToken>(malformedToken);
+            Func<Task> act = async () => await encoder.Decode(malformedToken);
 
             act.Should().Throw<BadInputException>().WithMessage($"*{malformedToken}*");
         }
 
-        private class DeserializedToken
+        private class TestToken
         {
             public int Limit { get; set; }
 

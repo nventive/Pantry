@@ -4,6 +4,7 @@ using System.Linq;
 using Microsoft.Azure.Cosmos.Table;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using Pantry.Continuation;
 using Pantry.Mapping;
 using Pantry.Queries;
 
@@ -25,13 +26,15 @@ namespace Pantry.Azure.TableStorage.Queries
         /// <param name="cloudTableFor">The <see cref="CloudTableFor{T}"/>.</param>
         /// <param name="tableEntityMapper">The <see cref="IMapper{TSource, TDestination}"/>.</param>
         /// <param name="keysResolver">The <see cref="IAzureTableStorageKeysResolver{T}"/>.</param>
+        /// <param name="tokenEncoder">The continuation token encoder.</param>
         /// <param name="logger">The <see cref="ILogger"/>.</param>
         public AzureTableStorageMirrorQueryHandler(
             CloudTableFor<TEntity> cloudTableFor,
             IMapper<TEntity, DynamicTableEntity> tableEntityMapper,
             IAzureTableStorageKeysResolver<TEntity> keysResolver,
+            IContinuationTokenEncoder<TableContinuationToken> tokenEncoder,
             ILogger<AzureTableStorageMirrorQueryHandler<TEntity>>? logger = null)
-            : base(cloudTableFor, tableEntityMapper)
+            : base(cloudTableFor, tableEntityMapper, tokenEncoder)
         {
             _keysResolver = keysResolver ?? throw new ArgumentNullException(nameof(keysResolver));
             _logger = logger ?? NullLogger<AzureTableStorageMirrorQueryHandler<TEntity>>.Instance;

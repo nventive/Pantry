@@ -1,4 +1,6 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Pantry.Continuation;
@@ -19,10 +21,13 @@ namespace Pantry.InMemory.Queries
         /// Initializes a new instance of the <see cref="ConcurrentDictionaryQueryHandler{TEntity, TQuery}"/> class.
         /// </summary>
         /// <param name="storage">The storage.</param>
+        /// <param name="tokenEncoder">The continuation token encoder.</param>
         public ConcurrentDictionaryQueryHandler(
-            ConcurrentDictionary<string, TEntity> storage)
+            ConcurrentDictionary<string, TEntity> storage,
+            IContinuationTokenEncoder<LimitOffsetContinuationToken> tokenEncoder)
         {
-            Storage = storage;
+            Storage = storage ?? throw new ArgumentNullException(nameof(storage));
+            TokenEncoder = tokenEncoder ?? throw new ArgumentNullException(nameof(tokenEncoder));
         }
 
         /// <summary>
@@ -30,7 +35,22 @@ namespace Pantry.InMemory.Queries
         /// </summary>
         protected ConcurrentDictionary<string, TEntity> Storage { get; }
 
+        /// <summary>
+        /// Gets the <see cref="IContinuationTokenEncoder{LimitOffsetContinuationToken}"/>.
+        /// </summary>
+        protected IContinuationTokenEncoder<LimitOffsetContinuationToken> TokenEncoder { get; }
+
         /// <inheritdoc/>
-        public abstract Task<IContinuationEnumerable<TEntity>> ExecuteAsync(TQuery query, CancellationToken cancellationToken = default);
+        public virtual async Task<IContinuationEnumerable<TEntity>> ExecuteAsync(TQuery query, CancellationToken cancellationToken = default)
+            => await TokenEncoder.ToContinuationEnumerable(
+                GetFilteredEnumeration(query),
+                query);
+
+        /// <summary>
+        /// Returns the filtered items. from the storage, before pagination.
+        /// </summary>
+        /// <param name="query">The query.</param>
+        /// <returns>The filtered items.</returns>
+        protected abstract IEnumerable<TEntity> GetFilteredEnumeration(TQuery query);
     }
 }

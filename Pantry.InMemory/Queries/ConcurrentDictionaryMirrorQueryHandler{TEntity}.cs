@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using Pantry.Continuation;
 using Pantry.Queries;
 
@@ -19,14 +18,16 @@ namespace Pantry.InMemory.Queries
         /// Initializes a new instance of the <see cref="ConcurrentDictionaryMirrorQueryHandler{TEntity}"/> class.
         /// </summary>
         /// <param name="storage">The storage.</param>
+        /// <param name="tokenEncoder">The continuation token encoder.</param>
         public ConcurrentDictionaryMirrorQueryHandler(
-            ConcurrentDictionary<string, TEntity> storage)
-            : base(storage)
+            ConcurrentDictionary<string, TEntity> storage,
+            IContinuationTokenEncoder<LimitOffsetContinuationToken> tokenEncoder)
+            : base(storage, tokenEncoder)
         {
         }
 
         /// <inheritdoc/>
-        public override async Task<IContinuationEnumerable<TEntity>> ExecuteAsync(MirrorQuery<TEntity> query, CancellationToken cancellationToken = default)
+        protected override IEnumerable<TEntity> GetFilteredEnumeration(MirrorQuery<TEntity> query)
         {
             if (query is null)
             {
@@ -53,7 +54,7 @@ namespace Pantry.InMemory.Queries
                 }
             }
 
-            return enumerable.ToContinuationEnumerable(query);
+            return enumerable;
         }
     }
 }
