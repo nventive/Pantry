@@ -8,11 +8,11 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DocumentationFile>bin\Debug\netstandard2.1\Pantry.InMemory.xml</DocumentationFile>
+    <DocumentationFile>bin\Debug\netstandard2.1\Pantry.Dapper.xml</DocumentationFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DocumentationFile>bin\Release\netstandard2.1\Pantry.InMemory.xml</DocumentationFile>
+    <DocumentationFile>bin\Release\netstandard2.1\Pantry.Dapper.xml</DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>

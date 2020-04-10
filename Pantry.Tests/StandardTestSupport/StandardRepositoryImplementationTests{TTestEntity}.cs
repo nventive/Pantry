@@ -78,9 +78,15 @@ namespace Pantry.Tests.StandardTestSupport
         [SkippableFact(typeof(UnsupportedFeatureException))]
         public virtual async Task ItShouldNotAddWhenNull()
         {
-            Func<Task> act = async () => await Repo.AddAsync(null!);
-
-            act.Should().Throw<ArgumentNullException>();
+            try
+            {
+                await Repo.AddAsync(null!);
+                throw new Exception("Should have thrown another exception before.");
+            }
+            catch (ArgumentNullException)
+            {
+                Assert.True(true);
+            }
         }
 
         [SkippableFact(typeof(UnsupportedFeatureException))]
@@ -164,6 +170,20 @@ namespace Pantry.Tests.StandardTestSupport
             result.Timestamp.Should().NotBeNull();
             result.Should().BeEquivalentTo(updatedEntity, opt => opt.Excluding(x => x.ETag).Excluding(x => x.Timestamp));
             result.Should().NotBeEquivalentTo(existingEntity, opt => opt.Excluding(x => x.ETag).Excluding(x => x.Timestamp));
+        }
+
+        [SkippableFact(typeof(UnsupportedFeatureException))]
+        public virtual async Task ItShouldNotAddOrUpdateWhenNull()
+        {
+            try
+            {
+                await Repo.AddOrUpdateAsync(null!);
+                throw new Exception("Should have thrown another exception before.");
+            }
+            catch (ArgumentNullException)
+            {
+                Assert.True(true);
+            }
         }
 
         [SkippableFact(typeof(UnsupportedFeatureException))]
@@ -289,6 +309,20 @@ namespace Pantry.Tests.StandardTestSupport
         }
 
         [SkippableFact(typeof(UnsupportedFeatureException))]
+        public virtual async Task ItShouldNotExistsWhenNull()
+        {
+            try
+            {
+                await Repo.ExistsAsync(null!);
+                throw new Exception("Should have thrown another exception before.");
+            }
+            catch (ArgumentNullException)
+            {
+                Assert.True(true);
+            }
+        }
+
+        [SkippableFact(typeof(UnsupportedFeatureException))]
         public virtual async Task ItShouldUpdateUnconditionally()
         {
             var existingEntity = TestEntityGenerator.Generate();
@@ -323,6 +357,20 @@ namespace Pantry.Tests.StandardTestSupport
             result.Timestamp.Should().NotBe(existingEntity.Timestamp!.Value);
             result.Should().BeEquivalentTo(updatedEntity, opt => opt.Excluding(x => x.ETag).Excluding(x => x.Timestamp));
             result.Should().NotBeEquivalentTo(existingEntity, opt => opt.Excluding(x => x.ETag).Excluding(x => x.Timestamp));
+        }
+
+        [SkippableFact(typeof(UnsupportedFeatureException))]
+        public virtual async Task ItShouldNotUpdateWhenNull()
+        {
+            try
+            {
+                await Repo.UpdateAsync(null!);
+                throw new Exception("Should have thrown another exception before.");
+            }
+            catch (ArgumentNullException)
+            {
+                Assert.True(true);
+            }
         }
 
         [SkippableFact(typeof(UnsupportedFeatureException))]
