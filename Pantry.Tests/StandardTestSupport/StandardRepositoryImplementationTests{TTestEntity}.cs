@@ -60,10 +60,11 @@ namespace Pantry.Tests.StandardTestSupport
         /// </summary>
         protected abstract Faker<TTestEntity> TestEntityGenerator { get; }
 
-        [Fact]
+        [SkippableFact(typeof(UnsupportedFeatureException))]
         public virtual async Task ItShouldAdd()
         {
             var entity = TestEntityGenerator.Generate();
+            using var scope = new TemporaryEntitiesScope<TTestEntity>(Repo, entity, cleanUpOnly: true);
 
             var result = await Repo.AddAsync(entity);
 
@@ -72,7 +73,7 @@ namespace Pantry.Tests.StandardTestSupport
             result.Should().BeEquivalentTo(entity, opt => opt.Excluding(x => x.Id).Excluding(x => x.ETag));
         }
 
-        [Fact]
+        [SkippableFact(typeof(UnsupportedFeatureException))]
         public virtual async Task ItShouldNotAddWhenNull()
         {
             Func<Task> act = async () => await Repo.AddAsync(null!);
@@ -80,13 +81,14 @@ namespace Pantry.Tests.StandardTestSupport
             act.Should().Throw<ArgumentNullException>();
         }
 
-        [Fact]
+        [SkippableFact(typeof(UnsupportedFeatureException))]
         public virtual async Task ItShouldAddWithExistingId()
         {
             var existingId = await IdGenerator.Generate(null);
             var entity = TestEntityGenerator
                 .RuleFor(x => x.Id, existingId)
                 .Generate();
+            using var scope = new TemporaryEntitiesScope<TTestEntity>(Repo, entity, cleanUpOnly: true);
 
             Func<Task> act = async () => await Repo.AddAsync(null!);
 
@@ -95,7 +97,7 @@ namespace Pantry.Tests.StandardTestSupport
             result.Id.Should().Be(existingId);
         }
 
-        [Fact]
+        [SkippableFact(typeof(UnsupportedFeatureException))]
         public virtual async Task ItShouldNotAddWhenConflict()
         {
             var existingEntity = TestEntityGenerator.Generate();
@@ -112,7 +114,73 @@ namespace Pantry.Tests.StandardTestSupport
             result.Should().BeEquivalentTo(existingEntity, opt => opt.Excluding(x => x.ETag));
         }
 
-        [Fact]
+        [SkippableFact(typeof(UnsupportedFeatureException))]
+        public virtual async Task ItShouldAddOrUpdateWhenNew()
+        {
+            var entity = TestEntityGenerator.Generate();
+            using var scope = new TemporaryEntitiesScope<TTestEntity>(Repo, entity, cleanUpOnly: true);
+
+            var result = await Repo.AddOrUpdateAsync(entity);
+
+            result.Id.Should().NotBeNullOrEmpty();
+            result.ETag.Should().NotBeNullOrEmpty();
+            result.Should().BeEquivalentTo(entity, opt => opt.Excluding(x => x.Id).Excluding(x => x.ETag));
+        }
+
+        [SkippableFact(typeof(UnsupportedFeatureException))]
+        public virtual async Task ItShouldAddOrUpdateWhenNotNewUnconditionally()
+        {
+            var existingEntity = TestEntityGenerator.Generate();
+            using var scope = new TemporaryEntitiesScope<TTestEntity>(Repo, existingEntity);
+            var updatedEntity = TestEntityGenerator
+                .RuleFor(x => x.Id, existingEntity.Id)
+                .Generate();
+
+            var result = await Repo.UpdateAsync(updatedEntity);
+
+            result.ETag.Should().NotBeNullOrEmpty();
+            result.Should().BeEquivalentTo(updatedEntity, opt => opt.Excluding(x => x.ETag));
+            result.Should().NotBeEquivalentTo(existingEntity, opt => opt.Excluding(x => x.ETag));
+        }
+
+        [SkippableFact(typeof(UnsupportedFeatureException))]
+        public virtual async Task ItShouldAddOrUpdateWhenNotNewConditionally()
+        {
+            var existingEntity = TestEntityGenerator.Generate();
+            using var scope = new TemporaryEntitiesScope<TTestEntity>(Repo, existingEntity);
+            var updatedEntity = TestEntityGenerator
+                .RuleFor(x => x.Id, existingEntity.Id)
+                .Generate();
+
+            var result = await Repo.AddOrUpdateAsync(updatedEntity);
+
+            result.ETag.Should().NotBeNullOrEmpty();
+            result.Should().BeEquivalentTo(updatedEntity, opt => opt.Excluding(x => x.ETag));
+            result.Should().NotBeEquivalentTo(existingEntity, opt => opt.Excluding(x => x.ETag));
+        }
+
+        [SkippableFact(typeof(UnsupportedFeatureException))]
+        public virtual async Task ItShouldNotAddOrUpdateConditionallyWhenConcurrencyIssue()
+        {
+            var existingEntity = TestEntityGenerator.Generate();
+            using var scope = new TemporaryEntitiesScope<TTestEntity>(Repo, existingEntity);
+            var updatedEntity = TestEntityGenerator
+                .RuleFor(x => x.Id, existingEntity.Id)
+                .RuleFor(x => x.ETag, await IdGenerator.Generate())
+                .Generate();
+
+            try
+            {
+                await Repo.AddOrUpdateAsync(updatedEntity);
+                throw new Exception("Should not be reached.");
+            }
+            catch (ConcurrencyException concurrencyException)
+            {
+                concurrencyException.TargetId.Should().Be(existingEntity.Id);
+            }
+        }
+
+        [SkippableFact(typeof(UnsupportedFeatureException))]
         public virtual async Task ItShouldTryGetById()
         {
             var entities = TestEntityGenerator.Generate(3);
@@ -124,7 +192,7 @@ namespace Pantry.Tests.StandardTestSupport
             result.Should().BeEquivalentTo(referenceEntity, opt => opt.Excluding(x => x.ETag));
         }
 
-        [Fact]
+        [SkippableFact(typeof(UnsupportedFeatureException))]
         public virtual async Task ItShouldTryGetByIdWhenNull()
         {
             var entities = TestEntityGenerator.Generate(3);
@@ -136,7 +204,7 @@ namespace Pantry.Tests.StandardTestSupport
             result.Should().BeNull();
         }
 
-        [Fact]
+        [SkippableFact(typeof(UnsupportedFeatureException))]
         public virtual async Task ItShouldGetById()
         {
             var entities = TestEntityGenerator.Generate(3);
@@ -148,7 +216,7 @@ namespace Pantry.Tests.StandardTestSupport
             result.Should().BeEquivalentTo(referenceEntity, opt => opt.Excluding(x => x.ETag));
         }
 
-        [Fact]
+        [SkippableFact(typeof(UnsupportedFeatureException))]
         public virtual async Task ItShouldGetByIdWhenNotFound()
         {
             var entities = TestEntityGenerator.Generate(3);
@@ -160,7 +228,7 @@ namespace Pantry.Tests.StandardTestSupport
             act.Should().Throw<NotFoundException>().Which.TargetId.Should().Be(notExistingId);
         }
 
-        [Fact]
+        [SkippableFact(typeof(UnsupportedFeatureException))]
         public virtual async Task ItShouldTryGetByIds()
         {
             var entities = TestEntityGenerator.Generate(3);
@@ -173,7 +241,7 @@ namespace Pantry.Tests.StandardTestSupport
             result[entities.First().Id].Should().BeEquivalentTo(entities.First(), opt => opt.Excluding(x => x.ETag));
         }
 
-        [Fact]
+        [SkippableFact(typeof(UnsupportedFeatureException))]
         public virtual async Task ItShouldTryGetByIdsWhenSomeNotFound()
         {
             var entities = TestEntityGenerator.Generate(3);
@@ -189,7 +257,7 @@ namespace Pantry.Tests.StandardTestSupport
             result[entities.First().Id].Should().BeEquivalentTo(entities.First(), opt => opt.Excluding(x => x.ETag));
         }
 
-        [Fact]
+        [SkippableFact(typeof(UnsupportedFeatureException))]
         public virtual async Task ItShouldExists()
         {
             var entities = TestEntityGenerator.Generate(3);
@@ -201,7 +269,7 @@ namespace Pantry.Tests.StandardTestSupport
             result.Should().BeTrue();
         }
 
-        [Fact]
+        [SkippableFact(typeof(UnsupportedFeatureException))]
         public virtual async Task ItShouldNotExistsWhenNotFound()
         {
             var entities = TestEntityGenerator.Generate(3);
@@ -213,7 +281,7 @@ namespace Pantry.Tests.StandardTestSupport
             result.Should().BeFalse();
         }
 
-        [Fact]
+        [SkippableFact(typeof(UnsupportedFeatureException))]
         public virtual async Task ItShouldUpdateUnconditionally()
         {
             var existingEntity = TestEntityGenerator.Generate();
@@ -229,7 +297,7 @@ namespace Pantry.Tests.StandardTestSupport
             result.Should().NotBeEquivalentTo(existingEntity, opt => opt.Excluding(x => x.ETag));
         }
 
-        [Fact]
+        [SkippableFact(typeof(UnsupportedFeatureException))]
         public virtual async Task ItShouldUpdateConditionally()
         {
             var existingEntity = TestEntityGenerator.Generate();
@@ -247,7 +315,7 @@ namespace Pantry.Tests.StandardTestSupport
             result.Should().NotBeEquivalentTo(existingEntity, opt => opt.Excluding(x => x.ETag));
         }
 
-        [Fact]
+        [SkippableFact(typeof(UnsupportedFeatureException))]
         public virtual async Task ItShouldNotUpdateIfNotFound()
         {
             var existingEntity = TestEntityGenerator.Generate();
@@ -262,7 +330,7 @@ namespace Pantry.Tests.StandardTestSupport
             act.Should().Throw<NotFoundException>().Which.TargetId.Should().Be(notExistingId);
         }
 
-        [Fact]
+        [SkippableFact(typeof(UnsupportedFeatureException))]
         public virtual async Task ItShouldNotUpdateConditionallyWhenConcurrencyIssue()
         {
             var existingEntity = TestEntityGenerator.Generate();
@@ -277,7 +345,7 @@ namespace Pantry.Tests.StandardTestSupport
             act.Should().Throw<ConcurrencyException>().Which.TargetId.Should().Be(existingEntity.Id);
         }
 
-        [Fact]
+        [SkippableFact(typeof(UnsupportedFeatureException))]
         public virtual async Task ItShouldRemoveById()
         {
             var existingEntity = TestEntityGenerator.Generate();
@@ -288,7 +356,7 @@ namespace Pantry.Tests.StandardTestSupport
             (await Repo.TryGetByIdAsync(existingEntity.Id)).Should().BeNull();
         }
 
-        [Fact]
+        [SkippableFact(typeof(UnsupportedFeatureException))]
         public virtual async Task ItShouldNotRemoveByIdWhenNotFound()
         {
             var existingEntity = TestEntityGenerator.Generate();
@@ -300,7 +368,18 @@ namespace Pantry.Tests.StandardTestSupport
             act.Should().Throw<NotFoundException>().Which.TargetId.Should().Be(notExistingId);
         }
 
-        [Fact]
+        [SkippableFact(typeof(UnsupportedFeatureException))]
+        public virtual async Task ItShouldNotRemoveByIdWhenIdIsNull()
+        {
+            var existingEntity = TestEntityGenerator.Generate();
+            using var scope = new TemporaryEntitiesScope<TTestEntity>(Repo, existingEntity);
+
+            Func<Task> act = async () => await Repo.RemoveAsync((string)null!);
+
+            act.Should().Throw<NotFoundException>().Which.TargetId.Should().Be(null);
+        }
+
+        [SkippableFact(typeof(UnsupportedFeatureException))]
         public virtual async Task ItShouldRemoveByEntity()
         {
             var existingEntity = TestEntityGenerator.Generate();
@@ -311,7 +390,7 @@ namespace Pantry.Tests.StandardTestSupport
             (await Repo.TryGetByIdAsync(existingEntity.Id)).Should().BeNull();
         }
 
-        [Fact]
+        [SkippableFact(typeof(UnsupportedFeatureException))]
         public virtual async Task ItShouldNotRemoveByEntityWhenNotFound()
         {
             var existingEntity = TestEntityGenerator.Generate();
@@ -325,7 +404,19 @@ namespace Pantry.Tests.StandardTestSupport
             act.Should().Throw<NotFoundException>().Which.TargetId.Should().Be(notExistingEntity.Id);
         }
 
-        [Fact]
+        [SkippableFact(typeof(UnsupportedFeatureException))]
+        public virtual async Task ItShouldNotRemoveByEntityWhenIdIsNull()
+        {
+            var existingEntity = TestEntityGenerator.Generate();
+            using var scope = new TemporaryEntitiesScope<TTestEntity>(Repo, existingEntity);
+            var notExistingEntity = TestEntityGenerator.Generate();
+
+            Func<Task> act = async () => await Repo.RemoveAsync(notExistingEntity);
+
+            act.Should().Throw<NotFoundException>().Which.TargetId.Should().Be(notExistingEntity.Id);
+        }
+
+        [SkippableFact(typeof(UnsupportedFeatureException))]
         public virtual async Task ItShouldTryRemoveById()
         {
             var existingEntity = TestEntityGenerator.Generate();
@@ -336,7 +427,7 @@ namespace Pantry.Tests.StandardTestSupport
             result.Should().BeTrue();
         }
 
-        [Fact]
+        [SkippableFact(typeof(UnsupportedFeatureException))]
         public virtual async Task ItShouldTryRemoveByIdWhenNotFound()
         {
             var existingEntity = TestEntityGenerator.Generate();
@@ -348,7 +439,18 @@ namespace Pantry.Tests.StandardTestSupport
             result.Should().BeFalse();
         }
 
-        [Fact]
+        [SkippableFact(typeof(UnsupportedFeatureException))]
+        public virtual async Task ItShouldTryRemoveByIdWhenIdIsNull()
+        {
+            var existingEntity = TestEntityGenerator.Generate();
+            using var scope = new TemporaryEntitiesScope<TTestEntity>(Repo, existingEntity);
+
+            var result = await Repo.TryRemoveAsync((string)null!);
+
+            result.Should().BeFalse();
+        }
+
+        [SkippableFact(typeof(UnsupportedFeatureException))]
         public virtual async Task ItShouldTryRemoveByEntity()
         {
             var existingEntity = TestEntityGenerator.Generate();
@@ -359,7 +461,7 @@ namespace Pantry.Tests.StandardTestSupport
             result.Should().BeTrue();
         }
 
-        [Fact]
+        [SkippableFact(typeof(UnsupportedFeatureException))]
         public virtual async Task ItShouldTryRemoveByEntityWhenNotFound()
         {
             var existingEntity = TestEntityGenerator.Generate();
@@ -373,7 +475,19 @@ namespace Pantry.Tests.StandardTestSupport
             result.Should().BeFalse();
         }
 
-        [Fact]
+        [SkippableFact(typeof(UnsupportedFeatureException))]
+        public virtual async Task ItShouldTryRemoveByEntityWhenIdIsNull()
+        {
+            var existingEntity = TestEntityGenerator.Generate();
+            using var scope = new TemporaryEntitiesScope<TTestEntity>(Repo, existingEntity);
+            var notExistingEntity = TestEntityGenerator.Generate();
+
+            var result = await Repo.TryRemoveAsync(notExistingEntity);
+
+            result.Should().BeFalse();
+        }
+
+        [SkippableFact(typeof(UnsupportedFeatureException))]
         public virtual async Task ItShouldFindAll()
         {
             var entities = TestEntityGenerator.Generate(5);
@@ -384,7 +498,7 @@ namespace Pantry.Tests.StandardTestSupport
             result.Count().Should().BeGreaterOrEqualTo(entities.Count);
         }
 
-        [Fact]
+        [SkippableFact(typeof(UnsupportedFeatureException))]
         public virtual async Task ItShouldFindAllByPage()
         {
             var entities = TestEntityGenerator.Generate(5);
@@ -401,7 +515,7 @@ namespace Pantry.Tests.StandardTestSupport
             secondResult.ContinuationToken.Should().NotBe(firstResult.ContinuationToken);
         }
 
-        [Fact]
+        [SkippableFact(typeof(UnsupportedFeatureException))]
         public virtual async Task ItShouldFindAllWithZero()
         {
             var entities = TestEntityGenerator.Generate(5);
@@ -413,7 +527,7 @@ namespace Pantry.Tests.StandardTestSupport
             result.ContinuationToken.Should().BeNullOrEmpty();
         }
 
-        [Fact]
+        [SkippableFact(typeof(UnsupportedFeatureException))]
         public virtual async Task ItShouldFindAllWithNegativeNumber()
         {
             var entities = TestEntityGenerator.Generate(5);

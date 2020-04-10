@@ -5,20 +5,19 @@ using Pantry.Exceptions;
 namespace Pantry.Traits
 {
     /// <summary>
-    /// Update Repository Methods.
+    /// Add or Update Repository Methods.
     /// </summary>
     /// <typeparam name="TEntity">The entity type.</typeparam>
-    public interface IRepositoryUpdate<TEntity>
+    public interface IRepositoryAddOrUpdate<TEntity>
         where TEntity : IIdentifiable
     {
         /// <summary>
-        /// Updates the <paramref name="entity"/> in the repository.
+        /// Adds or Updates the <paramref name="entity"/> in the repository.
         /// </summary>
-        /// <param name="entity">The entity to update.</param>
+        /// <param name="entity">The entity to add or update.</param>
         /// <param name="cancellationToken">The <see cref="CancellationToken"/>.</param>
         /// <returns>The updated entity.</returns>
-        /// <exception cref="NotFoundException">If the entity was not found in the repository.</exception>
         /// <exception cref="ConcurrencyException">If the updates result in a concurrency issue.</exception>
-        Task<TEntity> UpdateAsync(TEntity entity, CancellationToken cancellationToken = default);
+        Task<TEntity> AddOrUpdateAsync(TEntity entity, CancellationToken cancellationToken = default);
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Pantry.Tests.StandardTestSupport
 {
@@ -15,29 +16,34 @@ namespace Pantry.Tests.StandardTestSupport
 
         public TemporaryEntitiesScope(
             ICrudRepository<TEntity> repository,
-            IEnumerable<TEntity> entitySet)
+            IEnumerable<TEntity> entitySet,
+            bool cleanUpOnly = false)
         {
             _repository = repository ?? throw new ArgumentNullException(nameof(repository));
             _entitySet = entitySet ?? throw new ArgumentNullException(nameof(entitySet));
 
-            foreach (var entity in _entitySet)
+            if (!cleanUpOnly)
             {
-                var result = _repository.AddAsync(entity).ConfigureAwait(false).GetAwaiter().GetResult();
-                entity.Id = result.Id;
-                entity.ETag = result.ETag;
+                foreach (var entity in _entitySet)
+                {
+                    var result = _repository.AddAsync(entity).ConfigureAwait(false).GetAwaiter().GetResult();
+                    entity.Id = result.Id;
+                    entity.ETag = result.ETag;
+                }
             }
         }
 
         public TemporaryEntitiesScope(
             ICrudRepository<TEntity> repository,
-            TEntity entity)
-            : this(repository, new[] { entity })
+            TEntity entity,
+            bool cleanUpOnly = false)
+            : this(repository, new[] { entity }, cleanUpOnly)
         {
         }
 
         public void Dispose()
         {
-            foreach (var entity in _entitySet)
+            foreach (var entity in _entitySet.Where(x => !string.IsNullOrEmpty(x.Id)))
             {
                 _repository.TryRemoveAsync(entity).ConfigureAwait(false).GetAwaiter().GetResult();
             }

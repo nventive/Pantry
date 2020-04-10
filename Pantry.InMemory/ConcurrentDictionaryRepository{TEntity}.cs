@@ -105,6 +105,25 @@ namespace Pantry.InMemory
         }
 
         /// <inheritdoc/>
+        public virtual async Task<TEntity> AddOrUpdateAsync(TEntity entity, CancellationToken cancellationToken = default)
+        {
+            if (entity is null)
+            {
+                throw new ArgumentNullException(nameof(entity));
+            }
+
+            var existingEntity = await TryGetByIdAsync(entity.Id, cancellationToken).ConfigureAwait(false);
+            if (existingEntity is null)
+            {
+                return await AddAsync(entity, cancellationToken).ConfigureAwait(false);
+            }
+            else
+            {
+                return await UpdateAsync(entity, cancellationToken).ConfigureAwait(false);
+            }
+        }
+
+        /// <inheritdoc/>
         public virtual async Task<TEntity?> TryGetByIdAsync(string id, CancellationToken cancellationToken = default)
         {
             Storage.TryGetValue(id, out var result);
@@ -186,6 +205,16 @@ namespace Pantry.InMemory
         /// <inheritdoc/>
         public virtual async Task<bool> TryRemoveAsync(string id, CancellationToken cancellationToken = default)
         {
+            if (string.IsNullOrEmpty(id))
+            {
+                Logger.LogDeletedWarning(
+                    entityType: typeof(TEntity),
+                    entityId: "(null)",
+                    warning: "NotFound");
+
+                return false;
+            }
+
             if (Storage.TryRemove(id, out var _))
             {
                 Logger.LogDeleted(

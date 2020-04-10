@@ -119,6 +119,52 @@ namespace Pantry.Azure.TableStorage
         }
 
         /// <inheritdoc/>
+        public virtual async Task<TEntity> AddOrUpdateAsync(TEntity entity, CancellationToken cancellationToken = default)
+        {
+            if (entity is null)
+            {
+                throw new ArgumentNullException(nameof(entity));
+            }
+
+            if (string.IsNullOrEmpty(entity.Id))
+            {
+                entity.Id = await IdGenerator.Generate(entity);
+            }
+
+            if (entity is IETaggable taggableEntity && !string.IsNullOrEmpty(taggableEntity.ETag))
+            {
+                // We revert to more complex operation because TableOperation.InsertOrReplace does not honor ETags concurrency. Go figure.
+                var existingEntity = await TryGetByIdAsync(entity.Id, cancellationToken).ConfigureAwait(false);
+                if (existingEntity is null)
+                {
+                    return await AddAsync(entity, cancellationToken).ConfigureAwait(false);
+                }
+                else
+                {
+                    return await UpdateAsync(entity, cancellationToken).ConfigureAwait(false);
+                }
+            }
+
+            var tableEntity = TableEntityMapper.MapToDestination(entity);
+            if (string.IsNullOrEmpty(tableEntity.ETag))
+            {
+                tableEntity.ETag = "*";
+            }
+
+            var operationResult = await CloudTableFor.CloudTable.ExecuteAsync(
+                TableOperation.InsertOrReplace(tableEntity),
+                cancellationToken)
+                .ConfigureAwait(false);
+
+            var result = TableEntityMapper.MapToSource((DynamicTableEntity)operationResult.Result);
+            Logger.LogUpdated(
+                entityType: typeof(TEntity),
+                entityId: result.Id,
+                entity: result);
+            return result;
+        }
+
+        /// <inheritdoc/>
         public virtual async Task<TEntity?> TryGetByIdAsync(string id, CancellationToken cancellationToken = default)
         {
             var (partitionKey, rowKey) = KeysResolver.GetStorageKeys(id);
@@ -217,6 +263,16 @@ namespace Pantry.Azure.TableStorage
         /// <inheritdoc/>
         public virtual async Task<bool> TryRemoveAsync(string id, CancellationToken cancellationToken = default)
         {
+            if (string.IsNullOrEmpty(id))
+            {
+                Logger.LogDeletedWarning(
+                    entityType: typeof(TEntity),
+                    entityId: "(null)",
+                    warning: "NotFound");
+
+                return false;
+            }
+
             var (partitionKey, rowKey) = KeysResolver.GetStorageKeys(id);
             var result = await CloudTableFor.CloudTable.ExecuteAsync(
                 TableOperation.Retrieve(partitionKey, rowKey),
