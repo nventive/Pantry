@@ -158,6 +158,11 @@ namespace Pantry.InMemory
                 }
             }
 
+            if (entity is IETaggable taggableEntityUpdate)
+            {
+                taggableEntityUpdate.ETag = await EtagGenerator.Generate(entity);
+            }
+
             if (Storage.TryUpdate(entity.Id, entity, existing))
             {
                 Logger.LogUpdated(

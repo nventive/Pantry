@@ -10,4 +10,5 @@
 [assembly: SuppressMessage("Microsoft.Usage", "CA1816:Call GC.SuppressFinalize correctly", Justification = "Not needed for tests projects")]
 [assembly: SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Conflicts with some standard patterns.")]
 [assembly: SuppressMessage("Reliability", "CA2007:Do not directly await a Task", Justification = "Not needed for tests projects")]
+[assembly: SuppressMessage("Usage", "CA2227:Collection properties should be read only", Justification = "Interferes with the serialization.")]
 [assembly: SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings", Justification = "String is fine - Uri class is sometime cumbersome.")]

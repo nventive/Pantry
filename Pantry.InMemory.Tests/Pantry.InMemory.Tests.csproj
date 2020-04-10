@@ -30,6 +30,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Pantry.InMemory\Pantry.InMemory.csproj" />
+    <ProjectReference Include="..\Pantry.Tests\Pantry.Tests.csproj" />
   </ItemGroup>
 
 </Project>

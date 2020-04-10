@@ -30,6 +30,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Pantry.Azure.TableStorage\Pantry.Azure.TableStorage.csproj" />
+    <ProjectReference Include="..\Pantry.Tests\Pantry.Tests.csproj" />
   </ItemGroup>
 
 </Project>
