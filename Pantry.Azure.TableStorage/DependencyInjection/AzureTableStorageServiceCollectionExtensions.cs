@@ -36,7 +36,7 @@ namespace Microsoft.Extensions.DependencyInjection
         public static IAzureTableStorageRepositoryBuilder<TEntity> AddAzureTableStorageRepository<TEntity, TRepository>(this IServiceCollection services)
             where TEntity : class, IIdentifiable, new()
         {
-            services.TryAddSingleton<IIdGenerator<TEntity>, IdGenerator<TEntity>>();
+            services.TryAddIdGeneratorFor<TEntity>();
             services.TryAddSingleton<IAzureTableStorageKeysResolver<TEntity>, AzureTableStorageKeysResolver<TEntity>>();
             services.TryAddSingleton<IMapper<TEntity, DynamicTableEntity>, DynamicTableEntityMapper<TEntity>>();
             services.TryAddSingleton<IContinuationTokenEncoder<TableContinuationToken>, Base64JsonContinuationTokenEncoder<TableContinuationToken>>();

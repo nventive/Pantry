@@ -64,6 +64,7 @@ namespace Pantry.InMemory.Tests
                     {
                         Id = entity.Id,
                         Name = TestEntityGenerator.Generate().Name,
+                        ETag = entity.ETag,
                     });
 
                 resultUpdate.Name.Should().NotBe(entity.Name);

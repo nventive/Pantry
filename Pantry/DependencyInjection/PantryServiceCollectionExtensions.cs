@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Pantry.Generators;
 using Pantry.Queries;
 
 namespace Pantry.DependencyInjection
@@ -82,6 +83,44 @@ namespace Pantry.DependencyInjection
 
             services.Add(new ServiceDescriptor(queryHandlerType, queryHandlerType, ServiceLifetime.Transient));
             services.TryAddEnumerable(new ServiceDescriptor(typeof(TQueryHandlerBaseType), queryHandlerType, ServiceLifetime.Transient));
+
+            return services;
+        }
+
+        /// <summary>
+        /// Tries to add an <see cref="IIdGenerator{TEntity}"/>.
+        /// </summary>
+        /// <typeparam name="TEntity">The entity type.</typeparam>
+        /// <param name="services">The <see cref="IServiceCollection"/>.</param>
+        /// <returns>The updated <see cref="IServiceCollection"/>.</returns>
+        public static IServiceCollection TryAddIdGeneratorFor<TEntity>(this IServiceCollection services)
+            where TEntity : class
+        {
+            if (services is null)
+            {
+                throw new ArgumentNullException(nameof(services));
+            }
+
+            services.TryAddSingleton<IIdGenerator<TEntity>, GuidIdGenerator<TEntity>>();
+
+            return services;
+        }
+
+        /// <summary>
+        /// Tries to add an <see cref="IETagGenerator{TEntity}"/>.
+        /// </summary>
+        /// <typeparam name="TEntity">The entity type.</typeparam>
+        /// <param name="services">The <see cref="IServiceCollection"/>.</param>
+        /// <returns>The updated <see cref="IServiceCollection"/>.</returns>
+        public static IServiceCollection TryAddETagGeneratorFor<TEntity>(this IServiceCollection services)
+            where TEntity : class
+        {
+            if (services is null)
+            {
+                throw new ArgumentNullException(nameof(services));
+            }
+
+            services.TryAddSingleton<IETagGenerator<TEntity>, SHA1ETagGenerator<TEntity>>();
 
             return services;
         }

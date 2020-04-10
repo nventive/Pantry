@@ -37,7 +37,8 @@ namespace Microsoft.Extensions.DependencyInjection
         public static IRepositoryBuilder AddConcurrentDictionaryRepository<TEntity, TRepository>(this IServiceCollection services)
             where TEntity : class, IIdentifiable, new()
         {
-            services.TryAddSingleton<IIdGenerator<TEntity>, IdGenerator<TEntity>>();
+            services.TryAddIdGeneratorFor<TEntity>();
+            services.TryAddETagGeneratorFor<TEntity>();
             services.TryAddSingleton<IContinuationTokenEncoder<LimitOffsetContinuationToken>, Base64JsonContinuationTokenEncoder<LimitOffsetContinuationToken>>();
 
             services.TryAddSingleton<IQueryHandlerExecutor<TEntity, IConcurrentDictionaryQueryHandler>, ServiceProviderQueryHandlerExecutor<TEntity, IConcurrentDictionaryQueryHandler>>();

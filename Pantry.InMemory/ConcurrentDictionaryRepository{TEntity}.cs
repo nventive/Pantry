@@ -24,16 +24,19 @@ namespace Pantry.InMemory
         /// </summary>
         /// <param name="storage">The storage.</param>
         /// <param name="idGenerator">The <see cref="IIdGenerator{T}"/>.</param>
+        /// <param name="etagGenerator">The <see cref="IETagGenerator{T}"/>.</param>
         /// <param name="queryHandlerExecutor">The query handler executor.</param>
         /// <param name="logger">The <see cref="ILogger"/>.</param>
         public ConcurrentDictionaryRepository(
             ConcurrentDictionary<string, TEntity> storage,
             IIdGenerator<TEntity> idGenerator,
+            IETagGenerator<TEntity> etagGenerator,
             IQueryHandlerExecutor<TEntity, IConcurrentDictionaryQueryHandler> queryHandlerExecutor,
             ILogger<ConcurrentDictionaryRepository<TEntity>>? logger = null)
         {
             Storage = storage;
             IdGenerator = idGenerator ?? throw new ArgumentNullException(nameof(idGenerator));
+            EtagGenerator = etagGenerator ?? throw new ArgumentNullException(nameof(etagGenerator));
             QueryHandlerExecutor = queryHandlerExecutor;
             Logger = logger ?? NullLogger<ConcurrentDictionaryRepository<TEntity>>.Instance;
         }
@@ -47,6 +50,11 @@ namespace Pantry.InMemory
         /// Gets the <see cref="IIdGenerator{T}"/>.
         /// </summary>
         protected IIdGenerator<TEntity> IdGenerator { get; }
+
+        /// <summary>
+        /// Gets the <see cref="IETagGenerator{T}"/>.
+        /// </summary>
+        protected IETagGenerator<TEntity> EtagGenerator { get; }
 
         /// <summary>
         /// Gets the <see cref="IQueryHandlerExecutor{TEntity, IConcurrentDictionaryQueryHandler}"/>.
@@ -69,6 +77,11 @@ namespace Pantry.InMemory
             if (string.IsNullOrEmpty(entity.Id))
             {
                 entity.Id = await IdGenerator.Generate(entity);
+            }
+
+            if (entity is IETaggable taggableEntity && string.IsNullOrEmpty(taggableEntity.ETag))
+            {
+                taggableEntity.ETag = await EtagGenerator.Generate(entity);
             }
 
             if (Storage.TryAdd(entity.Id, entity))
@@ -124,6 +137,27 @@ namespace Pantry.InMemory
                 throw notFoundEx;
             }
 
+            if (existing is IETaggable existingTaggableEntity
+                && entity is IETaggable taggableEntity
+                && !string.IsNullOrEmpty(taggableEntity.ETag)
+                && !string.IsNullOrEmpty(existingTaggableEntity.ETag))
+            {
+                if (existingTaggableEntity.ETag != taggableEntity.ETag)
+                {
+                    var concurrencyEx = new ConcurrencyException(
+                        typeof(TEntity).Name,
+                        entity.Id,
+                        $"Mismatched ETag for {entity}: {taggableEntity.ETag} != {existingTaggableEntity.ETag}");
+                    Logger.LogUpdatedWarning(
+                        entityType: typeof(TEntity),
+                        entityId: entity.Id,
+                        warning: "Concurrency",
+                        exception: concurrencyEx);
+
+                    throw concurrencyEx;
+                }
+            }
+
             if (Storage.TryUpdate(entity.Id, entity, existing))
             {
                 Logger.LogUpdated(
@@ -133,14 +167,14 @@ namespace Pantry.InMemory
                 return entity;
             }
 
-            var concurrencyEx = new ConcurrencyException(typeof(TEntity).Name, entity.Id);
+            var concurrencyEx2 = new ConcurrencyException(typeof(TEntity).Name, entity.Id);
             Logger.LogUpdatedWarning(
                 entityType: typeof(TEntity),
                 entityId: entity.Id,
                 warning: "Concurrency",
-                exception: concurrencyEx);
+                exception: concurrencyEx2);
 
-            throw concurrencyEx;
+            throw concurrencyEx2;
         }
 
         /// <inheritdoc/>

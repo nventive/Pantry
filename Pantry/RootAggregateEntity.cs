@@ -1,12 +1,15 @@
 ﻿namespace Pantry
 {
     /// <summary>
-    /// Base class for entities that are <see cref="IIdentifiable"/>.
+    /// Base class for root aggregate entities that are <see cref="IIdentifiable"/> and <see cref="IETaggable"/>.
     /// </summary>
-    public abstract class Entity : IIdentifiable
+    public abstract class RootAggregateEntity : IIdentifiable, IETaggable
     {
         /// <inheritdoc/>
         public string Id { get; set; } = string.Empty;
+
+        /// <inheritdoc/>
+        public string? ETag { get; set; }
 
         /// <inheritdoc />
         public override string ToString() => $"[{GetType().Name}] ({(string.IsNullOrEmpty(Id) ? "<new>" : Id)})";

@@ -60,9 +60,10 @@ namespace Pantry.Azure.TableStorage.Tests
             var entities = SimpleEntityGenerator.Generate(3);
             var repository = ServiceProvider.GetRequiredService<ICrudRepository<SimpleEntity>>();
 
+            var addedEntities = new List<SimpleEntity>();
             foreach (var entity in entities)
             {
-                await repository.AddAsync(entity);
+                addedEntities.Add(await repository.AddAsync(entity));
             }
 
             var result = await repository.GetByIdAsync(entities.First().Id);
@@ -72,19 +73,23 @@ namespace Pantry.Azure.TableStorage.Tests
             var multipleResults = await repository.TryGetByIdsAsync(entities.Select(x => x.Id));
             multipleResults.Should().HaveSameCount(entities);
 
-            foreach (var entity in entities)
+            var updatedEntities = new List<SimpleEntity>();
+            foreach (var entity in addedEntities)
             {
                 var resultUpdate = await repository.UpdateAsync(
                     new SimpleEntity
                     {
                         Id = entity.Id,
+                        ETag = entity.ETag,
                         Name = SimpleEntityGenerator.Generate().Name,
                     });
 
                 resultUpdate.Name.Should().NotBe(entity.Name);
+                resultUpdate.ETag.Should().NotBe(entity.ETag);
+                updatedEntities.Add(resultUpdate);
             }
 
-            foreach (var entity in entities)
+            foreach (var entity in updatedEntities)
             {
                 var deleteResult = await repository.TryDeleteAsync(entity);
                 deleteResult.Should().BeTrue();

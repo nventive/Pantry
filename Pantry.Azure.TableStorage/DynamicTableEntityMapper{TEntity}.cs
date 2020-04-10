@@ -45,6 +45,11 @@ namespace Pantry.Azure.TableStorage
             var (partitionKey, rowKey) = _keysResolver.GetStorageKeys(source.Id);
             var dynamicTableEntity = new DynamicTableEntity(partitionKey, rowKey);
 
+            if (source is IETaggable taggableEntity)
+            {
+                dynamicTableEntity.ETag = taggableEntity.ETag;
+            }
+
             foreach (var property in GetSerializableProperties())
             {
                 var value = property.GetValue(source);
@@ -76,6 +81,11 @@ namespace Pantry.Azure.TableStorage
             {
                 Id = _keysResolver.GetEntityId(destination.PartitionKey, destination.RowKey),
             };
+
+            if (result is IETaggable taggableEntity)
+            {
+                taggableEntity.ETag = destination.ETag;
+            }
 
             foreach (var property in GetSerializableProperties())
             {
@@ -110,7 +120,7 @@ namespace Pantry.Azure.TableStorage
         {
             return typeof(TEntity).GetProperties()
                 .Where(x => x.CanRead && x.CanWrite)
-                .Where(x => x.Name != nameof(IIdentifiable.Id));
+                .Where(x => x.Name != nameof(IIdentifiable.Id) && x.Name != nameof(IETaggable.ETag));
         }
     }
 }

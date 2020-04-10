@@ -12,8 +12,8 @@ namespace Pantry
         /// <summary>
         /// Generates a unique id.
         /// </summary>
-        /// <param name="entity">The entity to generate an id for, eventually.</param>
+        /// <param name="value">The value to generate an id for, eventually.</param>
         /// <returns>The generated id.</returns>
-        ValueTask<string> Generate(T? entity);
+        ValueTask<string> Generate(T? value);
     }
 }

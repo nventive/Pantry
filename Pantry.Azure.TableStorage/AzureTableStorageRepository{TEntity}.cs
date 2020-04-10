@@ -98,6 +98,7 @@ namespace Pantry.Azure.TableStorage
                     .ConfigureAwait(false);
 
                 var result = TableEntityMapper.MapToSource((DynamicTableEntity)operationResult.Result);
+
                 Logger.LogAdded(
                     entityType: typeof(TEntity),
                     entityId: result.Id,
@@ -148,7 +149,11 @@ namespace Pantry.Azure.TableStorage
             try
             {
                 var targetUpdatedTableEntity = TableEntityMapper.MapToDestination(entity);
-                targetUpdatedTableEntity.ETag = "*";
+                if (string.IsNullOrEmpty(targetUpdatedTableEntity.ETag))
+                {
+                    targetUpdatedTableEntity.ETag = "*";
+                }
+
                 var operationResult = await CloudTableFor.CloudTable.ExecuteAsync(
                     TableOperation.Replace(targetUpdatedTableEntity),
                     cancellationToken)
@@ -168,6 +173,28 @@ namespace Pantry.Azure.TableStorage
                     entityType: typeof(TEntity),
                     entityId: entity.Id,
                     warning: "NotFound",
+                    exception: exception);
+
+                throw exception;
+            }
+            catch (StorageException storageException) when (storageException.RequestInformation.HttpStatusCode == 412)
+            {
+                var exception = new ConcurrencyException(typeof(TEntity).Name, entity.Id, storageException.Message);
+                Logger.LogUpdatedWarning(
+                    entityType: typeof(TEntity),
+                    entityId: entity.Id,
+                    warning: "Concurrency",
+                    exception: exception);
+
+                throw exception;
+            }
+            catch (ArgumentException argumentException) when (argumentException.Message.Contains("ETag", StringComparison.InvariantCultureIgnoreCase))
+            {
+                var exception = new ConcurrencyException(typeof(TEntity).Name, entity.Id, argumentException.Message);
+                Logger.LogUpdatedWarning(
+                    entityType: typeof(TEntity),
+                    entityId: entity.Id,
+                    warning: "Concurrency",
                     exception: exception);
 
                 throw exception;
