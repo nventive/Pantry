@@ -45,6 +45,12 @@ steps:
   inputs:
     checkLatest: true
 
+- task: NuGetCommand@2
+  displayName: NuGet Pack Templates
+  inputs:
+    command: custom
+    arguments: pack templates/Pantry.Templates.nuspec -OutputDirectory $(build.artifactStagingDirectory) -version $(GitVersion.NuGetVersionV2) -NoDefaultExcludes
+
 - task: PublishBuildArtifacts@1
   displayName: 'Publish Build Artifacts'
 
