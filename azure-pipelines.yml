@@ -19,10 +19,12 @@ steps:
     feedsToUse: 'select'
 
 - script: dotnet build --no-restore --configuration $(buildConfiguration) -p:Version=$(GitVersion.NuGetVersionV2) -p:FileVersion=$(GitVersion.AssemblySemVer) -p:InformationalVersion=$(GitVersion.InformationalVersion)
-  displayName: Build
+  workingDirectory: src
+  displayName: Build solution
 
 - script: dotnet test --no-build --configuration $(buildConfiguration) --logger:trx
   displayName: Test
+  workingDirectory: src
   env:
     ConnectionStrings__StorageConnectionString: $(ConnectionStrings__StorageConnectionString)
 
@@ -35,16 +37,16 @@ steps:
     testRunTitle: 'Unit tests'
 
 - script: dotnet pack --no-build --configuration $(buildConfiguration) -p:Version=$(GitVersion.NuGetVersionV2) --output $(build.artifactStagingDirectory)
+  workingDirectory: src
   displayName: Pack
-
-- task: PublishBuildArtifacts@1
-  displayName: 'Publish Build Artifacts'
 
 - task: NuGetToolInstaller@1
   condition: and(succeeded(), or(eq(variables['Build.SourceBranch'], 'refs/heads/master'), eq('true', variables['forcePushNuget'])))
   inputs:
-    versionSpec: '>= 4.9'
     checkLatest: true
+
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish Build Artifacts'
 
 - task: NuGetCommand@2
   condition: and(succeeded(), or(eq(variables['Build.SourceBranch'], 'refs/heads/master'), eq('true', variables['forcePushNuget'])))

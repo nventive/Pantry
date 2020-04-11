@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "nventive",
+  "name": "Pantry Provider template",
+  "identity": "Pantry.ProviderTemplate",
+  "groupIdentity": "Pantry.ProviderTemplate",
+  "shortName": "pantry-provider",
+  "classifications": ["Pantry"],
+  "tags": {
+    "language": "C#",
+    "type": "project"
+  },
+  "sourceName": "Pantry.ProviderTemplate",
+  "preferNameDirectory": true,
+  "symbols": {
+    "Provider": {
+      "type": "parameter",
+      "datatype": "string",
+      "replaces": "Provider",
+      "description": "The name of the provider."
+    }
+  },
+  "sources": [
+    {
+      "modifiers": [
+        {
+          "exclude": [
+            "**/[Bb]in/**",
+            "**/[Oo]bj/**",
+            ".template.config/**/*",
+            "**/*.filelist",
+            "**/*.user",
+            "**/*.lock.json",
+            "**/package-lock.json",
+            ".vs/**",
+            ".git/**"
+          ]
+        }
+      ]
+    }
+  ],
+  "postActions": [
+    {
+      "description": "Add project to solution",
+      "manualInstructions": [{ "text": "Run 'dotnet sln add SourceName'" }],
+      "actionId": "D396686C-DE0E-4DE6-906D-291CD29FC5DE",
+      "continueOnError": true
+    }
+  ]
+}

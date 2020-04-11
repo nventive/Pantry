@@ -29,7 +29,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Pantry.Dapper\Pantry.Dapper.csproj" />
+    <ProjectReference Include="..\Pantry.ProviderTemplate\Pantry.ProviderTemplate.csproj" />
     <ProjectReference Include="..\Pantry.Tests\Pantry.Tests.csproj" />
   </ItemGroup>
 

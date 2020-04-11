@@ -6,12 +6,8 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{FC6CD172-26FF-4B3E-93F2-5B7538B6F81E}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
-		azure-pipelines.yml = azure-pipelines.yml
-		CHANGELOG.md = CHANGELOG.md
 		Directory.Build.props = Directory.Build.props
-		GitVersion.yml = GitVersion.yml
 		GlobalSuppressions.cs = GlobalSuppressions.cs
-		README.md = README.md
 		stylecop.json = stylecop.json
 		TestsSuppressions.cs = TestsSuppressions.cs
 	EndProjectSection
@@ -29,10 +25,6 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pantry.InMemory.Tests", "Pantry.InMemory.Tests\Pantry.InMemory.Tests.csproj", "{FFEDA73E-C8E3-458E-AF89-892654E15A84}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pantry.Tests", "Pantry.Tests\Pantry.Tests.csproj", "{9FC6CE8C-2AED-4753-8865-545C6F118F1F}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pantry.Dapper", "Pantry.Dapper\Pantry.Dapper.csproj", "{9F2EAAD6-DB64-4510-98C0-7997AB0D2B8D}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pantry.Dapper.Tests", "Pantry.Dapper.Tests\Pantry.Dapper.Tests.csproj", "{2BE5EB96-C7CE-435B-863F-91B7267EC8A0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

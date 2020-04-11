@@ -3,18 +3,18 @@ using Microsoft.Extensions.Hosting;
 using Pantry.Tests.StandardTestSupport;
 using Xunit.Abstractions;
 
-namespace Pantry.Dapper.Tests
+namespace Pantry.ProviderTemplate.Tests
 {
-    public class DapperStandardTests : StandardRepositoryImplementationTests
+    public class ProviderStandardTests : StandardRepositoryImplementationTests
     {
-        public DapperStandardTests(ITestOutputHelper outputHelper)
+        public ProviderStandardTests(ITestOutputHelper outputHelper)
             : base(outputHelper)
         {
         }
 
         protected override void RegisterTestServices<TEntity>(HostBuilderContext context, IServiceCollection services)
         {
-            services.AddDapperRepository<TEntity>();
+            services.AddProviderRepository<TEntity>();
         }
     }
 }

@@ -5,23 +5,23 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Pantry.Continuation;
 using Pantry.Exceptions;
 
-namespace Pantry.Dapper
+namespace Pantry.ProviderTemplate
 {
     /// <summary>
-    /// Dapper Repository Implementation.
+    /// Provider Repository Implementation.
     /// </summary>
     /// <typeparam name="TEntity">The entity type.</typeparam>
-    public class DapperRepository<TEntity> : IRepository<TEntity>
+    public class ProviderRepository<TEntity> : IRepository<TEntity>
         where TEntity : class, IIdentifiable
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="DapperRepository{TEntity}"/> class.
+        /// Initializes a new instance of the <see cref="ProviderRepository{TEntity}"/> class.
         /// </summary>
         /// <param name="logger">The <see cref="ILogger"/>.</param>
-        public DapperRepository(
-            ILogger<DapperRepository<TEntity>>? logger = null)
+        public ProviderRepository(
+            ILogger<ProviderRepository<TEntity>>? logger = null)
         {
-            Logger = logger ?? NullLogger<DapperRepository<TEntity>>.Instance;
+            Logger = logger ?? NullLogger<ProviderRepository<TEntity>>.Instance;
         }
 
         /// <summary>
