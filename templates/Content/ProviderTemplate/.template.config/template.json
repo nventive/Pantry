@@ -2,6 +2,7 @@
   "$schema": "http://json.schemastore.org/template",
   "author": "nventive",
   "name": "Pantry Provider template",
+  "description": "Use the following command to generate a provider in the solution folder: dotnet new pantry-provider -n Pantry.Azure.Cosmos -p Cosmos -o .",
   "identity": "Pantry.ProviderTemplate",
   "groupIdentity": "Pantry.ProviderTemplate",
   "shortName": "pantry-provider",
@@ -13,11 +14,12 @@
   "sourceName": "Pantry.ProviderTemplate",
   "preferNameDirectory": true,
   "symbols": {
-    "Provider": {
+    "provider": {
       "type": "parameter",
       "datatype": "string",
       "replaces": "Provider",
-      "description": "The name of the provider."
+      "description": "The name of the provider.",
+      "fileRename": "Provider"
     }
   },
   "sources": [
@@ -38,6 +40,10 @@
         }
       ]
     }
+  ],
+  "primaryOutputs": [
+    { "path": "Pantry.ProviderTemplate/Pantry.ProviderTemplate.csproj" },
+    { "path": "Pantry.ProviderTemplate.Tests/Pantry.ProviderTemplate.Tests.csproj" }
   ],
   "postActions": [
     {
