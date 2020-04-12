@@ -5,7 +5,7 @@ using Xunit.Abstractions;
 
 namespace Pantry.ProviderTemplate.Tests
 {
-    public class ProviderStandardTests : StandardRepositoryImplementationTests
+    public class ProviderStandardTests : StandardRepositoryImplementationTests<ProviderRepository<StandardEntity>>
     {
         public ProviderStandardTests(ITestOutputHelper outputHelper)
             : base(outputHelper)
