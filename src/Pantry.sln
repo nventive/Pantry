@@ -26,6 +26,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pantry.InMemory.Tests", "Pa
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pantry.Tests", "Pantry.Tests\Pantry.Tests.csproj", "{9FC6CE8C-2AED-4753-8865-545C6F118F1F}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pantry.AspNetCore", "Pantry.AspNetCore\Pantry.AspNetCore.csproj", "{00EED0E0-D27F-47B6-AE13-25ED910FD8AD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pantry.AspNetCore.Tests", "Pantry.AspNetCore.Tests\Pantry.AspNetCore.Tests.csproj", "{7118DBF6-1C00-4579-83C2-45820E19EB0D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -60,6 +64,14 @@ Global
 		{9FC6CE8C-2AED-4753-8865-545C6F118F1F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9FC6CE8C-2AED-4753-8865-545C6F118F1F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9FC6CE8C-2AED-4753-8865-545C6F118F1F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{00EED0E0-D27F-47B6-AE13-25ED910FD8AD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{00EED0E0-D27F-47B6-AE13-25ED910FD8AD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{00EED0E0-D27F-47B6-AE13-25ED910FD8AD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{00EED0E0-D27F-47B6-AE13-25ED910FD8AD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7118DBF6-1C00-4579-83C2-45820E19EB0D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7118DBF6-1C00-4579-83C2-45820E19EB0D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7118DBF6-1C00-4579-83C2-45820E19EB0D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7118DBF6-1C00-4579-83C2-45820E19EB0D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
