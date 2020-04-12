@@ -275,6 +275,11 @@ namespace Pantry.InMemory
 
             foreach (var criterion in query)
             {
+                if (criterion is PropertyCriterion propertyCriterion && propertyCriterion.PropertyPath.Contains(".", StringComparison.Ordinal))
+                {
+                    throw new UnsupportedFeatureException($"{GetType().Name} does not support sub-property selection ({propertyCriterion.PropertyPath}).");
+                }
+
                 queryable = criterion switch
                 {
                     IQueryableCriterion queryableCriterion => (IQueryable<TEntity>)queryableCriterion.Apply(queryable),

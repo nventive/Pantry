@@ -22,6 +22,6 @@ namespace Pantry.Queries.Criteria
         public IQueryable Apply(IQueryable queryable) => queryable.Where($"{PropertyPath} > @0", Value);
 
         /// <inheritdoc/>
-        public override string ToString() => $"{PropertyPath} > {Value}";
+        public override string ToString() => $"[{GetType().Name}] {PropertyPath} > {Value}";
     }
 }

@@ -28,11 +28,21 @@ namespace Pantry.Tests.StandardTestSupport
             => new List<Func<StandardEntity, StandardEntityCriteriaQuery>>
                 {
                     x => new StandardEntityCriteriaQuery { NameEq = x.Name },
+                    x => new StandardEntityCriteriaQuery { NameLike = x.Name!.Substring(1, 3) },
                     x => new StandardEntityCriteriaQuery { AgeEq = x.Age },
                     x => new StandardEntityCriteriaQuery { AgeGt = x.Age - 1 },
+                    x => new StandardEntityCriteriaQuery { AgeGte = x.Age },
+                    x => new StandardEntityCriteriaQuery { AgeLt = x.Age + 1 },
+                    x => new StandardEntityCriteriaQuery { AgeLte = x.Age },
                     x => new StandardEntityCriteriaQuery { NotarizedAtEq = x.NotarizedAt },
                     x => new StandardEntityCriteriaQuery { NotarizedAtGt = x.NotarizedAt!.Value.AddDays(-1) },
+                    x => new StandardEntityCriteriaQuery { NotarizedAtGte = x.NotarizedAt },
+                    x => new StandardEntityCriteriaQuery { NotarizedAtLt = x.NotarizedAt!.Value.AddDays(1) },
+                    x => new StandardEntityCriteriaQuery { NotarizedAtLte = x.NotarizedAt },
                     x => new StandardEntityCriteriaQuery { RelatedNameEq = x.Related!.Name },
+                    x => new StandardEntityCriteriaQuery { RelatedNameLike = x.Related!.Name!.Substring(1, 3) },
+                    x => new StandardEntityCriteriaQuery { LinesNameEq = x.Lines[0].Name },
+                    x => new StandardEntityCriteriaQuery { LinesNameLike = x.Lines[0].Name!.Substring(1, 3) },
                 }.Select(x => new object[] { x });
 
         protected virtual Faker Faker { get; } = new Faker();
