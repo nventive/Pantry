@@ -40,7 +40,7 @@ namespace Pantry.Azure.TableStorage
             IContinuationTokenEncoder<TableContinuationToken> continuationTokenEncoder,
             ILogger<AzureTableStorageRepository<TEntity>>? logger = null)
         {
-            CloudTableFor = cloudTableFor ?? throw new ArgumentNullException(nameof(cloudTableFor));
+            CloudTable = cloudTableFor?.CloudTable ?? throw new ArgumentNullException(nameof(cloudTableFor));
             IdGenerator = idGenerator ?? throw new ArgumentNullException(nameof(idGenerator));
             KeysResolver = keysResolver ?? throw new ArgumentNullException(nameof(keysResolver));
             TableEntityMapper = tableEntityMapper ?? throw new ArgumentNullException(nameof(tableEntityMapper));
@@ -49,9 +49,9 @@ namespace Pantry.Azure.TableStorage
         }
 
         /// <summary>
-        /// Gets the <see cref="CloudTableFor{T}"/>.
+        /// Gets the <see cref="CloudTable"/>.
         /// </summary>
-        protected CloudTableFor<TEntity> CloudTableFor { get; }
+        protected CloudTable CloudTable { get; }
 
         /// <summary>
         /// Gets the <see cref="IIdGenerator{T}"/>.
@@ -95,7 +95,7 @@ namespace Pantry.Azure.TableStorage
 
             try
             {
-                var operationResult = await CloudTableFor.CloudTable.ExecuteAsync(
+                var operationResult = await CloudTable.ExecuteAsync(
                     TableOperation.Insert(tableEntity),
                     cancellationToken)
                     .ConfigureAwait(false);
@@ -154,7 +154,7 @@ namespace Pantry.Azure.TableStorage
                 tableEntity.ETag = "*";
             }
 
-            var operationResult = await CloudTableFor.CloudTable.ExecuteAsync(
+            var operationResult = await CloudTable.ExecuteAsync(
                 TableOperation.InsertOrReplace(tableEntity),
                 cancellationToken)
                 .ConfigureAwait(false);
@@ -171,7 +171,7 @@ namespace Pantry.Azure.TableStorage
         public virtual async Task<TEntity?> TryGetByIdAsync(string id, CancellationToken cancellationToken = default)
         {
             var (partitionKey, rowKey) = KeysResolver.GetStorageKeys(id);
-            var operationResult = await CloudTableFor.CloudTable.ExecuteAsync(
+            var operationResult = await CloudTable.ExecuteAsync(
                 TableOperation.Retrieve(partitionKey, rowKey),
                 cancellationToken)
                 .ConfigureAwait(false);
@@ -205,7 +205,7 @@ namespace Pantry.Azure.TableStorage
                     targetUpdatedTableEntity.ETag = "*";
                 }
 
-                var operationResult = await CloudTableFor.CloudTable.ExecuteAsync(
+                var operationResult = await CloudTable.ExecuteAsync(
                     TableOperation.Replace(targetUpdatedTableEntity),
                     cancellationToken)
                     .ConfigureAwait(false);
@@ -277,7 +277,7 @@ namespace Pantry.Azure.TableStorage
             }
 
             var (partitionKey, rowKey) = KeysResolver.GetStorageKeys(id);
-            var result = await CloudTableFor.CloudTable.ExecuteAsync(
+            var result = await CloudTable.ExecuteAsync(
                 TableOperation.Retrieve(partitionKey, rowKey),
                 cancellationToken)
                 .ConfigureAwait(false);
@@ -291,7 +291,7 @@ namespace Pantry.Azure.TableStorage
                 return false;
             }
 
-            await CloudTableFor.CloudTable.ExecuteAsync(
+            await CloudTable.ExecuteAsync(
                 TableOperation.Delete((ITableEntity)result.Result),
                 cancellationToken)
                 .ConfigureAwait(false);
@@ -368,8 +368,8 @@ namespace Pantry.Azure.TableStorage
         /// <inheritdoc/>
         public async Task ClearAsync(CancellationToken cancellationToken = default)
         {
-            await CloudTableFor.CloudTable.DeleteIfExistsAsync(cancellationToken).ConfigureAwait(false);
-            await CloudTableFor.CloudTable.CreateAsync(cancellationToken).ConfigureAwait(false);
+            await CloudTable.DeleteIfExistsAsync(cancellationToken).ConfigureAwait(false);
+            await CloudTable.CreateAsync(cancellationToken).ConfigureAwait(false);
             Logger.LogClear(typeof(TEntity));
         }
 
@@ -401,7 +401,7 @@ namespace Pantry.Azure.TableStorage
             tableQuery.Take(query.Limit);
             apply(tableQuery);
 
-            var operationResult = await CloudTableFor.CloudTable.ExecuteQuerySegmentedAsync(
+            var operationResult = await CloudTable.ExecuteQuerySegmentedAsync(
                 tableQuery,
                 await ContinuationTokenEncoder.Decode(query.ContinuationToken),
                 cancellationToken).ConfigureAwait(false);
