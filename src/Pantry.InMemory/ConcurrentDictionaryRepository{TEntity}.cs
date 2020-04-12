@@ -12,6 +12,7 @@ using Pantry.Logging;
 using Pantry.Providers;
 using Pantry.Queries;
 using Pantry.Queries.Criteria;
+using Pantry.Traits;
 
 namespace Pantry.InMemory
 {
@@ -19,7 +20,7 @@ namespace Pantry.InMemory
     /// <see cref="IRepository{T}"/> implementation using in-memory storage.
     /// </summary>
     /// <typeparam name="TEntity">The entity type.</typeparam>
-    public class ConcurrentDictionaryRepository<TEntity> : IRepository<TEntity>
+    public class ConcurrentDictionaryRepository<TEntity> : IRepository<TEntity>, IRepositoryClear<TEntity>
         where TEntity : class, IIdentifiable
     {
         /// <summary>
@@ -292,6 +293,14 @@ namespace Pantry.InMemory
                 query.Limit);
             Logger.LogFind(query, result);
             return result;
+        }
+
+        /// <inheritdoc/>
+        public Task ClearAsync(CancellationToken cancellationToken = default)
+        {
+            Storage.Clear();
+            Logger.LogClear(typeof(TEntity));
+            return Task.CompletedTask;
         }
     }
 }

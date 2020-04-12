@@ -66,6 +66,12 @@ namespace Pantry.Logging
                 new EventId(EventIdBase + 6, "PantryFind"),
                 "{Method}() = {Query} {Result}");
 
+        private static readonly Action<ILogger, string?, string?, Exception?> _logClear =
+            LoggerMessage.Define<string?, string?>(
+                LogLevel.Information,
+                new EventId(EventIdBase + 7, "PantryClear"),
+                "{Method}() = {EntityType}");
+
         /// <summary>
         /// Logs a mapping operation.
         /// </summary>
@@ -294,6 +300,24 @@ namespace Pantry.Logging
                 methodName,
                 query,
                 result,
+                null);
+        }
+
+        /// <summary>
+        /// Logs a Clear operation.
+        /// </summary>
+        /// <param name="logger">The <see cref="ILogger"/>.</param>
+        /// <param name="entityType">The entity type.</param>
+        /// <param name="methodName">The method name, taken from <see cref="CallerMemberNameAttribute"/>.</param>
+        public static void LogClear(
+            this ILogger logger,
+            Type entityType,
+            [CallerMemberName] string? methodName = null)
+        {
+            _logClear(
+                logger,
+                methodName,
+                entityType?.Name,
                 null);
         }
     }

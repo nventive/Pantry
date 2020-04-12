@@ -635,6 +635,20 @@ namespace Pantry.Tests.StandardTestSupport
             result.ContinuationToken.Should().BeNullOrEmpty();
         }
 
+        [SkippableFact(typeof(UnsupportedFeatureException))]
+        public virtual async Task ItShouldClear()
+        {
+            var repo = GetRepositoryAs<IRepositoryClear<TTestEntity>>();
+            var entities = TestEntityGenerator.Generate(5);
+            using var scope = new TemporaryEntitiesScope<TTestEntity>(repo, entities);
+
+            await repo.ClearAsync();
+
+            var result = await GetRepositoryAs<IRepositoryFindAll<TTestEntity>>().FindAllAsync(null);
+
+            result.Should().BeEmpty();
+        }
+
         protected TInterface GetRepositoryAs<TInterface>()
             where TInterface : class
         {

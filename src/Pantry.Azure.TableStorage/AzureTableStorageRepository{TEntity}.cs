@@ -12,6 +12,7 @@ using Pantry.Logging;
 using Pantry.Mapping;
 using Pantry.Queries;
 using Pantry.Queries.Criteria;
+using Pantry.Traits;
 
 namespace Pantry.Azure.TableStorage
 {
@@ -19,7 +20,7 @@ namespace Pantry.Azure.TableStorage
     /// Azure Table Storage Repository Implementation.
     /// </summary>
     /// <typeparam name="TEntity">The entity type.</typeparam>
-    public class AzureTableStorageRepository<TEntity> : IRepository<TEntity>
+    public class AzureTableStorageRepository<TEntity> : IRepository<TEntity>, IRepositoryClear<TEntity>
         where TEntity : class, IIdentifiable
     {
         /// <summary>
@@ -362,6 +363,14 @@ namespace Pantry.Azure.TableStorage
                     }
                 },
                 cancellationToken);
+        }
+
+        /// <inheritdoc/>
+        public async Task ClearAsync(CancellationToken cancellationToken = default)
+        {
+            await CloudTableFor.CloudTable.DeleteIfExistsAsync(cancellationToken).ConfigureAwait(false);
+            await CloudTableFor.CloudTable.CreateAsync(cancellationToken).ConfigureAwait(false);
+            Logger.LogClear(typeof(TEntity));
         }
 
         /// <summary>
