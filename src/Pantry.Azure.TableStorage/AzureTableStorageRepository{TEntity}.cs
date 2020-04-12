@@ -20,7 +20,7 @@ namespace Pantry.Azure.TableStorage
     /// Azure Table Storage Repository Implementation.
     /// </summary>
     /// <typeparam name="TEntity">The entity type.</typeparam>
-    public class AzureTableStorageRepository<TEntity> : IRepository<TEntity>, IRepositoryClear<TEntity>
+    public class AzureTableStorageRepository<TEntity> : IRepository<TEntity>
         where TEntity : class, IIdentifiable
     {
         /// <summary>
@@ -363,14 +363,6 @@ namespace Pantry.Azure.TableStorage
                     }
                 },
                 cancellationToken);
-        }
-
-        /// <inheritdoc/>
-        public async Task ClearAsync(CancellationToken cancellationToken = default)
-        {
-            await CloudTable.DeleteIfExistsAsync(cancellationToken).ConfigureAwait(false);
-            await CloudTable.CreateAsync(cancellationToken).ConfigureAwait(false);
-            Logger.LogClear(typeof(TEntity));
         }
 
         /// <summary>
