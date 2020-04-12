@@ -5,7 +5,7 @@ using Xunit.Abstractions;
 
 namespace Pantry.InMemory.Tests
 {
-    public class ConcurrentDictionaryStandardTests : StandardRepositoryImplementationTests
+    public class ConcurrentDictionaryStandardTests : StandardRepositoryImplementationTests<ConcurrentDictionaryRepository<StandardEntity>>
     {
         public ConcurrentDictionaryStandardTests(ITestOutputHelper outputHelper)
             : base(outputHelper)

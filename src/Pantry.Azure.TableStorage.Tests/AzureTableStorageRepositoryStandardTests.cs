@@ -6,7 +6,7 @@ using Xunit.Abstractions;
 
 namespace Pantry.Azure.TableStorage.Tests
 {
-    public class AzureTableStorageRepositoryStandardTests : StandardRepositoryImplementationTests
+    public class AzureTableStorageRepositoryStandardTests : StandardRepositoryImplementationTests<AzureTableStorageRepository<StandardEntity>>
     {
         private const string StorageConnectionString = nameof(StorageConnectionString);
 

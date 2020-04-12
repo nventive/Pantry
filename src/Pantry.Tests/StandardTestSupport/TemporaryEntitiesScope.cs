@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Pantry.Traits;
 
 namespace Pantry.Tests.StandardTestSupport
 {
@@ -11,22 +12,22 @@ namespace Pantry.Tests.StandardTestSupport
     public class TemporaryEntitiesScope<TEntity> : IDisposable
         where TEntity : class, IIdentifiable, IETaggable, ITimestamped
     {
-        private readonly ICrudRepository<TEntity> _repository;
+        private readonly object _repository;
         private readonly IEnumerable<TEntity> _entitySet;
 
         public TemporaryEntitiesScope(
-            ICrudRepository<TEntity> repository,
+            object repository,
             IEnumerable<TEntity> entitySet,
             bool cleanUpOnly = false)
         {
             _repository = repository ?? throw new ArgumentNullException(nameof(repository));
             _entitySet = entitySet ?? throw new ArgumentNullException(nameof(entitySet));
 
-            if (!cleanUpOnly)
+            if (!cleanUpOnly && _repository is IRepositoryAdd<TEntity> repoAdd)
             {
                 foreach (var entity in _entitySet)
                 {
-                    var result = _repository.AddAsync(entity).ConfigureAwait(false).GetAwaiter().GetResult();
+                    var result = repoAdd.AddAsync(entity).ConfigureAwait(false).GetAwaiter().GetResult();
                     entity.Id = result.Id;
                     entity.ETag = result.ETag;
                     entity.Timestamp = result.Timestamp;
@@ -35,7 +36,7 @@ namespace Pantry.Tests.StandardTestSupport
         }
 
         public TemporaryEntitiesScope(
-            ICrudRepository<TEntity> repository,
+            object repository,
             TEntity entity,
             bool cleanUpOnly = false)
             : this(repository, new[] { entity }, cleanUpOnly)
@@ -44,9 +45,12 @@ namespace Pantry.Tests.StandardTestSupport
 
         public void Dispose()
         {
-            foreach (var entity in _entitySet.Where(x => !string.IsNullOrEmpty(x.Id)))
+            if (_repository is IRepositoryRemove<TEntity> repoRemove)
             {
-                _repository.TryRemoveAsync(entity).ConfigureAwait(false).GetAwaiter().GetResult();
+                foreach (var entity in _entitySet.Where(x => !string.IsNullOrEmpty(x.Id)))
+                {
+                    repoRemove.TryRemoveAsync(entity).ConfigureAwait(false).GetAwaiter().GetResult();
+                }
             }
         }
     }

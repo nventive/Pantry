@@ -12,7 +12,7 @@ namespace Pantry.Traits
     /// <typeparam name="TResult">The query return type.</typeparam>
     /// <typeparam name="TQuery">The query type.</typeparam>
     public interface IRepositoryFind<TEntity, TResult, TQuery>
-        where TQuery : IQuery<TEntity, TResult>
+        where TQuery : IQuery<TResult>
     {
         /// <summary>
         /// Find <typeparamref name="TResult"/> elements using the <paramref name="query"/>.
