@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Dynamic.Core;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -12,6 +12,7 @@ using Pantry.Generators;
 using Pantry.Logging;
 using Pantry.Providers;
 using Pantry.Queries;
+using Pantry.Queries.Criteria;
 
 namespace Pantry.InMemory
 {
@@ -259,6 +260,33 @@ namespace Pantry.InMemory
                 continuationToken,
                 limit);
             Logger.LogFind($"(ct: {continuationToken ?? "<no-ct>"}, limit: {limit})", result);
+            return result;
+        }
+
+        /// <inheritdoc/>
+        public async Task<IContinuationEnumerable<TEntity>> FindAsync(ICriteriaQuery<TEntity> query, CancellationToken cancellationToken = default)
+        {
+            if (query is null)
+            {
+                throw new ArgumentNullException(nameof(query));
+            }
+
+            var queryable = Storage.Values.AsQueryable();
+
+            foreach (var criterion in query)
+            {
+                queryable = criterion switch
+                {
+                    IQueryableCriterion queryableCriterion => (IQueryable<TEntity>)queryableCriterion.Apply(queryable),
+                    _ => throw new UnsupportedFeatureException($"The {criterion} criterion is not supported by {this}."),
+                };
+            }
+
+            var result = await ContinuationTokenEncoder.ToContinuationEnumerable(
+                queryable.ToList(),
+                query.ContinuationToken,
+                query.Limit);
+            Logger.LogFind(query, result);
             return result;
         }
     }

@@ -1,9 +1,12 @@
-﻿namespace Pantry.Queries.Criteria
+﻿using System.Linq;
+using System.Linq.Dynamic.Core;
+
+namespace Pantry.Queries.Criteria
 {
     /// <summary>
     /// Criterion that represents property equality.
     /// </summary>
-    public class EqualPropertyCriterion : PropertyCriterion
+    public class EqualPropertyCriterion : PropertyCriterion, IQueryableCriterion
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="EqualPropertyCriterion"/> class.
@@ -14,5 +17,11 @@
             : base(propertyPath, value)
         {
         }
+
+        /// <inheritdoc/>
+        public IQueryable Apply(IQueryable queryable) => queryable.Where($"{PropertyPath} == @0", Value);
+
+        /// <inheritdoc/>
+        public override string ToString() => $"{PropertyPath} == {Value}";
     }
 }

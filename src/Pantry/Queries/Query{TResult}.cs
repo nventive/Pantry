@@ -11,5 +11,8 @@
 
         /// <inheritdoc />
         public string? ContinuationToken { get; set; }
+
+        /// <inheritdoc />
+        public override string ToString() => $"[{GetType().Name}]: (ct: {ContinuationToken ?? "<no-ct>"}, limit: {Limit})";
     }
 }

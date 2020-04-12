@@ -315,6 +315,12 @@ namespace Pantry.Azure.TableStorage
                 cancellationToken);
         }
 
+        /// <inheritdoc/>
+        public Task<IContinuationEnumerable<TEntity>> FindAsync(ICriteriaQuery<TEntity> query, CancellationToken cancellationToken = default)
+        {
+            throw new UnsupportedFeatureException();
+        }
+
         /// <summary>
         /// Prepares a <see cref="TableQuery{DynamicTableEntity}"/> for execution,
         /// allows its customization trough <paramref name="apply"/>, and then

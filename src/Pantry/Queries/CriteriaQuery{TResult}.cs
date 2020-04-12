@@ -9,9 +9,12 @@ namespace Pantry.Queries
     public class CriteriaQuery<TResult> : List<ICriterion>, ICriteriaQuery<TResult>
     {
         /// <inheritdoc/>
-        public int Limit { get; set; }
+        public int Limit { get; set; } = Query.DefaultLimit;
 
         /// <inheritdoc/>
         public string? ContinuationToken { get; set; }
+
+        /// <inheritdoc/>
+        public override string ToString() => $"[{GetType().Name}]: {string.Join(", ", this)}";
     }
 }
