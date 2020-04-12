@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Linq;
-using System.Linq.Dynamic.Core;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -275,7 +274,7 @@ namespace Pantry.InMemory
 
             foreach (var criterion in query)
             {
-                if (criterion is PropertyCriterion propertyCriterion && propertyCriterion.PropertyPath.Contains(".", StringComparison.Ordinal))
+                if (criterion is PropertyCriterion propertyCriterion && propertyCriterion.PropertyPathContainsSubPath)
                 {
                     throw new UnsupportedFeatureException($"{GetType().Name} does not support sub-property selection ({propertyCriterion.PropertyPath}).");
                 }

@@ -40,9 +40,9 @@ namespace Pantry.Tests.StandardTestSupport
                     x => new StandardEntityCriteriaQuery { NotarizedAtLt = x.NotarizedAt!.Value.AddDays(1) },
                     x => new StandardEntityCriteriaQuery { NotarizedAtLte = x.NotarizedAt },
                     x => new StandardEntityCriteriaQuery { RelatedNameEq = x.Related!.Name },
-                    x => new StandardEntityCriteriaQuery { RelatedNameLike = x.Related!.Name!.Substring(1, 3) },
+                    x => new StandardEntityCriteriaQuery { RelatedNameLike = x.Related!.Name!.Substring(0, 1) },
                     x => new StandardEntityCriteriaQuery { LinesNameEq = x.Lines[0].Name },
-                    x => new StandardEntityCriteriaQuery { LinesNameLike = x.Lines[0].Name!.Substring(1, 3) },
+                    x => new StandardEntityCriteriaQuery { LinesNameLike = x.Lines[0].Name!.Substring(0, 1) },
                 }.Select(x => new object[] { x });
 
         protected virtual Faker Faker { get; } = new Faker();

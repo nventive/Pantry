@@ -11,6 +11,7 @@ using Pantry.Generators;
 using Pantry.Logging;
 using Pantry.Mapping;
 using Pantry.Queries;
+using Pantry.Queries.Criteria;
 
 namespace Pantry.Azure.TableStorage
 {
@@ -318,7 +319,49 @@ namespace Pantry.Azure.TableStorage
         /// <inheritdoc/>
         public Task<IContinuationEnumerable<TEntity>> FindAsync(ICriteriaQuery<TEntity> query, CancellationToken cancellationToken = default)
         {
-            throw new UnsupportedFeatureException();
+            if (query is null)
+            {
+                throw new ArgumentNullException(nameof(query));
+            }
+
+            string GenerateFilterCondition(PropertyCriterion criterion, string operation)
+            {
+                return criterion.Value switch
+                {
+                    byte[] binary => TableQuery.GenerateFilterConditionForBinary(criterion.PropertyPath, operation, binary),
+                    bool boolean => TableQuery.GenerateFilterConditionForBool(criterion.PropertyPath, operation, boolean),
+                    DateTimeOffset date => TableQuery.GenerateFilterConditionForDate(criterion.PropertyPath, operation, date),
+                    double dble => TableQuery.GenerateFilterConditionForDouble(criterion.PropertyPath, operation, dble),
+                    Guid guid => TableQuery.GenerateFilterConditionForGuid(criterion.PropertyPath, operation, guid),
+                    int integer => TableQuery.GenerateFilterConditionForInt(criterion.PropertyPath, operation, integer),
+                    long lng => TableQuery.GenerateFilterConditionForLong(criterion.PropertyPath, operation, lng),
+                    _ => TableQuery.GenerateFilterCondition(criterion.PropertyPath, operation, criterion.Value?.ToString()),
+                };
+            }
+
+            return PrepareQueryAndExecuteAsync(
+                query,
+                tableQuery =>
+                {
+                    foreach (var criterion in query)
+                    {
+                        if (criterion is PropertyCriterion propertyCriterion && propertyCriterion.PropertyPathContainsSubPath)
+                        {
+                            throw new UnsupportedFeatureException($"{GetType().Name} does not support sub-property selection ({propertyCriterion.PropertyPath}).");
+                        }
+
+                        tableQuery = criterion switch
+                        {
+                            EqualToPropertyCriterion equalTo => tableQuery.Where(GenerateFilterCondition(equalTo, QueryComparisons.Equal)),
+                            GreaterThanPropertyCriterion gt => tableQuery.Where(GenerateFilterCondition(gt, QueryComparisons.GreaterThan)),
+                            GreaterThanOrEqualToPropertyCriterion gte => tableQuery.Where(GenerateFilterCondition(gte, QueryComparisons.GreaterThanOrEqual)),
+                            LessThanPropertyCriterion lt => tableQuery.Where(GenerateFilterCondition(lt, QueryComparisons.LessThan)),
+                            LessThanOrEqualToPropertyCriterion lte => tableQuery.Where(GenerateFilterCondition(lte, QueryComparisons.LessThanOrEqual)),
+                            _ => throw new UnsupportedFeatureException($"The {criterion} criterion is not supported by {this}."),
+                        };
+                    }
+                },
+                cancellationToken);
         }
 
         /// <summary>
