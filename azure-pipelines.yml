@@ -22,7 +22,7 @@ steps:
   workingDirectory: src
   displayName: Build solution
 
-- script: dotnet test --no-build --configuration $(buildConfiguration) --logger:trx
+- script: dotnet test --no-build --configuration $(buildConfiguration) --logger:trx --collect "XPlat Code Coverage"
   displayName: Test
   workingDirectory: src
   env:
@@ -36,6 +36,20 @@ steps:
     testResultsFiles: '**/*.trx'
     mergeTestResults: true
     testRunTitle: 'Unit tests'
+
+- task: reportgenerator@4
+  displayName: "Generate Code Coverage Report"
+  inputs:
+    reports: "src/**/coverage.cobertura.xml"
+    reporttypes: "HtmlInline_AzurePipelines;Cobertura"
+    targetdir: "$(System.DefaultWorkingDirectory)/coveragereport"
+    assemblyfilters: "-xunit*;-microsoft*"
+
+- task: PublishCodeCoverageResults@1
+  displayName: Publish Code Coverage Results
+  inputs:
+    summaryFileLocation: "$(System.DefaultWorkingDirectory)/coveragereport/Cobertura.xml"
+    reportDirectory: "$(System.DefaultWorkingDirectory)/coveragereport"
 
 - script: dotnet pack --no-build --configuration $(buildConfiguration) -p:Version=$(GitVersion.NuGetVersionV2) --output $(build.artifactStagingDirectory)
   workingDirectory: src
