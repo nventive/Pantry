@@ -1,9 +1,6 @@
 ﻿using System.Net;
-using System.Net.Http;
 using System.Threading.Tasks;
 using FluentAssertions;
-using Pantry.AspNetCore.Tests.Server;
-using Refit;
 using Xunit;
 using Xunit.Abstractions;
 

@@ -13,7 +13,7 @@ namespace Pantry.AspNetCore.Tests
         }
 
         [Fact]
-        public async Task ItShouldGetSwagger()
+        public async Task ItShouldGetOpenApi()
         {
             var result = await Factory.CreateClient().GetStringAsync("/swagger/v1/swagger.json");
             result.Should().NotBeNullOrEmpty();

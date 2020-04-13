@@ -44,9 +44,10 @@ namespace Pantry.AspNetCore.Controllers
         /// <returns>An <see cref="ActionResult{TEntity}"/>.</returns>
         [HttpGet("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status304NotModified)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
         [ProducesDefaultResponseType]
         public virtual async Task<ActionResult<TEntity>> GetById([FromRoute] string id)
-            => OkOrNotFound(await GetAction(id).ConfigureAwait(false));
+            => OkNotFoundOrNotModified(await GetAction(id).ConfigureAwait(false));
     }
 }

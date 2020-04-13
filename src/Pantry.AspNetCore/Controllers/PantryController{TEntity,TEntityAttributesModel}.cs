@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Net.Http.Headers;
 using Omu.ValueInjecter;
+using Pantry.AspNetCore.Filters;
 using Pantry.Mapping;
 using Pantry.Traits;
 
@@ -15,6 +18,7 @@ namespace Pantry.AspNetCore.Controllers
     /// <typeparam name="TEntity">The entity type.</typeparam>
     /// <typeparam name="TEntityAttributesModel">The model that contains the attributes.</typeparam>
     [ApiController]
+    [EntityResponseHeaders]
     public abstract class PantryController<TEntity, TEntityAttributesModel> : ControllerBase
         where TEntity : class, IIdentifiable
     {
@@ -68,12 +72,15 @@ namespace Pantry.AspNetCore.Controllers
         }
 
         /// <summary>
-        /// Return either OK or NotFound depending on whether the <paramref name="result"/> is null.
+        /// Return either 200 OK, 404 NotFound or 304 Not Modified depending on the <paramref name="result"/> and the current Request headers.
+        /// If <paramref name="result"/> is null, return not found.
+        /// If <paramref name="result"/> is not null and does not implement <see cref="IETaggable"/> or <see cref="ITimestamped"/>, returns OK.
+        /// If <paramref name="result"/> is not null and implements <see cref="IETaggable"/> or <see cref="ITimestamped"/>, returns either OK or Not Modified depending on the request headers.
         /// </summary>
         /// <typeparam name="TResult">The type of result.</typeparam>
         /// <param name="result">The result.</param>
-        /// <returns><see cref="OkObjectResult"/> is not result is not null, or a <see cref="ObjectResult"/> with 404 and <see cref="ProblemDetails"/> if it is.</returns>
-        protected virtual ActionResult<TResult> OkOrNotFound<TResult>(TResult? result)
+        /// <returns>The result based on the rules outlined above.</returns>
+        protected virtual ActionResult<TResult> OkNotFoundOrNotModified<TResult>(TResult? result)
             where TResult : class
         {
             if (result is null)
@@ -84,7 +91,30 @@ namespace Pantry.AspNetCore.Controllers
             }
             else
             {
-                return Ok(result);
+                ActionResult<TResult>? actionResult = null;
+                if (result is ITimestamped timestamped && timestamped.Timestamp.HasValue)
+                {
+                    Response.GetTypedHeaders().LastModified = timestamped.Timestamp.Value;
+                    if (Request.GetTypedHeaders().IfModifiedSince != null
+                     && Request.GetTypedHeaders().IfModifiedSince >= Response.GetTypedHeaders().LastModified)
+                    {
+                        actionResult = StatusCode(StatusCodes.Status304NotModified);
+                    }
+                }
+
+                if (result is IETaggable taggable && !string.IsNullOrEmpty(taggable.ETag))
+                {
+                    Response.GetTypedHeaders().ETag = new EntityTagHeaderValue($"\"{taggable.ETag}\"", true);
+
+                    if (Request.GetTypedHeaders().IfNoneMatch != null
+                     && Request.GetTypedHeaders().IfNoneMatch.Any()
+                     && Request.GetTypedHeaders().IfNoneMatch.First().Compare(Response.GetTypedHeaders().ETag, false))
+                    {
+                        actionResult = StatusCode(StatusCodes.Status304NotModified);
+                    }
+                }
+
+                return actionResult ?? Ok(result);
             }
         }
     }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using Bogus;
 using FluentAssertions;
 using Pantry.AspNetCore.Tests.Server;
@@ -29,6 +30,9 @@ namespace Pantry.AspNetCore.Tests
             .RuleFor(x => x.Age, f => f.Random.Int(1, 100));
 
         protected Faker<StandardEntity> StandardEntityGenerator => new Faker<StandardEntity>()
+            .RuleFor(x => x.Id, f => f.Random.Guid().ToString("n", CultureInfo.InvariantCulture))
+            .RuleFor(x => x.ETag, f => f.Random.Hash())
+            .RuleFor(x => x.Timestamp, f => f.Date.PastOffset())
             .RuleFor(x => x.Name, f => f.Person.UserName)
             .RuleFor(x => x.Age, f => f.Random.Int(1, 100));
 
