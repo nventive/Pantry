@@ -29,10 +29,12 @@ namespace Pantry.AspNetCore.Controllers
         /// </summary>
         Update = 0b_0000_0100,
 
+        /*
         /// <summary>
         /// Update partial action (PATCH /collection/{id})
         /// </summary>
         UpdatePartial = 0b_0000_1000,
+        */
 
         /// <summary>
         /// Delete action (DELETE /collection/{id})
@@ -42,6 +44,6 @@ namespace Pantry.AspNetCore.Controllers
         /// <summary>
         /// All CRUD actions.
         /// </summary>
-        CRUD = Create | GetById | Update | UpdatePartial | Delete,
+        CRUD = Create | GetById | Update | Delete,
     }
 }

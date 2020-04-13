@@ -36,8 +36,8 @@ namespace Pantry.AspNetCore.Tests
             .RuleFor(x => x.Name, f => f.Person.UserName)
             .RuleFor(x => x.Age, f => f.Random.Int(1, 100));
 
-        protected IControllerApiClient<StandardEntity, StandardEntityAttributes> GetControllerApiClient(string relativeUri)
-            => Factory.GetApiClient<IControllerApiClient<StandardEntity, StandardEntityAttributes>>(relativeUri);
+        protected IRepositoryApiClient<StandardEntity, StandardEntityAttributes> GetRepositoryApiClient(string relativeUri)
+            => Factory.GetApiClient<IRepositoryApiClient<StandardEntity, StandardEntityAttributes>>(relativeUri);
 
         protected void AssertEntityAttributesAreOk(StandardEntity entity, StandardEntityAttributes attributes)
         {

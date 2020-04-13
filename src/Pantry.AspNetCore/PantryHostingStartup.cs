@@ -24,7 +24,7 @@ namespace Pantry.AspNetCore
             {
                 services.Configure<MvcOptions>(options =>
                 {
-                    options.Conventions.Add(new CapabilitiesActionModelConvention());
+                    options.Conventions.Add(new CapabilitiesApplicationModelConvention());
                 });
             });
         }

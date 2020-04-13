@@ -17,7 +17,7 @@ namespace Pantry.AspNetCore.Tests
         {
             var result = await Factory.CreateClient().GetStringAsync("/swagger/v1/swagger.json");
             result.Should().NotBeNullOrEmpty();
-            // result.Should().NotContain("/api/create-controller/entities/{id}");
+            result.Should().NotContain("/api/standard-entities-create/{id}");
         }
     }
 }
