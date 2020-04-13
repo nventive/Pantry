@@ -49,7 +49,9 @@ namespace Pantry.AspNetCore.Tests
                 })
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
-                    webBuilder.UseStartup<Startup>();
+                    webBuilder
+                        .UseSetting(WebHostDefaults.HostingStartupAssembliesKey, "Pantry.AspNetCore")
+                        .UseStartup<Startup>();
                 });
     }
 }
