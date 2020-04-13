@@ -122,7 +122,7 @@ namespace Pantry.Azure.TableStorage
         }
 
         /// <inheritdoc/>
-        public virtual async Task<TEntity> AddOrUpdateAsync(TEntity entity, CancellationToken cancellationToken = default)
+        public virtual async Task<(TEntity, bool)> AddOrUpdateAsync(TEntity entity, CancellationToken cancellationToken = default)
         {
             if (entity is null)
             {
@@ -131,40 +131,18 @@ namespace Pantry.Azure.TableStorage
 
             if (string.IsNullOrEmpty(entity.Id))
             {
-                entity.Id = await IdGenerator.Generate(entity);
+                return (await AddAsync(entity, cancellationToken).ConfigureAwait(false), true);
             }
 
-            if (entity is IETaggable taggableEntity && !string.IsNullOrEmpty(taggableEntity.ETag))
+            var existingEntity = await TryGetByIdAsync(entity.Id, cancellationToken).ConfigureAwait(false);
+            if (existingEntity is null)
             {
-                // We revert to more complex operation because TableOperation.InsertOrReplace does not honor ETags concurrency. Go figure.
-                var existingEntity = await TryGetByIdAsync(entity.Id, cancellationToken).ConfigureAwait(false);
-                if (existingEntity is null)
-                {
-                    return await AddAsync(entity, cancellationToken).ConfigureAwait(false);
-                }
-                else
-                {
-                    return await UpdateAsync(entity, cancellationToken).ConfigureAwait(false);
-                }
+                return (await AddAsync(entity, cancellationToken).ConfigureAwait(false), true);
             }
-
-            var tableEntity = TableEntityMapper.MapToDestination(entity);
-            if (string.IsNullOrEmpty(tableEntity.ETag))
+            else
             {
-                tableEntity.ETag = "*";
+                return (await UpdateAsync(entity, cancellationToken).ConfigureAwait(false), false);
             }
-
-            var operationResult = await CloudTable.ExecuteAsync(
-                TableOperation.InsertOrReplace(tableEntity),
-                cancellationToken)
-                .ConfigureAwait(false);
-
-            var result = TableEntityMapper.MapToSource((DynamicTableEntity)operationResult.Result);
-            Logger.LogUpdated(
-                entityType: typeof(TEntity),
-                entityId: result.Id,
-                entity: result);
-            return result;
         }
 
         /// <inheritdoc/>

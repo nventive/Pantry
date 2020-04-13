@@ -38,9 +38,9 @@ namespace Microsoft.Extensions.DependencyInjection
             services.TryAddSingleton<IAzureTableStorageKeysResolver<TEntity>, AzureTableStorageKeysResolver<TEntity>>();
             services.TryAddSingleton<IMapper<TEntity, DynamicTableEntity>, DynamicTableEntityMapper<TEntity>>();
 
-            services.TryAddAsSelfAndAllInterfaces<TRepository>();
+            var allInterfaces = services.TryAddAsSelfAndAllInterfaces<TRepository>();
 
-            return new AzureTableStorageRepositoryBuilder<TEntity>(services);
+            return new AzureTableStorageRepositoryBuilder<TEntity>(services, allInterfaces);
         }
     }
 }

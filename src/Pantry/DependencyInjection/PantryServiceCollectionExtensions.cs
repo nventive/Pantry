@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Pantry.Continuation;
 using Pantry.Generators;
 using Pantry.Providers;
+using Pantry.Traits;
 
 namespace Pantry.DependencyInjection
 {
@@ -19,8 +20,8 @@ namespace Pantry.DependencyInjection
         /// <typeparam name="T">The implementation to register.</typeparam>
         /// <param name="services">The <see cref="IServiceCollection"/>.</param>
         /// <param name="lifetime">The <see cref="ServiceLifetime"/>.</param>
-        /// <returns>The updated <see cref="IServiceCollection"/>.</returns>
-        public static IServiceCollection TryAddAsSelfAndAllInterfaces<T>(
+        /// <returns>The registered interfaces types.</returns>
+        public static IEnumerable<Type> TryAddAsSelfAndAllInterfaces<T>(
             this IServiceCollection services,
             ServiceLifetime lifetime = ServiceLifetime.Transient)
             => services.TryAddAsSelfAndAllInterfaces(typeof(T), lifetime);
@@ -31,8 +32,8 @@ namespace Pantry.DependencyInjection
         /// <param name="services">The <see cref="IServiceCollection"/>.</param>
         /// <param name="implementationType">The implementation type to register.</param>
         /// <param name="lifetime">The <see cref="ServiceLifetime"/>.</param>
-        /// <returns>The updated <see cref="IServiceCollection"/>.</returns>
-        public static IServiceCollection TryAddAsSelfAndAllInterfaces(
+        /// <returns>The registered interfaces types.</returns>
+        public static IEnumerable<Type> TryAddAsSelfAndAllInterfaces(
             this IServiceCollection services,
             Type implementationType,
             ServiceLifetime lifetime = ServiceLifetime.Transient)
@@ -42,13 +43,16 @@ namespace Pantry.DependencyInjection
                 throw new ArgumentNullException(nameof(implementationType));
             }
 
+            var result = new List<Type>();
+
             services.TryAdd(new ServiceDescriptor(implementationType, implementationType, lifetime));
             foreach (var iface in implementationType.GetInterfaces())
             {
                 services.TryAdd(new ServiceDescriptor(iface, sp => sp.GetService(implementationType), lifetime));
+                result.Add(iface);
             }
 
-            return services;
+            return result;
         }
 
         /// <summary>
@@ -121,6 +125,33 @@ namespace Pantry.DependencyInjection
             }
 
             services.TryAddSingleton<IContinuationTokenEncoder<TContinuationToken>, Base64JsonContinuationTokenEncoder<TContinuationToken>>();
+
+            return services;
+        }
+
+        /// <summary>
+        /// Tries to decorate all traits for a repository of <typeparamref name="TEntity"/>.
+        /// </summary>
+        /// <typeparam name="TEntity">The entity type.</typeparam>
+        /// <param name="services">The <see cref="IServiceCollection"/>.</param>
+        /// <param name="serviceTypes">All the service types.</param>
+        /// <param name="decoratorFactory">The decorator factory.</param>
+        /// <returns>The updated <see cref="IServiceCollection"/>.</returns>
+        public static IServiceCollection DecorateForAll<TEntity>(
+            this IServiceCollection services,
+            IEnumerable<Type> serviceTypes,
+            Func<object, IServiceProvider, object> decoratorFactory)
+            where TEntity : class, IIdentifiable
+        {
+            if (serviceTypes is null)
+            {
+                throw new ArgumentNullException(nameof(serviceTypes));
+            }
+
+            foreach (var serviceType in serviceTypes)
+            {
+                services.TryDecorate(serviceType, decoratorFactory);
+            }
 
             return services;
         }

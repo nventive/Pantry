@@ -121,21 +121,26 @@ namespace Pantry.InMemory
         }
 
         /// <inheritdoc/>
-        public virtual async Task<TEntity> AddOrUpdateAsync(TEntity entity, CancellationToken cancellationToken = default)
+        public virtual async Task<(TEntity, bool)> AddOrUpdateAsync(TEntity entity, CancellationToken cancellationToken = default)
         {
             if (entity is null)
             {
                 throw new ArgumentNullException(nameof(entity));
             }
 
+            if (string.IsNullOrEmpty(entity.Id))
+            {
+                return (await AddAsync(entity, cancellationToken).ConfigureAwait(false), true);
+            }
+
             var existingEntity = await TryGetByIdAsync(entity.Id, cancellationToken).ConfigureAwait(false);
             if (existingEntity is null)
             {
-                return await AddAsync(entity, cancellationToken).ConfigureAwait(false);
+                return (await AddAsync(entity, cancellationToken).ConfigureAwait(false), true);
             }
             else
             {
-                return await UpdateAsync(entity, cancellationToken).ConfigureAwait(false);
+                return (await UpdateAsync(entity, cancellationToken).ConfigureAwait(false), false);
             }
         }
 

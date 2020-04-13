@@ -16,8 +16,8 @@ namespace Microsoft.Extensions.DependencyInjection
         /// </summary>
         /// <typeparam name="TEntity">The entity type.</typeparam>
         /// <param name="services">The <see cref="IServiceCollection"/>.</param>
-        /// <returns>The <see cref="IRepositoryBuilder"/>.</returns>
-        public static IRepositoryBuilder AddConcurrentDictionaryRepository<TEntity>(this IServiceCollection services)
+        /// <returns>The <see cref="IRepositoryBuilder{TEntity}"/>.</returns>
+        public static IRepositoryBuilder<TEntity> AddConcurrentDictionaryRepository<TEntity>(this IServiceCollection services)
             where TEntity : class, IIdentifiable, new()
             => services.AddConcurrentDictionaryRepository<TEntity, ConcurrentDictionaryRepository<TEntity>>();
 
@@ -27,8 +27,8 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <typeparam name="TEntity">The entity type.</typeparam>
         /// <typeparam name="TRepository">The repository type.</typeparam>
         /// <param name="services">The <see cref="IServiceCollection"/>.</param>
-        /// <returns>The <see cref="IRepositoryBuilder"/>.</returns>
-        public static IRepositoryBuilder AddConcurrentDictionaryRepository<TEntity, TRepository>(this IServiceCollection services)
+        /// <returns>The <see cref="IRepositoryBuilder{TEntity}"/>.</returns>
+        public static IRepositoryBuilder<TEntity> AddConcurrentDictionaryRepository<TEntity, TRepository>(this IServiceCollection services)
             where TEntity : class, IIdentifiable, new()
         {
             services.TryAddIdGeneratorFor<TEntity>();
@@ -37,9 +37,9 @@ namespace Microsoft.Extensions.DependencyInjection
             services.TryAddContinuationTokenEncoderFor<LimitOffsetContinuationToken>();
 
             services.AddSingleton<ConcurrentDictionary<string, TEntity>>();
-            services.TryAddAsSelfAndAllInterfaces<TRepository>();
+            var allInterfaces = services.TryAddAsSelfAndAllInterfaces<TRepository>();
 
-            return new RepositoryBuilder(services, typeof(TEntity));
+            return new RepositoryBuilder<TEntity>(services, allInterfaces);
         }
     }
 }

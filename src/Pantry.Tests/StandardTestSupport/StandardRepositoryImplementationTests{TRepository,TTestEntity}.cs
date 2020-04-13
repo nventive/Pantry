@@ -134,8 +134,9 @@ namespace Pantry.Tests.StandardTestSupport
             var entity = TestEntityGenerator.Generate();
             using var scope = new TemporaryEntitiesScope<TTestEntity>(repo, entity, cleanUpOnly: true);
 
-            var result = await repo.AddOrUpdateAsync(entity);
+            var (result, added) = await repo.AddOrUpdateAsync(entity);
 
+            added.Should().BeTrue();
             result.Id.Should().NotBeNullOrEmpty();
             result.ETag.Should().NotBeNullOrEmpty();
             result.Timestamp.Should().NotBeNull();
@@ -152,8 +153,9 @@ namespace Pantry.Tests.StandardTestSupport
                 .RuleFor(x => x.Id, existingEntity.Id)
                 .Generate();
 
-            var result = await repo.AddOrUpdateAsync(updatedEntity);
+            var (result, added) = await repo.AddOrUpdateAsync(updatedEntity);
 
+            added.Should().BeFalse();
             result.ETag.Should().NotBeNullOrEmpty();
             result.Timestamp.Should().NotBeNull();
             result.Should().BeEquivalentTo(updatedEntity, opt => opt.Excluding(x => x.ETag).Excluding(x => x.Timestamp));
@@ -170,8 +172,9 @@ namespace Pantry.Tests.StandardTestSupport
                 .RuleFor(x => x.Id, existingEntity.Id)
                 .Generate();
 
-            var result = await repo.AddOrUpdateAsync(updatedEntity);
+            var (result, added) = await repo.AddOrUpdateAsync(updatedEntity);
 
+            added.Should().BeFalse();
             result.ETag.Should().NotBeNullOrEmpty();
             result.Timestamp.Should().NotBeNull();
             result.Should().BeEquivalentTo(updatedEntity, opt => opt.Excluding(x => x.ETag).Excluding(x => x.Timestamp));
