@@ -33,9 +33,9 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             services.TryAddIdGeneratorFor<TEntity>();
 
-            services.TryAddAsSelfAndAllInterfaces<TRepository>();
+            var allInterfaces = services.TryAddAsSelfAndAllInterfaces<TRepository>();
 
-            return new ProviderRepositoryBuilder<TEntity>(services);
+            return new ProviderRepositoryBuilder<TEntity>(services, allInterfaces);
         }
     }
 }

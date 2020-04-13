@@ -8,14 +8,16 @@ namespace Pantry.ProviderTemplate.DependencyInjection
     /// <see cref="IProviderRepositoryBuilder{TEntity}"/> default implementation.
     /// </summary>
     /// <typeparam name="TEntity">The entity type.</typeparam>
-    public class ProviderRepositoryBuilder<TEntity> : RepositoryBuilder, IProviderRepositoryBuilder<TEntity>
+    public class ProviderRepositoryBuilder<TEntity> : RepositoryBuilder<TEntity>, IProviderRepositoryBuilder<TEntity>
+        where TEntity : class, IIdentifiable
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="ProviderRepositoryBuilder{TEntity}"/> class.
         /// </summary>
         /// <param name="services">The <see cref="IServiceCollection"/>.</param>
-        public ProviderRepositoryBuilder(IServiceCollection services)
-            : base(services, typeof(TEntity))
+        /// <param name="registeredRepositoryInterfaces">The list of registered repository interfaces.</param>
+        public ProviderRepositoryBuilder(IServiceCollection services, IEnumerable<Type> registeredRepositoryInterfaces)
+            : base(services, registeredRepositoryInterfaces)
         {
         }
     }
