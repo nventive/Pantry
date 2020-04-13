@@ -18,13 +18,20 @@ namespace Pantry.AspNetCore.Tests
     {
         public ITestOutputHelper? OutputHelper { get; set; }
 
-        public T GetApiClient<T>()
+        public T GetApiClient<T>(string? relativeUri = null)
         {
-            return RestService.For<T>(
-                CreateDefaultClient(new[]
+            var client = CreateDefaultClient(new[]
                 {
                     new HttpTracingDelegatingHandler(Services.GetRequiredService<ILogger<T>>(), bufferRequests: true),
-                }),
+                });
+
+            if (!string.IsNullOrEmpty(relativeUri))
+            {
+                client.BaseAddress = new Uri(client.BaseAddress!, relativeUri);
+            }
+
+            return RestService.For<T>(
+                client,
                 new RefitSettings
                 {
                     ContentSerializer = new SystemTextJsonContentSerializer(

@@ -5,6 +5,7 @@
 [assembly: SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1652:Enable XML documentation output", Justification = "Not needed for tests projects")]
 [assembly: SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1615:Element return value must be documented", Justification = "Not needed for tests projects")]
 [assembly: SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1611:Element parameters must be documented", Justification = "Not needed for tests projects")]
+[assembly: SuppressMessage("Design", "CA1054:Uri parameters should not be strings", Justification = "Easier usage in tests.")]
 [assembly: SuppressMessage("Microsoft.Design", "CA1063:Implement IDisposable correctly", Justification = "Not needed for tests projects")]
 [assembly: SuppressMessage("Performance", "CA1812:Avoid uninstantiated internal classes", Justification = "DI sometimes works as well :-)")]
 [assembly: SuppressMessage("Microsoft.Usage", "CA1816:Call GC.SuppressFinalize correctly", Justification = "Not needed for tests projects")]

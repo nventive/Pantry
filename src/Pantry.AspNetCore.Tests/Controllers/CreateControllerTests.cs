@@ -1,7 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using System.Net;
+using System.Threading.Tasks;
 using FluentAssertions;
-using Pantry.AspNetCore.Tests.Server;
-using Refit;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -14,25 +13,16 @@ namespace Pantry.AspNetCore.Tests.Controllers
         {
         }
 
-        internal interface ICreateControllerApi
-        {
-            [Post("/api/create-controller/entities")]
-            Task<StandardEntity> Create([Body] StandardEntityAttributes attributes);
-        }
-
         [Fact]
         public async Task ItShouldCreate()
         {
-            var client = Factory.GetApiClient<ICreateControllerApi>();
+            var client = GetControllerApiClient("/api/create-controller/entities");
             var attributes = StandardEntityAttributesGenerator.Generate();
 
             var result = await client.Create(attributes);
+            result.StatusCode.Should().Be(HttpStatusCode.OK);
 
-            result.Id.Should().NotBeNullOrEmpty();
-            result.ETag.Should().NotBeNullOrEmpty();
-            result.Timestamp.Should().NotBeNull();
-            result.Name.Should().Be(attributes.Name);
-            result.Age.Should().Be(attributes.Age);
+            AssertEntityAttributesAreOk(result.Content, attributes);
         }
     }
 }

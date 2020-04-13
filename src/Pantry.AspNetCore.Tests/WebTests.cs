@@ -1,5 +1,6 @@
 ﻿using System;
 using Bogus;
+using FluentAssertions;
 using Pantry.AspNetCore.Tests.Server;
 using Xunit;
 using Xunit.Abstractions;
@@ -30,5 +31,27 @@ namespace Pantry.AspNetCore.Tests
         protected Faker<StandardEntity> StandardEntityGenerator => new Faker<StandardEntity>()
             .RuleFor(x => x.Name, f => f.Person.UserName)
             .RuleFor(x => x.Age, f => f.Random.Int(1, 100));
+
+        protected IControllerApiClient<StandardEntity, StandardEntityAttributes> GetControllerApiClient(string relativeUri)
+            => Factory.GetApiClient<IControllerApiClient<StandardEntity, StandardEntityAttributes>>(relativeUri);
+
+        protected void AssertEntityAttributesAreOk(StandardEntity entity, StandardEntityAttributes attributes)
+        {
+            if (entity is null)
+            {
+                throw new ArgumentNullException(nameof(entity));
+            }
+
+            if (attributes is null)
+            {
+                throw new ArgumentNullException(nameof(attributes));
+            }
+
+            entity.Id.Should().NotBeNullOrEmpty();
+            entity.ETag.Should().NotBeNullOrEmpty();
+            entity.Timestamp.Should().NotBeNull();
+            entity.Name.Should().Be(attributes.Name);
+            entity.Age.Should().Be(attributes.Age);
+        }
     }
 }
