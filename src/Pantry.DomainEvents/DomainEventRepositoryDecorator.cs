@@ -1,9 +1,8 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
-using Pantry.Continuation;
-using Pantry.Queries;
-using Pantry.Traits;
+using Pantry.Decorators;
 
 namespace Pantry.DomainEvents
 {
@@ -11,11 +10,11 @@ namespace Pantry.DomainEvents
     /// <see cref="IRepository{TEntity}"/> decorator that sends <see cref="IDomainEvent"/>.
     /// </summary>
     /// <typeparam name="TEntity">The entity type.</typeparam>
-    public class DomainEventRepositoryDecorator<TEntity> : IRepository<TEntity>
+    [SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "This is a decorator.")]
+    public class DomainEventRepositoryDecorator<TEntity> : RepositoryDecorator<TEntity>
         where TEntity : class, IIdentifiable
     {
         private readonly IDomainEventsDispatcher _dispatcher;
-        private readonly object _innerRepository;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DomainEventRepositoryDecorator{TEntity}"/> class.
@@ -25,24 +24,24 @@ namespace Pantry.DomainEvents
         public DomainEventRepositoryDecorator(
             IDomainEventsDispatcher dispatcher,
             object innerRepository)
+            : base(innerRepository)
         {
             _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
-            _innerRepository = innerRepository ?? throw new ArgumentNullException(nameof(innerRepository));
         }
 
         /// <inheritdoc/>
-        public async Task<TEntity> AddAsync(TEntity entity, CancellationToken cancellationToken = default)
+        public override async Task<TEntity> AddAsync(TEntity entity, CancellationToken cancellationToken = default)
         {
-            var result = await ((IRepositoryAdd<TEntity>)_innerRepository).AddAsync(entity, cancellationToken).ConfigureAwait(false);
+            var result = await base.AddAsync(entity, cancellationToken).ConfigureAwait(false);
             var domainEvent = new EntityAddedDomainEvent<TEntity> { Entity = result };
             await _dispatcher.DispatchAsync(domainEvent).ConfigureAwait(false);
             return result;
         }
 
         /// <inheritdoc/>
-        public async Task<(TEntity, bool)> AddOrUpdateAsync(TEntity entity, CancellationToken cancellationToken = default)
+        public override async Task<(TEntity, bool)> AddOrUpdateAsync(TEntity entity, CancellationToken cancellationToken = default)
         {
-            var (result, added) = await ((IRepositoryAddOrUpdate<TEntity>)_innerRepository).AddOrUpdateAsync(entity, cancellationToken).ConfigureAwait(false);
+            var (result, added) = await base.AddOrUpdateAsync(entity, cancellationToken).ConfigureAwait(false);
             var domainEvent = added
                 ? new EntityAddedDomainEvent<TEntity> { Entity = result }
                 : (IDomainEvent)new EntityUpdatedDomainEvent<TEntity> { Entity = result };
@@ -51,9 +50,9 @@ namespace Pantry.DomainEvents
         }
 
         /// <inheritdoc/>
-        public async Task<bool> TryRemoveAsync(string id, CancellationToken cancellationToken = default)
+        public override async Task<bool> TryRemoveAsync(string id, CancellationToken cancellationToken = default)
         {
-            var result = await ((IRepositoryRemove<TEntity>)_innerRepository).TryRemoveAsync(id, cancellationToken).ConfigureAwait(false);
+            var result = await base.TryRemoveAsync(id, cancellationToken).ConfigureAwait(false);
             if (result)
             {
                 var domainEvent = new EntityRemovedDomainEvent<TEntity> { EntityId = id };
@@ -64,24 +63,41 @@ namespace Pantry.DomainEvents
         }
 
         /// <inheritdoc/>
-        public async Task<TEntity> UpdateAsync(TEntity entity, CancellationToken cancellationToken = default)
+        public override async Task<bool> TryRemoveAsync(TEntity entity, CancellationToken cancellationToken = default)
         {
-            var result = await ((IRepositoryUpdate<TEntity>)_innerRepository).UpdateAsync(entity, cancellationToken).ConfigureAwait(false);
-            var domainEvent = new EntityUpdatedDomainEvent<TEntity> { Entity = result };
-            await _dispatcher.DispatchAsync(domainEvent).ConfigureAwait(false);
+            var result = await base.TryRemoveAsync(entity, cancellationToken).ConfigureAwait(false);
+            if (result)
+            {
+                var domainEvent = new EntityRemovedDomainEvent<TEntity> { EntityId = entity.Id };
+                await _dispatcher.DispatchAsync(domainEvent).ConfigureAwait(false);
+            }
+
             return result;
         }
 
         /// <inheritdoc/>
-        public Task<IContinuationEnumerable<TEntity>> FindAllAsync(string? continuationToken, int limit = 50, CancellationToken cancellationToken = default)
-            => ((IRepositoryFindAll<TEntity>)_innerRepository).FindAllAsync(continuationToken, limit, cancellationToken);
+        public override async Task RemoveAsync(string id, CancellationToken cancellationToken = default)
+        {
+            await base.RemoveAsync(id, cancellationToken).ConfigureAwait(false);
+            var domainEvent = new EntityRemovedDomainEvent<TEntity> { EntityId = id };
+            await _dispatcher.DispatchAsync(domainEvent).ConfigureAwait(false);
+        }
 
         /// <inheritdoc/>
-        public Task<IContinuationEnumerable<TEntity>> FindAsync(ICriteriaQuery<TEntity> query, CancellationToken cancellationToken = default)
-            => ((IRepositoryFindByCriteria<TEntity>)_innerRepository).FindAsync(query, cancellationToken);
+        public override async Task RemoveAsync(TEntity entity, CancellationToken cancellationToken = default)
+        {
+            await base.RemoveAsync(entity, cancellationToken).ConfigureAwait(false);
+            var domainEvent = new EntityRemovedDomainEvent<TEntity> { EntityId = entity.Id };
+            await _dispatcher.DispatchAsync(domainEvent).ConfigureAwait(false);
+        }
 
         /// <inheritdoc/>
-        public Task<TEntity?> TryGetByIdAsync(string id, CancellationToken cancellationToken = default)
-            => ((IRepositoryGet<TEntity>)_innerRepository).TryGetByIdAsync(id, cancellationToken);
+        public override async Task<TEntity> UpdateAsync(TEntity entity, CancellationToken cancellationToken = default)
+        {
+            var result = await base.UpdateAsync(entity, cancellationToken).ConfigureAwait(false);
+            var domainEvent = new EntityUpdatedDomainEvent<TEntity> { Entity = result };
+            await _dispatcher.DispatchAsync(domainEvent).ConfigureAwait(false);
+            return result;
+        }
     }
 }

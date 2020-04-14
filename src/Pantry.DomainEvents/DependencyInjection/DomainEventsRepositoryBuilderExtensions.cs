@@ -26,8 +26,7 @@ namespace Microsoft.Extensions.DependencyInjection
             }
 
             builder.Services.TryAddTransient<IDomainEventsDispatcher, ServiceProviderDomainEventsDispatcher>();
-            builder.Services.DecorateForAll<TEntity>(
-                builder.RegisteredRepositoryInterfaces,
+            builder.AddRepositoryDecorator(
                 (repo, sp) => new DomainEventRepositoryDecorator<TEntity>(sp.GetRequiredService<IDomainEventsDispatcher>(), repo));
 
             return builder;

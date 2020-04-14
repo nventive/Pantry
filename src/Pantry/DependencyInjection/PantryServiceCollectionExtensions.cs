@@ -5,7 +5,6 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Pantry.Continuation;
 using Pantry.Generators;
 using Pantry.Providers;
-using Pantry.Traits;
 
 namespace Pantry.DependencyInjection
 {
@@ -125,33 +124,6 @@ namespace Pantry.DependencyInjection
             }
 
             services.TryAddSingleton<IContinuationTokenEncoder<TContinuationToken>, Base64JsonContinuationTokenEncoder<TContinuationToken>>();
-
-            return services;
-        }
-
-        /// <summary>
-        /// Tries to decorate all traits for a repository of <typeparamref name="TEntity"/>.
-        /// </summary>
-        /// <typeparam name="TEntity">The entity type.</typeparam>
-        /// <param name="services">The <see cref="IServiceCollection"/>.</param>
-        /// <param name="serviceTypes">All the service types.</param>
-        /// <param name="decoratorFactory">The decorator factory.</param>
-        /// <returns>The updated <see cref="IServiceCollection"/>.</returns>
-        public static IServiceCollection DecorateForAll<TEntity>(
-            this IServiceCollection services,
-            IEnumerable<Type> serviceTypes,
-            Func<object, IServiceProvider, object> decoratorFactory)
-            where TEntity : class, IIdentifiable
-        {
-            if (serviceTypes is null)
-            {
-                throw new ArgumentNullException(nameof(serviceTypes));
-            }
-
-            foreach (var serviceType in serviceTypes)
-            {
-                services.TryDecorate(serviceType, decoratorFactory);
-            }
 
             return services;
         }
