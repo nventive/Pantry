@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Pantry.AspNetCore.Controllers;
 
 namespace Pantry.AspNetCore.Tests.Server
 {
@@ -19,7 +20,9 @@ namespace Pantry.AspNetCore.Tests.Server
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddConcurrentDictionaryRepository<StandardEntity>();
-            services.AddControllers();
+            services
+                .AddControllers()
+                .AddRepositoryController<StandardEntity>("/api/standard-entities-2", Capabilities.GetById);
             services.AddOpenApiDocument();
         }
 

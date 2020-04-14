@@ -19,7 +19,6 @@ namespace Pantry.AspNetCore.Controllers
     /// <typeparam name="TEntity">The entity type.</typeparam>
     /// <typeparam name="TEntityAttributesModel">The model that contains the attributes.</typeparam>
     [ApiController]
-    [EntityHttpCacheResponseHeaders]
     public abstract class RepositoryController<TEntity, TEntityAttributesModel> : ControllerBase, ICapabilitiesProvider
         where TEntity : class, IIdentifiable
         where TEntityAttributesModel : class

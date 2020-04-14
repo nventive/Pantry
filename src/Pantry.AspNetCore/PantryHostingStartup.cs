@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Pantry.AspNetCore.ApplicationModels;
+using Pantry.AspNetCore.Filters;
 
 [assembly: HostingStartup(typeof(Pantry.AspNetCore.PantryHostingStartup))]
 
@@ -25,6 +26,7 @@ namespace Pantry.AspNetCore
                 services.Configure<MvcOptions>(options =>
                 {
                     options.Conventions.Add(new CapabilitiesApplicationModelConvention());
+                    options.Filters.Add<EntityHttpCacheResponseHeadersAttribute>();
                 });
             });
         }
