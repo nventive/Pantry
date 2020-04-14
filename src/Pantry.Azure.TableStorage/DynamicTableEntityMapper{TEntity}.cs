@@ -12,25 +12,20 @@ using Pantry.Mapping;
 namespace Pantry.Azure.TableStorage
 {
     /// <summary>
-    /// Maps entities to and from <see cref="DynamicTableEntity"/>.
+    /// <see cref="IDynamicTableEntityMapper{TEntity}"/> default implementation.
     /// </summary>
     /// <typeparam name="TEntity">The entity type.</typeparam>
-    public class DynamicTableEntityMapper<TEntity> : IMapper<TEntity, DynamicTableEntity>
+    public class DynamicTableEntityMapper<TEntity> : IDynamicTableEntityMapper<TEntity>
         where TEntity : class, IIdentifiable, new()
     {
-        private readonly IAzureTableStorageKeysResolver<TEntity> _keysResolver;
         private readonly ILogger _logger;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DynamicTableEntityMapper{T}"/> class.
         /// </summary>
-        /// <param name="keysResolver">The <see cref="IAzureTableStorageKeysResolver{T}"/>.</param>
         /// <param name="logger">The <see cref="ILogger"/>.</param>
-        public DynamicTableEntityMapper(
-            IAzureTableStorageKeysResolver<TEntity> keysResolver,
-            ILogger<DynamicTableEntityMapper<TEntity>>? logger = null)
+        public DynamicTableEntityMapper(ILogger<DynamicTableEntityMapper<TEntity>>? logger = null)
         {
-            _keysResolver = keysResolver ?? throw new ArgumentNullException(nameof(keysResolver));
             _logger = logger ?? NullLogger<DynamicTableEntityMapper<TEntity>>.Instance;
         }
 
@@ -42,7 +37,7 @@ namespace Pantry.Azure.TableStorage
                 throw new ArgumentNullException(nameof(source));
             }
 
-            var (partitionKey, rowKey) = _keysResolver.GetStorageKeys(source.Id);
+            var (partitionKey, rowKey) = GetStorageKeys(source.Id);
             var dynamicTableEntity = new DynamicTableEntity(partitionKey, rowKey);
 
             if (source is IETaggable taggableEntity)
@@ -84,7 +79,7 @@ namespace Pantry.Azure.TableStorage
 
             var result = new TEntity
             {
-                Id = _keysResolver.GetEntityId(destination.PartitionKey, destination.RowKey),
+                Id = GetEntityId(destination.PartitionKey, destination.RowKey),
             };
 
             if (result is IETaggable taggableEntity)
@@ -127,6 +122,28 @@ namespace Pantry.Azure.TableStorage
 
             return result;
         }
+
+        /// <inheritdoc/>
+        public virtual (string partitionKey, string rowKey) GetStorageKeys(string id)
+        {
+            if (string.IsNullOrEmpty(id))
+            {
+                throw new ArgumentNullException(nameof(id));
+            }
+
+            return (id, id);
+        }
+
+        /// <inheritdoc/>
+        public virtual string GetEntityId(string partitionKey, string rowKey) => rowKey;
+
+        /// <inheritdoc/>
+        public virtual IEnumerable<string> ResolveQueryPropertyPaths(string propertyPath)
+            => propertyPath switch
+            {
+                "Id" => new[] { "PartitionKey", "RowKey" },
+                _ => new[] { propertyPath },
+            };
 
         /// <summary>
         /// Returns the list of serializable properties in <typeparamref name="TEntity"/>.

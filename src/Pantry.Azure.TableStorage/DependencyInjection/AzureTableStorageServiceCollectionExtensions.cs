@@ -35,8 +35,7 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             services.TryAddIdGeneratorFor<TEntity>();
             services.TryAddContinuationTokenEncoderFor<TableContinuationToken>();
-            services.TryAddSingleton<IAzureTableStorageKeysResolver<TEntity>, AzureTableStorageKeysResolver<TEntity>>();
-            services.TryAddSingleton<IMapper<TEntity, DynamicTableEntity>, DynamicTableEntityMapper<TEntity>>();
+            services.TryAddSingleton<IDynamicTableEntityMapper<TEntity>, DynamicTableEntityMapper<TEntity>>();
 
             var allInterfaces = services.TryAddAsSelfAndAllInterfaces<TRepository>();
 

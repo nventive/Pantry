@@ -6,6 +6,12 @@ namespace Pantry.Tests.StandardTestSupport
 {
     public class StandardEntityCriteriaQuery : CriteriaQuery<StandardEntity>
     {
+        public string? IdEq
+        {
+            get => this.EqualToValue(x => x.Id);
+            set => this.EqualTo(x => x.Id, value);
+        }
+
         public string? NameEq
         {
             get => this.EqualToValue(x => x.Name);

@@ -9,10 +9,8 @@ using Pantry.Continuation;
 using Pantry.Exceptions;
 using Pantry.Generators;
 using Pantry.Logging;
-using Pantry.Mapping;
 using Pantry.Queries;
 using Pantry.Queries.Criteria;
-using Pantry.Traits;
 
 namespace Pantry.Azure.TableStorage
 {
@@ -21,29 +19,26 @@ namespace Pantry.Azure.TableStorage
     /// </summary>
     /// <typeparam name="TEntity">The entity type.</typeparam>
     public class AzureTableStorageRepository<TEntity> : IRepository<TEntity>
-        where TEntity : class, IIdentifiable
+        where TEntity : class, IIdentifiable, new()
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="AzureTableStorageRepository{T}"/> class.
         /// </summary>
         /// <param name="cloudTableFor">The <see cref="CloudTableFor{T}"/> instance to use.</param>
         /// <param name="idGenerator">The <see cref="IIdGenerator{T}"/>.</param>
-        /// <param name="tableEntityMapper">The mapper to <see cref="ITableEntity"/>.</param>
+        /// <param name="mapper">The mapper to <see cref="DynamicTableEntity"/>.</param>
         /// <param name="continuationTokenEncoder">The <see cref="IContinuationTokenEncoder{TableContinuationToken}"/>.</param>
-        /// <param name="keysResolver">The <see cref="IAzureTableStorageKeysResolver{T}"/> to use.</param>
         /// <param name="logger">The <see cref="ILogger"/>.</param>
         public AzureTableStorageRepository(
             CloudTableFor<TEntity> cloudTableFor,
             IIdGenerator<TEntity> idGenerator,
-            IAzureTableStorageKeysResolver<TEntity> keysResolver,
-            IMapper<TEntity, DynamicTableEntity> tableEntityMapper,
+            IDynamicTableEntityMapper<TEntity> mapper,
             IContinuationTokenEncoder<TableContinuationToken> continuationTokenEncoder,
             ILogger<AzureTableStorageRepository<TEntity>>? logger = null)
         {
             CloudTable = cloudTableFor?.CloudTable ?? throw new ArgumentNullException(nameof(cloudTableFor));
             IdGenerator = idGenerator ?? throw new ArgumentNullException(nameof(idGenerator));
-            KeysResolver = keysResolver ?? throw new ArgumentNullException(nameof(keysResolver));
-            TableEntityMapper = tableEntityMapper ?? throw new ArgumentNullException(nameof(tableEntityMapper));
+            Mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             ContinuationTokenEncoder = continuationTokenEncoder ?? throw new ArgumentNullException(nameof(continuationTokenEncoder));
             Logger = logger ?? NullLogger<AzureTableStorageRepository<TEntity>>.Instance;
         }
@@ -59,14 +54,9 @@ namespace Pantry.Azure.TableStorage
         protected IIdGenerator<TEntity> IdGenerator { get; }
 
         /// <summary>
-        /// Gets the <see cref="IAzureTableStorageKeysResolver{T}"/>.
+        /// Gets the <see cref="IDynamicTableEntityMapper{TEntity}"/>.
         /// </summary>
-        protected IAzureTableStorageKeysResolver<TEntity> KeysResolver { get; }
-
-        /// <summary>
-        /// Gets the <see cref="IMapper{T, DynamicTableEntity}"/>.
-        /// </summary>
-        protected IMapper<TEntity, DynamicTableEntity> TableEntityMapper { get; }
+        protected IDynamicTableEntityMapper<TEntity> Mapper { get; }
 
         /// <summary>
         /// Gets the <see cref="IContinuationTokenEncoder{TableContinuationToken}"/>.
@@ -91,7 +81,7 @@ namespace Pantry.Azure.TableStorage
                 entity.Id = await IdGenerator.Generate(entity);
             }
 
-            var tableEntity = TableEntityMapper.MapToDestination(entity);
+            var tableEntity = Mapper.MapToDestination(entity);
 
             try
             {
@@ -100,7 +90,7 @@ namespace Pantry.Azure.TableStorage
                     cancellationToken)
                     .ConfigureAwait(false);
 
-                var result = TableEntityMapper.MapToSource((DynamicTableEntity)operationResult.Result);
+                var result = Mapper.MapToSource((DynamicTableEntity)operationResult.Result);
 
                 Logger.LogAdded(
                     entityType: typeof(TEntity),
@@ -148,7 +138,7 @@ namespace Pantry.Azure.TableStorage
         /// <inheritdoc/>
         public virtual async Task<TEntity?> TryGetByIdAsync(string id, CancellationToken cancellationToken = default)
         {
-            var (partitionKey, rowKey) = KeysResolver.GetStorageKeys(id);
+            var (partitionKey, rowKey) = Mapper.GetStorageKeys(id);
             var operationResult = await CloudTable.ExecuteAsync(
                 TableOperation.Retrieve(partitionKey, rowKey),
                 cancellationToken)
@@ -156,7 +146,7 @@ namespace Pantry.Azure.TableStorage
 
             var result = operationResult.HttpStatusCode == 404
                 ? null
-                : TableEntityMapper.MapToSource((DynamicTableEntity)operationResult.Result);
+                : Mapper.MapToSource((DynamicTableEntity)operationResult.Result);
             Logger.LogGetById(
                     entityType: typeof(TEntity),
                     entityId: id,
@@ -176,7 +166,7 @@ namespace Pantry.Azure.TableStorage
             string? sentEtag = null; // To properly catch ETag format exceptions.
             try
             {
-                var targetUpdatedTableEntity = TableEntityMapper.MapToDestination(entity);
+                var targetUpdatedTableEntity = Mapper.MapToDestination(entity);
                 sentEtag = targetUpdatedTableEntity.ETag;
                 if (string.IsNullOrEmpty(targetUpdatedTableEntity.ETag))
                 {
@@ -188,7 +178,7 @@ namespace Pantry.Azure.TableStorage
                     cancellationToken)
                     .ConfigureAwait(false);
 
-                var result = TableEntityMapper.MapToSource((DynamicTableEntity)operationResult.Result);
+                var result = Mapper.MapToSource((DynamicTableEntity)operationResult.Result);
                 Logger.LogUpdated(
                     entityType: typeof(TEntity),
                     entityId: result.Id,
@@ -254,7 +244,7 @@ namespace Pantry.Azure.TableStorage
                 return false;
             }
 
-            var (partitionKey, rowKey) = KeysResolver.GetStorageKeys(id);
+            var (partitionKey, rowKey) = Mapper.GetStorageKeys(id);
             var result = await CloudTable.ExecuteAsync(
                 TableOperation.Retrieve(partitionKey, rowKey),
                 cancellationToken)
@@ -303,19 +293,27 @@ namespace Pantry.Azure.TableStorage
                 throw new ArgumentNullException(nameof(query));
             }
 
-            string GenerateFilterCondition(PropertyCriterion criterion, string operation)
+            TableQuery<DynamicTableEntity> AddFilterCondition(TableQuery<DynamicTableEntity> tblQuery, PropertyCriterion criterion, string operation)
             {
-                return criterion.Value switch
+                var targetPropertyPaths = Mapper.ResolveQueryPropertyPaths(criterion.PropertyPath);
+                foreach (var targetPropertyPath in targetPropertyPaths)
                 {
-                    byte[] binary => TableQuery.GenerateFilterConditionForBinary(criterion.PropertyPath, operation, binary),
-                    bool boolean => TableQuery.GenerateFilterConditionForBool(criterion.PropertyPath, operation, boolean),
-                    DateTimeOffset date => TableQuery.GenerateFilterConditionForDate(criterion.PropertyPath, operation, date),
-                    double dble => TableQuery.GenerateFilterConditionForDouble(criterion.PropertyPath, operation, dble),
-                    Guid guid => TableQuery.GenerateFilterConditionForGuid(criterion.PropertyPath, operation, guid),
-                    int integer => TableQuery.GenerateFilterConditionForInt(criterion.PropertyPath, operation, integer),
-                    long lng => TableQuery.GenerateFilterConditionForLong(criterion.PropertyPath, operation, lng),
-                    _ => TableQuery.GenerateFilterCondition(criterion.PropertyPath, operation, criterion.Value?.ToString()),
-                };
+                    Logger.LogTrace("AddFilterCondition() {TargetPropertyPath} {Operation} {Value}", targetPropertyPath, operation, criterion.Value);
+                    tblQuery = tblQuery.Where(
+                        criterion.Value switch
+                        {
+                            byte[] binary => TableQuery.GenerateFilterConditionForBinary(targetPropertyPath, operation, binary),
+                            bool boolean => TableQuery.GenerateFilterConditionForBool(targetPropertyPath, operation, boolean),
+                            DateTimeOffset date => TableQuery.GenerateFilterConditionForDate(targetPropertyPath, operation, date),
+                            double dble => TableQuery.GenerateFilterConditionForDouble(targetPropertyPath, operation, dble),
+                            Guid guid => TableQuery.GenerateFilterConditionForGuid(targetPropertyPath, operation, guid),
+                            int integer => TableQuery.GenerateFilterConditionForInt(targetPropertyPath, operation, integer),
+                            long lng => TableQuery.GenerateFilterConditionForLong(targetPropertyPath, operation, lng),
+                            _ => TableQuery.GenerateFilterCondition(targetPropertyPath, operation, criterion.Value?.ToString()),
+                        });
+                }
+
+                return tblQuery;
             }
 
             return PrepareQueryAndExecuteAsync(
@@ -331,11 +329,11 @@ namespace Pantry.Azure.TableStorage
 
                         tableQuery = criterion switch
                         {
-                            EqualToPropertyCriterion equalTo => tableQuery.Where(GenerateFilterCondition(equalTo, QueryComparisons.Equal)),
-                            GreaterThanPropertyCriterion gt => tableQuery.Where(GenerateFilterCondition(gt, QueryComparisons.GreaterThan)),
-                            GreaterThanOrEqualToPropertyCriterion gte => tableQuery.Where(GenerateFilterCondition(gte, QueryComparisons.GreaterThanOrEqual)),
-                            LessThanPropertyCriterion lt => tableQuery.Where(GenerateFilterCondition(lt, QueryComparisons.LessThan)),
-                            LessThanOrEqualToPropertyCriterion lte => tableQuery.Where(GenerateFilterCondition(lte, QueryComparisons.LessThanOrEqual)),
+                            EqualToPropertyCriterion equalTo => AddFilterCondition(tableQuery, equalTo, QueryComparisons.Equal),
+                            GreaterThanPropertyCriterion gt => AddFilterCondition(tableQuery, gt, QueryComparisons.GreaterThan),
+                            GreaterThanOrEqualToPropertyCriterion gte => AddFilterCondition(tableQuery, gte, QueryComparisons.GreaterThanOrEqual),
+                            LessThanPropertyCriterion lt => AddFilterCondition(tableQuery, lt, QueryComparisons.LessThan),
+                            LessThanOrEqualToPropertyCriterion lte => AddFilterCondition(tableQuery, lte, QueryComparisons.LessThanOrEqual),
                             _ => throw new UnsupportedFeatureException($"The {criterion} criterion is not supported by {this}."),
                         };
                     }
@@ -377,7 +375,7 @@ namespace Pantry.Azure.TableStorage
                 cancellationToken).ConfigureAwait(false);
 
             var result = operationResult.Results
-                .Select(x => TableEntityMapper.MapToSource(x))
+                .Select(x => Mapper.MapToSource(x))
                 .ToContinuationEnumerable(await ContinuationTokenEncoder.Encode(operationResult.ContinuationToken));
 
             Logger.LogFind(query, result);

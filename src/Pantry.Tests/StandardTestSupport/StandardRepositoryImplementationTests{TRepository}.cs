@@ -27,6 +27,7 @@ namespace Pantry.Tests.StandardTestSupport
         public static IEnumerable<object[]> ItShouldFindWithASimpleCriteriaQueryData
             => new List<Func<StandardEntity, StandardEntityCriteriaQuery>>
                 {
+                    x => new StandardEntityCriteriaQuery { IdEq = x.Id },
                     x => new StandardEntityCriteriaQuery { NameEq = x.Name },
                     x => new StandardEntityCriteriaQuery { NameLike = x.Name!.Substring(1, 3) },
                     x => new StandardEntityCriteriaQuery { AgeEq = x.Age },
@@ -36,13 +37,20 @@ namespace Pantry.Tests.StandardTestSupport
                     x => new StandardEntityCriteriaQuery { AgeLte = x.Age },
                     x => new StandardEntityCriteriaQuery { NotarizedAtEq = x.NotarizedAt },
                     x => new StandardEntityCriteriaQuery { NotarizedAtGt = x.NotarizedAt!.Value.AddDays(-1) },
-                    x => new StandardEntityCriteriaQuery { NotarizedAtGte = x.NotarizedAt },
+                    x => new StandardEntityCriteriaQuery { NotarizedAtGte = x.NotarizedAt!.Value.AddDays(-1) },
                     x => new StandardEntityCriteriaQuery { NotarizedAtLt = x.NotarizedAt!.Value.AddDays(1) },
-                    x => new StandardEntityCriteriaQuery { NotarizedAtLte = x.NotarizedAt },
+                    x => new StandardEntityCriteriaQuery { NotarizedAtLte = x.NotarizedAt!.Value.AddDays(1) },
                     x => new StandardEntityCriteriaQuery { RelatedNameEq = x.Related!.Name },
                     x => new StandardEntityCriteriaQuery { RelatedNameLike = x.Related!.Name!.Substring(0, 1) },
                     x => new StandardEntityCriteriaQuery { LinesNameEq = x.Lines[0].Name },
                     x => new StandardEntityCriteriaQuery { LinesNameLike = x.Lines[0].Name!.Substring(0, 1) },
+                }.Select(x => new object[] { x });
+
+        public static IEnumerable<object[]> ItShouldFindWithACombinedCriteriaQueryData
+            => new List<Func<StandardEntity, StandardEntityCriteriaQuery>>
+                {
+                    x => new StandardEntityCriteriaQuery { NameEq = x.Name, AgeGt = x.Age - 1, NotarizedAtLt = x.NotarizedAt!.Value.AddDays(1) },
+                    x => new StandardEntityCriteriaQuery { IdEq = x.Id, NotarizedAtLte = x.NotarizedAt!.Value.AddDays(1) },
                 }.Select(x => new object[] { x });
 
         protected virtual Faker Faker { get; } = new Faker();
@@ -60,6 +68,27 @@ namespace Pantry.Tests.StandardTestSupport
         [SkippableTheory(typeof(UnsupportedFeatureException))]
         [MemberData(nameof(ItShouldFindWithASimpleCriteriaQueryData))]
         public virtual async Task ItShouldFindWithASimpleCriteriaQuery(Func<StandardEntity, StandardEntityCriteriaQuery> queryFactory)
+        {
+            if (queryFactory is null)
+            {
+                throw new ArgumentNullException(nameof(queryFactory));
+            }
+
+            var repo = GetRepositoryAs<IRepositoryFindByCriteria<StandardEntity>>();
+            var entities = TestEntityGenerator.Generate(5);
+            using var scope = new TemporaryEntitiesScope<StandardEntity>(repo, entities);
+
+            var targetEntity = Faker.PickRandom(entities);
+            var query = queryFactory(targetEntity);
+            var result = await repo.FindAsync(query);
+
+            result.Should().HaveCountGreaterOrEqualTo(1);
+            result.Select(x => x.Id).Should().Contain(targetEntity.Id);
+        }
+
+        [SkippableTheory(typeof(UnsupportedFeatureException))]
+        [MemberData(nameof(ItShouldFindWithACombinedCriteriaQueryData))]
+        public virtual async Task ItShouldFindWithACombinedCriteriaQuery(Func<StandardEntity, StandardEntityCriteriaQuery> queryFactory)
         {
             if (queryFactory is null)
             {
