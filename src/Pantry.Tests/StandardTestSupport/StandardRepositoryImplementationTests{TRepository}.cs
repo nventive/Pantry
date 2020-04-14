@@ -51,6 +51,8 @@ namespace Pantry.Tests.StandardTestSupport
                 {
                     x => new StandardEntityCriteriaQuery { NameEq = x.Name, AgeGt = x.Age - 1, NotarizedAtLt = x.NotarizedAt!.Value.AddDays(1) },
                     x => new StandardEntityCriteriaQuery { IdEq = x.Id, NotarizedAtLte = x.NotarizedAt!.Value.AddDays(1) },
+                    x => new StandardEntityCriteriaQuery { NotarizedAtLte = x.NotarizedAt!.Value.AddDays(10), OrderBy = $"-{nameof(StandardEntity.Age)}" },
+                    x => new StandardEntityCriteriaQuery { AgeGt = x.Age - 1, OrderBy = $"+{nameof(StandardEntity.Name)}" },
                 }.Select(x => new object[] { x });
 
         protected virtual Faker Faker { get; } = new Faker();

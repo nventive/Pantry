@@ -107,5 +107,11 @@ namespace Pantry.Tests.StandardTestSupport
             get => this.StringContainsValue(x => x.Lines[0].Name);
             set => this.StringContains(x => x.Lines[0].Name, value);
         }
+
+        public string? OrderBy
+        {
+            get => this.OrderByPathAndAscendingIndicatorValue();
+            set => this.OrderByPathWithAscendingIndicator(value);
+        }
     }
 }

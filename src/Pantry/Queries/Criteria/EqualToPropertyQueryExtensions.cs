@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
-using Pantry.Queries.Criteria;
 using Pantry.Utils;
 
 namespace Pantry.Queries.Criteria

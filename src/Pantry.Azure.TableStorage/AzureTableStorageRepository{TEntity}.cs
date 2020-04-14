@@ -316,6 +316,19 @@ namespace Pantry.Azure.TableStorage
                 return tblQuery;
             }
 
+            TableQuery<DynamicTableEntity> AddOrderBy(TableQuery<DynamicTableEntity> tblQuery, OrderCriterion order)
+            {
+                var targetPropertyPaths = Mapper.ResolveQueryPropertyPaths(order.PropertyPath);
+                if (targetPropertyPaths.Any())
+                {
+                    return order.Ascending
+                        ? tblQuery.OrderBy(targetPropertyPaths.First())
+                        : tblQuery.OrderByDesc(targetPropertyPaths.First());
+                }
+
+                return tblQuery;
+            }
+
             return PrepareQueryAndExecuteAsync(
                 query,
                 tableQuery =>
@@ -334,6 +347,7 @@ namespace Pantry.Azure.TableStorage
                             GreaterThanOrEqualToPropertyCriterion gte => AddFilterCondition(tableQuery, gte, QueryComparisons.GreaterThanOrEqual),
                             LessThanPropertyCriterion lt => AddFilterCondition(tableQuery, lt, QueryComparisons.LessThan),
                             LessThanOrEqualToPropertyCriterion lte => AddFilterCondition(tableQuery, lte, QueryComparisons.LessThanOrEqual),
+                            OrderCriterion order => AddOrderBy(tableQuery, order),
                             _ => throw new UnsupportedFeatureException($"The {criterion} criterion is not supported by {this}."),
                         };
                     }
