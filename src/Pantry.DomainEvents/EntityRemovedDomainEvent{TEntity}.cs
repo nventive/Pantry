@@ -11,5 +11,8 @@
         /// Gets or sets the removed entity id.
         /// </summary>
         public string? EntityId { get; set; }
+
+        /// <inheritdoc/>
+        public override string ToString() => $"[{GetType().Name}] {EntityId}";
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
 using Pantry;
 using Pantry.DependencyInjection;
 using Pantry.DomainEvents;
@@ -25,9 +26,14 @@ namespace Microsoft.Extensions.DependencyInjection
                 throw new ArgumentNullException(nameof(builder));
             }
 
+            builder.Services.TryAddIdGeneratorFor<IDomainEvent>();
+            builder.Services.TryAddTimestampProvider();
             builder.Services.TryAddTransient<IDomainEventsDispatcher, ServiceProviderDomainEventsDispatcher>();
             builder.AddRepositoryDecorator(
-                (repo, sp) => new DomainEventRepositoryDecorator<TEntity>(sp.GetRequiredService<IDomainEventsDispatcher>(), repo));
+                (repo, sp) => new DomainEventRepositoryDecorator<TEntity>(
+                    sp.GetRequiredService<IDomainEventsDispatcher>(),
+                    repo,
+                    sp.GetService<ILogger<DomainEventRepositoryDecorator<TEntity>>>()));
 
             return builder;
         }

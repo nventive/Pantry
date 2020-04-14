@@ -12,5 +12,8 @@ namespace Pantry.DomainEvents
 
         /// <inheritdoc/>
         public DateTimeOffset? Timestamp { get; set; }
+
+        /// <inheritdoc/>
+        public override string ToString() => $"[{GetType().Name}] {Id} ({Timestamp})";
     }
 }

@@ -2,6 +2,8 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Pantry.Decorators;
 
 namespace Pantry.DomainEvents
@@ -15,18 +17,22 @@ namespace Pantry.DomainEvents
         where TEntity : class, IIdentifiable
     {
         private readonly IDomainEventsDispatcher _dispatcher;
+        private readonly ILogger<DomainEventRepositoryDecorator<TEntity>> _logger;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DomainEventRepositoryDecorator{TEntity}"/> class.
         /// </summary>
         /// <param name="dispatcher">The <see cref="IDomainEventsDispatcher"/>.</param>
         /// <param name="innerRepository">The inner repository.</param>
+        /// <param name="logger">The <see cref="ILogger"/>.</param>
         public DomainEventRepositoryDecorator(
             IDomainEventsDispatcher dispatcher,
-            object innerRepository)
+            object innerRepository,
+            ILogger<DomainEventRepositoryDecorator<TEntity>>? logger = null)
             : base(innerRepository)
         {
             _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
+            _logger = logger ?? NullLogger<DomainEventRepositoryDecorator<TEntity>>.Instance;
         }
 
         /// <inheritdoc/>
@@ -34,6 +40,7 @@ namespace Pantry.DomainEvents
         {
             var result = await base.AddAsync(entity, cancellationToken).ConfigureAwait(false);
             var domainEvent = new EntityAddedDomainEvent<TEntity> { Entity = result };
+            _logger.LogTrace("Dispatching {DomainEvent}", domainEvent);
             await _dispatcher.DispatchAsync(domainEvent).ConfigureAwait(false);
             return result;
         }
@@ -45,6 +52,7 @@ namespace Pantry.DomainEvents
             var domainEvent = added
                 ? new EntityAddedDomainEvent<TEntity> { Entity = result }
                 : (IDomainEvent)new EntityUpdatedDomainEvent<TEntity> { Entity = result };
+            _logger.LogTrace("Dispatching {DomainEvent}", domainEvent);
             await _dispatcher.DispatchAsync(domainEvent).ConfigureAwait(false);
             return (result, added);
         }
@@ -56,6 +64,7 @@ namespace Pantry.DomainEvents
             if (result)
             {
                 var domainEvent = new EntityRemovedDomainEvent<TEntity> { EntityId = id };
+                _logger.LogTrace("Dispatching {DomainEvent}", domainEvent);
                 await _dispatcher.DispatchAsync(domainEvent).ConfigureAwait(false);
             }
 
@@ -69,6 +78,7 @@ namespace Pantry.DomainEvents
             if (result)
             {
                 var domainEvent = new EntityRemovedDomainEvent<TEntity> { EntityId = entity.Id };
+                _logger.LogTrace("Dispatching {DomainEvent}", domainEvent);
                 await _dispatcher.DispatchAsync(domainEvent).ConfigureAwait(false);
             }
 
@@ -80,6 +90,7 @@ namespace Pantry.DomainEvents
         {
             await base.RemoveAsync(id, cancellationToken).ConfigureAwait(false);
             var domainEvent = new EntityRemovedDomainEvent<TEntity> { EntityId = id };
+            _logger.LogTrace("Dispatching {DomainEvent}", domainEvent);
             await _dispatcher.DispatchAsync(domainEvent).ConfigureAwait(false);
         }
 
@@ -88,6 +99,7 @@ namespace Pantry.DomainEvents
         {
             await base.RemoveAsync(entity, cancellationToken).ConfigureAwait(false);
             var domainEvent = new EntityRemovedDomainEvent<TEntity> { EntityId = entity.Id };
+            _logger.LogTrace("Dispatching {DomainEvent}", domainEvent);
             await _dispatcher.DispatchAsync(domainEvent).ConfigureAwait(false);
         }
 
@@ -96,6 +108,7 @@ namespace Pantry.DomainEvents
         {
             var result = await base.UpdateAsync(entity, cancellationToken).ConfigureAwait(false);
             var domainEvent = new EntityUpdatedDomainEvent<TEntity> { Entity = result };
+            _logger.LogTrace("Dispatching {DomainEvent}", domainEvent);
             await _dispatcher.DispatchAsync(domainEvent).ConfigureAwait(false);
             return result;
         }

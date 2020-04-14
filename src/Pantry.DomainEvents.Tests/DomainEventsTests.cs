@@ -2,15 +2,24 @@
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Pantry.Tests.StandardTestSupport;
 using Pantry.Traits;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Pantry.DomainEvents.Tests
 {
     public class DomainEventsTests
     {
+        private readonly ITestOutputHelper _outputHelper;
+
+        public DomainEventsTests(ITestOutputHelper outputHelper)
+        {
+            _outputHelper = outputHelper;
+        }
+
         [Fact]
         public async Task ItShouldWorkWithNoHandlers()
         {
@@ -120,6 +129,12 @@ namespace Pantry.DomainEvents.Tests
         {
             var svc = new ServiceCollection();
             svc
+                .AddLogging(logging =>
+                {
+                    logging
+                        .AddXUnit(_outputHelper)
+                        .AddFilter(_ => true);
+                })
                 .AddConcurrentDictionaryRepository<StandardEntity>()
                 .EmitDomainEvents();
 

@@ -11,5 +11,8 @@
         /// Gets or sets the updated entity.
         /// </summary>
         public TEntity? Entity { get; set; }
+
+        /// <inheritdoc/>
+        public override string ToString() => $"[{GetType().Name}] {Entity}";
     }
 }
