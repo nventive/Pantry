@@ -1,6 +1,6 @@
 ﻿using FluentAssertions;
+using Pantry.Reflection;
 using Pantry.Tests.StandardTestSupport;
-using Pantry.Utils;
 using Xunit;
 
 namespace Pantry.Tests.Utils

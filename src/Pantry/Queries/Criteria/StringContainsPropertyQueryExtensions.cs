@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Linq.Expressions;
 using Pantry.Queries.Criteria;
-using Pantry.Utils;
+using Pantry.Reflection;
 
 namespace Pantry.Queries.Criteria
 {

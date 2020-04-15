@@ -1,4 +1,6 @@
-﻿namespace Pantry.ProviderTemplate.DependencyInjection
+﻿using Pantry.ProviderTemplate.DependencyInjection;
+
+namespace Microsoft.Extensions.DependencyInjection
 {
     /// <summary>
     /// <see cref="IProviderRepositoryBuilder{TEntity}"/> extension methods.

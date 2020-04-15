@@ -23,7 +23,7 @@ namespace Pantry.Generators
                 string.Concat(
                     _hash.ComputeHash(
                         Encoding.UTF8.GetBytes(
-                            JsonSerializer.Serialize(value)))
+                            value is string valueStr ? valueStr : JsonSerializer.Serialize(value)))
                     .Select(
                         x => x.ToString(
                             "x2",

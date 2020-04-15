@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Azure.Cosmos;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Pantry.Continuation;
@@ -19,12 +20,25 @@ namespace Pantry.Azure.Cosmos
         /// <summary>
         /// Initializes a new instance of the <see cref="CosmosRepository{TEntity}"/> class.
         /// </summary>
+        /// <param name="cosmosContainerFor">The <see cref="CosmosContainerFor{TEntity}"/>.</param>
         /// <param name="logger">The <see cref="ILogger"/>.</param>
         public CosmosRepository(
+            CosmosContainerFor<TEntity> cosmosContainerFor,
             ILogger<CosmosRepository<TEntity>>? logger = null)
         {
+            CosmosContainerFor = cosmosContainerFor ?? throw new ArgumentNullException(nameof(cosmosContainerFor));
             Logger = logger ?? NullLogger<CosmosRepository<TEntity>>.Instance;
         }
+
+        /// <summary>
+        /// Gets the <see cref="CosmosContainerFor{TEntity}"/>.
+        /// </summary>
+        protected CosmosContainerFor<TEntity> CosmosContainerFor { get; }
+
+        /// <summary>
+        /// Gets the <see cref="CosmosContainer"/>.
+        /// </summary>
+        protected CosmosContainer CosmosContainer => CosmosContainerFor.CosmosContainer;
 
         /// <summary>
         /// Gets the <see cref="ILogger"/>.

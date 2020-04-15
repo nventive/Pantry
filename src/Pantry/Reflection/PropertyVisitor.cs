@@ -4,7 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
-namespace Pantry.Utils
+namespace Pantry.Reflection
 {
     /// <summary>
     /// <see cref="ExpressionVisitor"/> that can extract property paths.

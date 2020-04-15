@@ -5,7 +5,6 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Pantry;
 using Pantry.Azure.TableStorage;
 using Pantry.Azure.TableStorage.DependencyInjection;
-using Pantry.Mapping;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -81,17 +80,17 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <typeparam name="TMapper">The custom mapper type.</typeparam>
         /// <param name="builder">The <see cref="IAzureTableStorageRepositoryBuilder{T}"/>.</param>
         /// <returns>The updated <see cref="IAzureTableStorageRepositoryBuilder{T}"/>.</returns>
-        public static IAzureTableStorageRepositoryBuilder<TEntity> WithTableEntityMapper<TEntity, TMapper>(
+        public static IAzureTableStorageRepositoryBuilder<TEntity> WithDynamicTableEntityMapper<TEntity, TMapper>(
             this IAzureTableStorageRepositoryBuilder<TEntity> builder)
-            where TEntity : class, IIdentifiable
-            where TMapper : class, IMapper<TEntity, DynamicTableEntity>
+            where TEntity : class, IIdentifiable, new()
+            where TMapper : class, IDynamicTableEntityMapper<TEntity>
         {
             if (builder is null)
             {
                 throw new ArgumentNullException(nameof(builder));
             }
 
-            builder.Services.AddSingleton<IMapper<TEntity, DynamicTableEntity>, TMapper>();
+            builder.Services.AddSingleton<IDynamicTableEntityMapper<TEntity>, TMapper>();
             return builder;
         }
     }
