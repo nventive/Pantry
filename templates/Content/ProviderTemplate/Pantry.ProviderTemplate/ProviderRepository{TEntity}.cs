@@ -37,7 +37,7 @@ namespace Pantry.ProviderTemplate
         }
 
         /// <inheritdoc/>
-        public virtual Task<(TEntity, bool)> AddOrUpdateAsync(TEntity entity, CancellationToken cancellationToken = default)
+        public virtual async Task<(TEntity, bool)> AddOrUpdateAsync(TEntity entity, CancellationToken cancellationToken = default)
         {
             if (entity is null)
             {
@@ -80,6 +80,12 @@ namespace Pantry.ProviderTemplate
 
         /// <inheritdoc/>
         public virtual Task<IContinuationEnumerable<TEntity>> FindAllAsync(string? continuationToken, int limit = 50, CancellationToken cancellationToken = default)
+        {
+            throw new UnsupportedFeatureException("Not supported yet.");
+        }
+
+        /// <inheritdoc/>
+        public virtual Task<IContinuationEnumerable<TEntity>> FindAsync(ICriteriaQuery<TEntity> query, CancellationToken cancellationToken = default)
         {
             throw new UnsupportedFeatureException("Not supported yet.");
         }

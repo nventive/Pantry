@@ -5,7 +5,7 @@ using Xunit.Abstractions;
 
 namespace Pantry.Azure.Cosmos.Tests
 {
-    public class CosmosStandardTests : StandardRepositoryImplementationTests
+    public class CosmosStandardTests : StandardRepositoryImplementationTests<CosmosRepository<StandardEntity>>
     {
         public CosmosStandardTests(ITestOutputHelper outputHelper)
             : base(outputHelper)

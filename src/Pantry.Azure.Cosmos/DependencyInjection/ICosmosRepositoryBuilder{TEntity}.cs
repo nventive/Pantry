@@ -3,10 +3,11 @@
 namespace Pantry.Azure.Cosmos.DependencyInjection
 {
     /// <summary>
-    /// <see cref="IRepositoryBuilder"/> for Cosmos.
+    /// <see cref="IRepositoryBuilder{TEntity}"/> for Cosmos.
     /// </summary>
     /// <typeparam name="TEntity">The entity type.</typeparam>
-    public interface ICosmosRepositoryBuilder<TEntity> : IRepositoryBuilder
+    public interface ICosmosRepositoryBuilder<TEntity> : IRepositoryBuilder<TEntity>
+        where TEntity : class, IIdentifiable
     {
     }
 }
