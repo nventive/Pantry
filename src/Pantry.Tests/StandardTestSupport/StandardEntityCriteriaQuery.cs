@@ -86,8 +86,8 @@ namespace Pantry.Tests.StandardTestSupport
 
         public string? RelatedNameEq
         {
-            get => this.GreaterThanValue(x => x.Related!.Name);
-            set => this.GreaterThan(x => x.Related!.Name, value);
+            get => this.EqualToValue(x => x.Related!.Name);
+            set => this.EqualTo(x => x.Related!.Name, value);
         }
 
         public string? RelatedNameLike
@@ -98,8 +98,8 @@ namespace Pantry.Tests.StandardTestSupport
 
         public string? LinesNameEq
         {
-            get => this.GreaterThanValue(x => x.Lines[0].Name);
-            set => this.GreaterThan(x => x.Lines[0].Name, value);
+            get => this.EqualToValue(x => x.Lines[0].Name);
+            set => this.EqualTo(x => x.Lines[0].Name, value);
         }
 
         public string? LinesNameLike

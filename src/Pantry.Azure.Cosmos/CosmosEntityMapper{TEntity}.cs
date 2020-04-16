@@ -61,6 +61,11 @@ namespace Pantry.Azure.Cosmos
                 var value = property.GetValue(source);
                 if (value != null)
                 {
+                    if (value is DateTimeOffset dto)
+                    {
+                        value = dto.ToUnixTimeMilliseconds();
+                    }
+
                     document.Attributes[property.Name] = JToken.FromObject(value);
                     _logger.LogMapped(
                     entityType: typeof(CosmosDocument),
@@ -105,7 +110,16 @@ namespace Pantry.Azure.Cosmos
             {
                 if (destination.Attributes.ContainsKey(property.Name) && destination.Attributes[property.Name] != null)
                 {
-                    var value = destination.Attributes[property.Name].ToObject(property.PropertyType);
+                    object value;
+                    if (property.PropertyType == typeof(DateTimeOffset) || property.PropertyType == typeof(DateTimeOffset?))
+                    {
+                        value = DateTimeOffset.FromUnixTimeMilliseconds(destination.Attributes[property.Name].ToObject<long>());
+                    }
+                    else
+                    {
+                        value = destination.Attributes[property.Name].ToObject(property.PropertyType);
+                    }
+
                     property.SetValue(result, value);
                     _logger.LogMapped(
                         entityType: typeof(TEntity),

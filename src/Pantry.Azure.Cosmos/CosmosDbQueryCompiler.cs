@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Microsoft.Azure.Cosmos;
 using SqlKata.Compilers;
 
@@ -42,7 +43,13 @@ namespace Pantry.Azure.Cosmos
 
             foreach (var binding in sqlQuery.NamedBindings)
             {
-                definition = definition.WithParameter(binding.Key, binding.Value);
+                var parameterValue = binding.Value;
+                if (parameterValue is DateTimeOffset dto)
+                {
+                    parameterValue = dto.ToUnixTimeMilliseconds();
+                }
+
+                definition = definition.WithParameter(binding.Key, parameterValue);
             }
 
             return definition;

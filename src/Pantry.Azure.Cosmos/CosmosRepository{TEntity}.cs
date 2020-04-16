@@ -330,13 +330,18 @@ namespace Pantry.Azure.Cosmos
 
             foreach (var criterion in query)
             {
+                if (criterion is PropertyCriterion propertyCriterion && propertyCriterion.PropertyPathContainsSubPath)
+                {
+                    throw new UnsupportedFeatureException($"{GetType().Name} does not support sub-property selection ({propertyCriterion.PropertyPath}).");
+                }
+
                 queryBuilder = criterion switch
                 {
                     EqualToPropertyCriterion equalTo => queryBuilder.Where(QuotedMappedPropertyPath(equalTo.PropertyPath), equalTo.Value),
                     GreaterThanPropertyCriterion gt => queryBuilder.Where(QuotedMappedPropertyPath(gt.PropertyPath), ">", gt.Value),
                     GreaterThanOrEqualToPropertyCriterion gte => queryBuilder.Where(QuotedMappedPropertyPath(gte.PropertyPath), ">=", gte.Value),
                     LessThanPropertyCriterion lt => queryBuilder.Where(QuotedMappedPropertyPath(lt.PropertyPath), "<", lt.Value),
-                    LessThanOrEqualToPropertyCriterion lte => queryBuilder.Where(QuotedMappedPropertyPath(lte.PropertyPath), ">=", lte.Value),
+                    LessThanOrEqualToPropertyCriterion lte => queryBuilder.Where(QuotedMappedPropertyPath(lte.PropertyPath), "<=", lte.Value),
                     StringContainsPropertyCriterion strCont => queryBuilder.WhereRaw($"CONTAINS({QuotedMappedPropertyPath(strCont.PropertyPath)}, ?)", strCont.Value),
                     OrderCriterion order => queryBuilder.OrderByRaw($"{QuotedMappedPropertyPath(order.PropertyPath)} {(order.Ascending ? "ASC" : "DESC")}"),
                     _ => throw new UnsupportedFeatureException($"The {criterion} criterion is not supported by {this}."),

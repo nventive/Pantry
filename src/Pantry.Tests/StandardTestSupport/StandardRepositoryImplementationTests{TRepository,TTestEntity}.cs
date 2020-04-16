@@ -30,6 +30,14 @@ namespace Pantry.Tests.StandardTestSupport
         {
             _lazyHost = new Lazy<IHost>(BuildHost);
             OutputHelper = outputHelper;
+
+            AssertionOptions.AssertEquivalencyUsing(options =>
+            {
+                // Date - time resolution can vary between providers.
+                options.Using<DateTime>(ctx => ctx.Subject.Should().BeCloseTo(ctx.Expectation)).WhenTypeIs<DateTime>();
+                options.Using<DateTimeOffset>(ctx => ctx.Subject.Should().BeCloseTo(ctx.Expectation)).WhenTypeIs<DateTimeOffset>();
+                return options;
+            });
         }
 
         /// <summary>
