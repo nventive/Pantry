@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -11,6 +10,16 @@ namespace Pantry.Azure.Cosmos
     /// </summary>
     public class CosmosDocument : IIdentifiable
     {
+        /// <summary>
+        /// Gets the attribute name for the id. <see cref="Id"/>.
+        /// </summary>
+        public const string IdAttribute = "id";
+
+        /// <summary>
+        /// Gets the attribute name for the entity type. <see cref="EntityType"/>.
+        /// </summary>
+        public const string TypeAttribute = "_type";
+
         /// <summary>
         /// Gets the attribute name for the CosmosDB system ETag.
         /// </summary>
@@ -24,11 +33,11 @@ namespace Pantry.Azure.Cosmos
         /// <summary>
         /// Gets or sets the entity type that the document refer to.
         /// </summary>
-        [JsonProperty(PropertyName = "_type")]
+        [JsonProperty(PropertyName = TypeAttribute)]
         public string EntityType { get; set; } = string.Empty;
 
         /// <inheritdoc/>
-        [JsonProperty(PropertyName = "id")]
+        [JsonProperty(PropertyName = IdAttribute)]
         public string Id { get; set; } = string.Empty;
 
         /// <summary>

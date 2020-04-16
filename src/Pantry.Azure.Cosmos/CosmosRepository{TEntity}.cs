@@ -13,6 +13,8 @@ using Pantry.Generators;
 using Pantry.Logging;
 using Pantry.Providers;
 using Pantry.Queries;
+using Pantry.Queries.Criteria;
+using SqlKata.Compilers;
 
 namespace Pantry.Azure.Cosmos
 {
@@ -74,6 +76,11 @@ namespace Pantry.Azure.Cosmos
         /// Gets the <see cref="ILogger"/>.
         /// </summary>
         protected ILogger Logger { get; }
+
+        /// <summary>
+        /// Gets the SQL query <see cref="Compiler"/>.
+        /// </summary>
+        private CosmosDbQueryCompiler QueryCompiler { get; } = new CosmosDbQueryCompiler();
 
         /// <inheritdoc/>
         public virtual async Task<TEntity> AddAsync(TEntity entity, CancellationToken cancellationToken = default)
@@ -311,24 +318,40 @@ namespace Pantry.Azure.Cosmos
                 return ContinuationEnumerable.Empty<TEntity>();
             }
 
-            // TODO: does not work - need to use a SQL builder.
-            var queryable = Container.GetItemLinqQueryable<CosmosDocument>(
-                continuationToken: query.ContinuationToken,
-                requestOptions: new QueryRequestOptions { MaxItemCount = query.Limit })
-                .Where(x => x.EntityType == Mapper.GetEntityType());
+            var queryBuilder = new SqlKata.Query("e")
+                .Select("*")
+                .Where($"e[\"{CosmosDocument.TypeAttribute}\"]", Mapper.GetEntityType());
+
+            string QuotedMappedPropertyPath(string propertyPath)
+            {
+                var mappedPropertyPath = Mapper.ResolveQueryPropertyPaths(propertyPath);
+                return $"e{string.Join(string.Empty, mappedPropertyPath.Split(".").Select(x => $"[\"{x}\"]"))}";
+            }
 
             foreach (var criterion in query)
             {
-                queryable = criterion switch
+                queryBuilder = criterion switch
                 {
-                    IQueryableCriterion queryableCriterion => (IQueryable<CosmosDocument>)queryableCriterion.Apply(queryable),
+                    EqualToPropertyCriterion equalTo => queryBuilder.Where(QuotedMappedPropertyPath(equalTo.PropertyPath), equalTo.Value),
+                    GreaterThanPropertyCriterion gt => queryBuilder.Where(QuotedMappedPropertyPath(gt.PropertyPath), ">", gt.Value),
+                    GreaterThanOrEqualToPropertyCriterion gte => queryBuilder.Where(QuotedMappedPropertyPath(gte.PropertyPath), ">=", gte.Value),
+                    LessThanPropertyCriterion lt => queryBuilder.Where(QuotedMappedPropertyPath(lt.PropertyPath), "<", lt.Value),
+                    LessThanOrEqualToPropertyCriterion lte => queryBuilder.Where(QuotedMappedPropertyPath(lte.PropertyPath), ">=", lte.Value),
+                    StringContainsPropertyCriterion strCont => queryBuilder.WhereRaw($"CONTAINS({QuotedMappedPropertyPath(strCont.PropertyPath)}, ?)", strCont.Value),
+                    OrderCriterion order => queryBuilder.OrderByRaw($"{QuotedMappedPropertyPath(order.PropertyPath)} {(order.Ascending ? "ASC" : "DESC")}"),
                     _ => throw new UnsupportedFeatureException($"The {criterion} criterion is not supported by {this}."),
                 };
             }
 
-            var response = await queryable
-                .ToFeedIterator()
+            var queryDefinition = QueryCompiler.ToQueryDefinition(queryBuilder);
+            Logger.LogTrace("FindAsync() {CosmosDbQueryText}", queryDefinition.QueryText);
+
+            var response = await Container.GetItemQueryIterator<CosmosDocument>(
+                queryDefinition,
+                continuationToken: query.ContinuationToken,
+                requestOptions: new QueryRequestOptions { MaxItemCount = query.Limit })
                 .ReadNextAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
+
             var result = response.Resource.Select(x => Mapper.MapToSource(x)).ToContinuationEnumerable(response.ContinuationToken);
 
             Logger.LogFind(query, result);
