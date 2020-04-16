@@ -1,10 +1,10 @@
 ﻿using System;
-using Azure.Cosmos;
+using Microsoft.Azure.Cosmos;
 
 namespace Pantry.Azure.Cosmos
 {
     /// <summary>
-    /// Encapsulates <see cref="global::Azure.Cosmos.CosmosContainer"/> for easier Dependency Injection.
+    /// Encapsulates <see cref="Microsoft.Azure.Cosmos.Container"/> for easier Dependency Injection.
     /// </summary>
     /// <typeparam name="TEntity">The type related to the CosmosContainer itself. Probably an entity.</typeparam>
     public class CosmosContainerFor<TEntity>
@@ -12,15 +12,15 @@ namespace Pantry.Azure.Cosmos
         /// <summary>
         /// Initializes a new instance of the <see cref="CosmosContainerFor{T}"/> class.
         /// </summary>
-        /// <param name="cosmosContainer">The <see cref="CosmosContainer"/> To encapsulate.</param>
-        public CosmosContainerFor(CosmosContainer cosmosContainer)
+        /// <param name="container">The <see cref="Container"/> To encapsulate.</param>
+        public CosmosContainerFor(Container container)
         {
-            CosmosContainer = cosmosContainer ?? throw new ArgumentNullException(nameof(cosmosContainer));
+            Container = container ?? throw new ArgumentNullException(nameof(container));
         }
 
         /// <summary>
-        /// Gets the <see cref="global::Azure.Cosmos.CosmosContainer"/>.
+        /// Gets the <see cref="Microsoft.Azure.Cosmos.Container"/>.
         /// </summary>
-        public CosmosContainer CosmosContainer { get; }
+        public Container Container { get; }
     }
 }

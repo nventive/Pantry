@@ -376,9 +376,8 @@ namespace Pantry.Tests.StandardTestSupport
             result.ETag.Should().NotBeNullOrEmpty();
             result.ETag.Should().NotBe(existingEntity.ETag);
             result.Timestamp.Should().NotBeNull();
-            result.Timestamp.Should().NotBe(existingEntity.Timestamp!.Value);
             result.Should().BeEquivalentTo(updatedEntity, opt => opt.Excluding(x => x.ETag).Excluding(x => x.Timestamp));
-            result.Should().NotBeEquivalentTo(existingEntity, opt => opt.Excluding(x => x.ETag).Excluding(x => x.Timestamp));
+            result.Should().NotBeEquivalentTo(existingEntity);
         }
 
         [SkippableFact(typeof(UnsupportedFeatureException))]

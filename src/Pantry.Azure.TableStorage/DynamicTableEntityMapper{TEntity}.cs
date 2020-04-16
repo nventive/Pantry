@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using System.Text.Json;
 using Microsoft.Azure.Cosmos.Table;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Pantry.Logging;
-using Pantry.Mapping;
+using Pantry.Reflection;
 
 namespace Pantry.Azure.TableStorage
 {
@@ -50,7 +48,7 @@ namespace Pantry.Azure.TableStorage
                 dynamicTableEntity.Timestamp = timestampedEntity.Timestamp.Value;
             }
 
-            foreach (var property in GetSerializableProperties())
+            foreach (var property in EntityAttributes.GetAttributeProperties<TEntity>())
             {
                 var value = property.GetValue(source);
                 if (!DynamicTableEntityMapper.IsNativelySupportedAsProperty(property.PropertyType))
@@ -92,7 +90,7 @@ namespace Pantry.Azure.TableStorage
                 timestampedEntity.Timestamp = destination.Timestamp;
             }
 
-            foreach (var property in GetSerializableProperties())
+            foreach (var property in EntityAttributes.GetAttributeProperties<TEntity>())
             {
                 if (destination.Properties.ContainsKey(property.Name))
                 {
@@ -112,7 +110,7 @@ namespace Pantry.Azure.TableStorage
 
                         property.SetValue(result, dynamicValue);
                         _logger.LogMapped(
-                            entityType: typeof(DynamicTableEntity),
+                            entityType: typeof(TEntity),
                             entityId: result.Id,
                             propertyName: property.Name,
                             propertyValue: dynamicValue);
@@ -144,16 +142,5 @@ namespace Pantry.Azure.TableStorage
                 "Id" => new[] { "PartitionKey", "RowKey" },
                 _ => new[] { propertyPath },
             };
-
-        /// <summary>
-        /// Returns the list of serializable properties in <typeparamref name="TEntity"/>.
-        /// </summary>
-        /// <returns>The list of properties.</returns>
-        protected IEnumerable<PropertyInfo> GetSerializableProperties()
-        {
-            return typeof(TEntity).GetProperties()
-                .Where(x => x.CanRead && x.CanWrite)
-                .Where(x => x.Name != nameof(IIdentifiable.Id) && x.Name != nameof(IETaggable.ETag) && x.Name != nameof(ITimestamped.Timestamp));
-        }
     }
 }

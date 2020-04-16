@@ -187,7 +187,7 @@ namespace Pantry.Azure.TableStorage
             }
             catch (StorageException storageException) when (storageException.RequestInformation.HttpStatusCode == 404)
             {
-                var exception = new NotFoundException(typeof(TEntity).Name, entity.Id);
+                var exception = new NotFoundException(typeof(TEntity).Name, entity.Id, storageException);
                 Logger.LogUpdatedWarning(
                     entityType: typeof(TEntity),
                     entityId: entity.Id,
@@ -198,7 +198,7 @@ namespace Pantry.Azure.TableStorage
             }
             catch (StorageException storageException) when (storageException.RequestInformation.HttpStatusCode == 412)
             {
-                var exception = new ConcurrencyException(typeof(TEntity).Name, entity.Id, storageException.Message);
+                var exception = new ConcurrencyException(typeof(TEntity).Name, entity.Id, storageException.Message, storageException);
                 Logger.LogUpdatedWarning(
                     entityType: typeof(TEntity),
                     entityId: entity.Id,
@@ -209,7 +209,7 @@ namespace Pantry.Azure.TableStorage
             }
             catch (ArgumentException argumentException) when (argumentException.Message.Contains("ETag", StringComparison.InvariantCultureIgnoreCase))
             {
-                var exception = new ConcurrencyException(typeof(TEntity).Name, entity.Id, argumentException.Message);
+                var exception = new ConcurrencyException(typeof(TEntity).Name, entity.Id, argumentException.Message, argumentException);
                 Logger.LogUpdatedWarning(
                     entityType: typeof(TEntity),
                     entityId: entity.Id,
@@ -220,7 +220,7 @@ namespace Pantry.Azure.TableStorage
             }
             catch (StorageException storageException) when (storageException.Message.Contains(sentEtag, StringComparison.InvariantCultureIgnoreCase))
             {
-                var exception = new ConcurrencyException(typeof(TEntity).Name, entity.Id, storageException.Message);
+                var exception = new ConcurrencyException(typeof(TEntity).Name, entity.Id, storageException.Message, storageException);
                 Logger.LogUpdatedWarning(
                     entityType: typeof(TEntity),
                     entityId: entity.Id,

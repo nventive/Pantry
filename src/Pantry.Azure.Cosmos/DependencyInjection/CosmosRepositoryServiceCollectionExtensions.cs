@@ -1,4 +1,5 @@
-﻿using Pantry;
+﻿using Microsoft.Extensions.DependencyInjection.Extensions;
+using Pantry;
 using Pantry.Azure.Cosmos;
 using Pantry.Azure.Cosmos.DependencyInjection;
 using Pantry.DependencyInjection;
@@ -32,7 +33,9 @@ namespace Microsoft.Extensions.DependencyInjection
             where TRepository : CosmosRepository<TEntity>
         {
             services.TryAddIdGeneratorFor<TEntity>();
+            services.TryAddTimestampProvider();
 
+            services.TryAddSingleton<ICosmosEntityMapper<TEntity>, CosmosEntityMapper<TEntity>>();
             var allInterfaces = services.TryAddAsSelfAndAllInterfaces<TRepository>();
 
             return new CosmosRepositoryBuilder<TEntity>(services, allInterfaces);
