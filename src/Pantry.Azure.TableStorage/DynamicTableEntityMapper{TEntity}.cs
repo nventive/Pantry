@@ -139,7 +139,7 @@ namespace Pantry.Azure.TableStorage
         public virtual IEnumerable<string> ResolveQueryPropertyPaths(string propertyPath)
             => propertyPath switch
             {
-                "Id" => new[] { "PartitionKey", "RowKey" },
+                nameof(IIdentifiable.Id) => new[] { "PartitionKey", "RowKey" },
                 _ => new[] { propertyPath },
             };
     }

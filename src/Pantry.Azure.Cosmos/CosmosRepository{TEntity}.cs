@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.Cosmos;
+using Microsoft.Azure.Cosmos.Linq;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Pantry.Continuation;
@@ -275,15 +277,63 @@ namespace Pantry.Azure.Cosmos
         }
 
         /// <inheritdoc/>
-        public virtual Task<IContinuationEnumerable<TEntity>> FindAllAsync(string? continuationToken, int limit = 50, CancellationToken cancellationToken = default)
+        public virtual async Task<IContinuationEnumerable<TEntity>> FindAllAsync(string? continuationToken, int limit = 50, CancellationToken cancellationToken = default)
         {
-            throw new UnsupportedFeatureException("Not supported yet.");
+            if (limit <= 0)
+            {
+                return ContinuationEnumerable.Empty<TEntity>();
+            }
+
+            var iterator = Container.GetItemLinqQueryable<CosmosDocument>(
+                continuationToken: continuationToken,
+                requestOptions: new QueryRequestOptions { MaxItemCount = limit })
+                .Where(x => x.EntityType == Mapper.GetEntityType())
+                .ToFeedIterator();
+
+            var response = await iterator.ReadNextAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
+            var result = response.Resource.Select(x => Mapper.MapToSource(x)).ToContinuationEnumerable(response.ContinuationToken);
+
+            Logger.LogFind(new FindAllQuery<TEntity> { ContinuationToken = continuationToken, Limit = limit }, result);
+
+            return result;
         }
 
         /// <inheritdoc/>
-        public virtual Task<IContinuationEnumerable<TEntity>> FindAsync(ICriteriaQuery<TEntity> query, CancellationToken cancellationToken = default)
+        public virtual async Task<IContinuationEnumerable<TEntity>> FindAsync(ICriteriaQuery<TEntity> query, CancellationToken cancellationToken = default)
         {
-            throw new UnsupportedFeatureException("Not supported yet.");
+            if (query is null)
+            {
+                throw new ArgumentNullException(nameof(query));
+            }
+
+            if (query.Limit <= 0)
+            {
+                return ContinuationEnumerable.Empty<TEntity>();
+            }
+
+            // TODO: does not work - need to use a SQL builder.
+            var queryable = Container.GetItemLinqQueryable<CosmosDocument>(
+                continuationToken: query.ContinuationToken,
+                requestOptions: new QueryRequestOptions { MaxItemCount = query.Limit })
+                .Where(x => x.EntityType == Mapper.GetEntityType());
+
+            foreach (var criterion in query)
+            {
+                queryable = criterion switch
+                {
+                    IQueryableCriterion queryableCriterion => (IQueryable<CosmosDocument>)queryableCriterion.Apply(queryable),
+                    _ => throw new UnsupportedFeatureException($"The {criterion} criterion is not supported by {this}."),
+                };
+            }
+
+            var response = await queryable
+                .ToFeedIterator()
+                .ReadNextAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
+            var result = response.Resource.Select(x => Mapper.MapToSource(x)).ToContinuationEnumerable(response.ContinuationToken);
+
+            Logger.LogFind(query, result);
+
+            return result;
         }
     }
 }

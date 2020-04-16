@@ -16,5 +16,19 @@ namespace Pantry.Azure.Cosmos
         /// <param name="id">The entity id.</param>
         /// <returns>The <see cref="PartitionKey"/>.</returns>
         PartitionKey GetPartitionKey(string id);
+
+        /// <summary>
+        /// Gets the <see cref="CosmosDocument.EntityType"/> value.
+        /// </summary>
+        /// <returns>The entity type.</returns>
+        string GetEntityType();
+
+        /// <summary>
+        /// Resolve the original <paramref name="propertyPath"/> to the
+        /// querying property paths.
+        /// </summary>
+        /// <param name="propertyPath">The original property path.</param>
+        /// <returns>The querying property paths.</returns>
+        string ResolveQueryPropertyPaths(string propertyPath);
     }
 }

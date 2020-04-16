@@ -28,7 +28,19 @@ namespace Pantry.Azure.Cosmos
         }
 
         /// <inheritdoc/>
-        public PartitionKey GetPartitionKey(string id) => new PartitionKey(id);
+        public virtual PartitionKey GetPartitionKey(string id) => new PartitionKey(id);
+
+        /// <inheritdoc/>
+        public virtual string GetEntityType() => typeof(TEntity).Name;
+
+        /// <inheritdoc/>
+        public virtual string ResolveQueryPropertyPaths(string propertyPath)
+            => propertyPath switch
+            {
+                nameof(IIdentifiable.Id) => "id",
+                nameof(ITimestamped.Timestamp) => "_ts",
+                _ => propertyPath,
+            };
 
         /// <inheritdoc/>
         public virtual CosmosDocument MapToDestination(TEntity source)
@@ -40,7 +52,7 @@ namespace Pantry.Azure.Cosmos
 
             var document = new CosmosDocument
             {
-                EntityType = typeof(TEntity).FullName,
+                EntityType = GetEntityType(),
                 Id = source.Id,
             };
 
