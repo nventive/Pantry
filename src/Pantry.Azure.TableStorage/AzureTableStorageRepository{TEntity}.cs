@@ -5,12 +5,14 @@ using System.Threading.Tasks;
 using Microsoft.Azure.Cosmos.Table;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using Pantry.Azure.TableStorage.Queries;
 using Pantry.Continuation;
 using Pantry.Exceptions;
 using Pantry.Generators;
 using Pantry.Logging;
 using Pantry.Queries;
 using Pantry.Queries.Criteria;
+using Pantry.Traits;
 
 namespace Pantry.Azure.TableStorage
 {
@@ -18,7 +20,7 @@ namespace Pantry.Azure.TableStorage
     /// Azure Table Storage Repository Implementation.
     /// </summary>
     /// <typeparam name="TEntity">The entity type.</typeparam>
-    public class AzureTableStorageRepository<TEntity> : IRepository<TEntity>
+    public class AzureTableStorageRepository<TEntity> : IRepository<TEntity>, IRepositoryFind<TEntity, TEntity, AzureTableStorageTableQuery<TEntity>>
         where TEntity : class, IIdentifiable, new()
     {
         /// <summary>
@@ -272,7 +274,7 @@ namespace Pantry.Azure.TableStorage
         }
 
         /// <inheritdoc/>
-        public Task<IContinuationEnumerable<TEntity>> FindAllAsync(string? continuationToken, int limit = Query.DefaultLimit, CancellationToken cancellationToken = default)
+        public virtual Task<IContinuationEnumerable<TEntity>> FindAllAsync(string? continuationToken, int limit = Query.DefaultLimit, CancellationToken cancellationToken = default)
         {
             if (limit <= 0)
             {
@@ -286,7 +288,7 @@ namespace Pantry.Azure.TableStorage
         }
 
         /// <inheritdoc/>
-        public Task<IContinuationEnumerable<TEntity>> FindAsync(ICriteriaQuery<TEntity> query, CancellationToken cancellationToken = default)
+        public virtual Task<IContinuationEnumerable<TEntity>> FindAsync(ICriteriaQuery<TEntity> query, CancellationToken cancellationToken = default)
         {
             if (query is null)
             {
@@ -352,6 +354,20 @@ namespace Pantry.Azure.TableStorage
                         };
                     }
                 },
+                cancellationToken);
+        }
+
+        /// <inheritdoc/>
+        public virtual Task<IContinuationEnumerable<TEntity>> FindAsync(AzureTableStorageTableQuery<TEntity> query, CancellationToken cancellationToken = default)
+        {
+            if (query is null)
+            {
+                throw new ArgumentNullException(nameof(query));
+            }
+
+            return PrepareQueryAndExecuteAsync(
+                query,
+                tableQuery => query.Apply(tableQuery),
                 cancellationToken);
         }
 
