@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection.Extensions;
 using Pantry;
 using Pantry.Azure.Cosmos;
+using Pantry.Azure.Cosmos.Configuration;
 using Pantry.Azure.Cosmos.DependencyInjection;
 using Pantry.DependencyInjection;
 
@@ -36,6 +37,11 @@ namespace Microsoft.Extensions.DependencyInjection
             services.TryAddTimestampProvider();
 
             services.TryAddSingleton<ICosmosEntityMapper<TEntity>, CosmosEntityMapper<TEntity>>();
+
+            services.Configure<CosmosRepositoryOptions>(opt => { });
+            services.TryAddSingleton<CosmosContainerFactory>();
+            services.TryAddTransient(sp => new CosmosContainerFor<TEntity>(sp.GetRequiredService<CosmosContainerFactory>().Container));
+
             var allInterfaces = services.TryAddAsSelfAndAllInterfaces<TRepository>();
 
             return new CosmosRepositoryBuilder<TEntity>(services, allInterfaces);
