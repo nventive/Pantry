@@ -27,6 +27,7 @@ steps:
   workingDirectory: src
   env:
     ConnectionStrings__StorageConnectionString: $(ConnectionStrings__StorageConnectionString)
+    ConnectionStrings__CosmosDb: $(ConnectionStrings__CosmosDb)
 
 - task: PublishTestResults@2
   displayName: Publish Tests Results
