@@ -1,20 +1,17 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Pantry.Tests.StandardTestSupport;
+﻿using Pantry.Tests.StandardTestSupport;
+using Xunit;
 using Xunit.Abstractions;
 
 namespace Pantry.ProviderTemplate.Tests
 {
+    [Collection(ProviderStandardTestsFixtureCollection.CollectionName)]
     public class ProviderStandardTests : StandardRepositoryImplementationTests<ProviderRepository<StandardEntity>>
     {
-        public ProviderStandardTests(ITestOutputHelper outputHelper)
-            : base(outputHelper)
+        public ProviderStandardTests(
+            ProviderStandardTestsFixture fixture,
+            ITestOutputHelper outputHelper)
+            : base(fixture, outputHelper)
         {
-        }
-
-        protected override void RegisterTestServices<TEntity>(HostBuilderContext context, IServiceCollection services)
-        {
-            services.AddProviderRepository<TEntity>();
         }
     }
 }
