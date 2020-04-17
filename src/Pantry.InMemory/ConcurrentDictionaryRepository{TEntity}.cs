@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Pantry.Continuation;
 using Pantry.Exceptions;
 using Pantry.Generators;
+using Pantry.InMemory.Queries;
 using Pantry.Logging;
 using Pantry.Providers;
 using Pantry.Queries;
@@ -21,7 +22,9 @@ namespace Pantry.InMemory
     /// <see cref="IRepository{T}"/> implementation using in-memory storage.
     /// </summary>
     /// <typeparam name="TEntity">The entity type.</typeparam>
-    public class ConcurrentDictionaryRepository<TEntity> : IRepository<TEntity>, IRepositoryClear<TEntity>
+    public class ConcurrentDictionaryRepository<TEntity> : IRepository<TEntity>,
+                                                           IRepositoryClear<TEntity>,
+                                                           IRepositoryFind<TEntity, TEntity, InMemoryLinqQuery<TEntity>>
         where TEntity : class, IIdentifiable
     {
         /// <summary>
@@ -259,7 +262,7 @@ namespace Pantry.InMemory
         }
 
         /// <inheritdoc/>
-        public async Task<IContinuationEnumerable<TEntity>> FindAllAsync(string? continuationToken, int limit = Query.DefaultLimit, CancellationToken cancellationToken = default)
+        public virtual async Task<IContinuationEnumerable<TEntity>> FindAllAsync(string? continuationToken, int limit = Query.DefaultLimit, CancellationToken cancellationToken = default)
         {
             var result = await ContinuationTokenEncoder.ToContinuationEnumerable(
                 Storage.Values,
@@ -270,7 +273,7 @@ namespace Pantry.InMemory
         }
 
         /// <inheritdoc/>
-        public async Task<IContinuationEnumerable<TEntity>> FindAsync(ICriteriaQuery<TEntity> query, CancellationToken cancellationToken = default)
+        public virtual async Task<IContinuationEnumerable<TEntity>> FindAsync(ICriteriaQuery<TEntity> query, CancellationToken cancellationToken = default)
         {
             if (query is null)
             {
@@ -308,11 +311,32 @@ namespace Pantry.InMemory
         }
 
         /// <inheritdoc/>
-        public Task ClearAsync(CancellationToken cancellationToken = default)
+        public virtual Task ClearAsync(CancellationToken cancellationToken = default)
         {
             Storage.Clear();
             Logger.LogClear(typeof(TEntity));
             return Task.CompletedTask;
+        }
+
+        /// <inheritdoc/>
+        public virtual async Task<IContinuationEnumerable<TEntity>> FindAsync(
+            InMemoryLinqQuery<TEntity> query,
+            CancellationToken cancellationToken = default)
+        {
+            if (query is null)
+            {
+                throw new ArgumentNullException(nameof(query));
+            }
+
+            var queryable = Storage.Values.AsQueryable();
+            queryable = query.Apply(queryable);
+
+            var result = await ContinuationTokenEncoder.ToContinuationEnumerable(
+                queryable.ToList(),
+                query.ContinuationToken,
+                query.Limit);
+            Logger.LogFind(query, result);
+            return result;
         }
     }
 }
