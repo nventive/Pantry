@@ -281,9 +281,9 @@ namespace Pantry.InMemory
 
             foreach (var criterion in query)
             {
-                if (criterion is PropertyCriterion propertyCriterion && propertyCriterion.PropertyPathContainsSubPath)
+                if (criterion is PropertyCriterion propertyCriterion && propertyCriterion.PropertyPathContainsIndexer)
                 {
-                    throw new UnsupportedFeatureException($"{GetType().Name} does not support sub-property selection ({propertyCriterion.PropertyPath}).");
+                    throw new UnsupportedFeatureException($"{GetType().Name} does not support property indexers ({propertyCriterion.PropertyPath}).");
                 }
 
                 queryable = criterion switch

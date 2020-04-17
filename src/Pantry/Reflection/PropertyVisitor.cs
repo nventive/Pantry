@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -16,7 +17,10 @@ namespace Pantry.Reflection
         /// <summary>
         /// Gets the property path as a string.
         /// </summary>
-        public string PropertyPath => string.Join(".", _path.Reverse().Select(p => p.Name));
+        public string PropertyPath => string.Join(
+            ".",
+            _path.Reverse().Select(
+                x => x.IsEnumerableAndNotString() ? $"{x.Name}[]" : x.Name));
 
         /// <summary>
         /// Gets the property path as a string.

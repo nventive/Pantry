@@ -25,5 +25,10 @@ namespace Pantry.Queries.Criteria
         /// Gets a value indicating whether <see cref="PropertyPath"/> contains a sub-path (e.g. Prop1.Prop2).
         /// </summary>
         public bool PropertyPathContainsSubPath => PropertyPath.Contains(".", StringComparison.Ordinal);
+
+        /// <summary>
+        /// Gets a value indicating whether <see cref="PropertyPath"/> contains a sub-path (e.g. Prop1.Prop2).
+        /// </summary>
+        public bool PropertyPathContainsIndexer => PropertyPath.Contains("[]", StringComparison.Ordinal);
     }
 }
