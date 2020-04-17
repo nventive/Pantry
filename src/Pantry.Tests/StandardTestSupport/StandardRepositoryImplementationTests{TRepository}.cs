@@ -19,8 +19,10 @@ namespace Pantry.Tests.StandardTestSupport
     [SuppressMessage("Design", "CA1000:Do not declare static members on generic types", Justification = "OK Here - support for generic test suite / xUnit member data pattern.")]
     public abstract class StandardRepositoryImplementationTests<TRepository> : StandardRepositoryImplementationTests<TRepository, StandardEntity>
     {
-        public StandardRepositoryImplementationTests(ITestOutputHelper outputHelper)
-            : base(outputHelper)
+        public StandardRepositoryImplementationTests(
+            StandardRepositoryImplementationTestsFixture fixture,
+            ITestOutputHelper outputHelper)
+            : base(fixture, outputHelper)
         {
         }
 

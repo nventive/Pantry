@@ -1,20 +1,17 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Pantry.Tests.StandardTestSupport;
+﻿using Pantry.Tests.StandardTestSupport;
+using Xunit;
 using Xunit.Abstractions;
 
 namespace Pantry.InMemory.Tests
 {
+    [Collection(ConcurrentDictionaryStandardTestsFixtureCollection.CollectionName)]
     public class ConcurrentDictionaryStandardTests : StandardRepositoryImplementationTests<ConcurrentDictionaryRepository<StandardEntity>>
     {
-        public ConcurrentDictionaryStandardTests(ITestOutputHelper outputHelper)
-            : base(outputHelper)
+        public ConcurrentDictionaryStandardTests(
+            ConcurrentDictionaryStandardTestsFixture fixture,
+            ITestOutputHelper outputHelper)
+            : base(fixture, outputHelper)
         {
-        }
-
-        protected override void RegisterTestServices<TEntity>(HostBuilderContext context, IServiceCollection services)
-        {
-            services.AddConcurrentDictionaryRepository<TEntity>();
         }
     }
 }

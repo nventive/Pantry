@@ -1,13 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Bogus;
 using FluentAssertions;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Pantry.Exceptions;
 using Pantry.Generators;
 using Pantry.Traits;
@@ -24,12 +20,12 @@ namespace Pantry.Tests.StandardTestSupport
     public abstract class StandardRepositoryImplementationTests<TRepository, TTestEntity>
         where TTestEntity : class, IIdentifiable, IETaggable, ITimestamped, new()
     {
-        private readonly Lazy<IHost> _lazyHost;
-
-        public StandardRepositoryImplementationTests(ITestOutputHelper outputHelper)
+        protected StandardRepositoryImplementationTests(
+            StandardRepositoryImplementationTestsFixture fixture,
+            ITestOutputHelper outputHelper)
         {
-            _lazyHost = new Lazy<IHost>(BuildHost);
-            OutputHelper = outputHelper;
+            Fixture = fixture ?? throw new ArgumentNullException(nameof(fixture));
+            Fixture.OutputHelper = outputHelper;
 
             AssertionOptions.AssertEquivalencyUsing(options =>
             {
@@ -41,19 +37,14 @@ namespace Pantry.Tests.StandardTestSupport
         }
 
         /// <summary>
-        /// Gets the <see cref="ITestOutputHelper"/>.
+        /// Gets the Fixture.
         /// </summary>
-        protected ITestOutputHelper OutputHelper { get; }
-
-        /// <summary>
-        /// Gets the <see cref="IHost"/>.
-        /// </summary>
-        protected IHost Host => _lazyHost.Value;
+        protected StandardRepositoryImplementationTestsFixture Fixture { get; }
 
         /// <summary>
         /// Gets the <see cref="IServiceProvider"/>.
         /// </summary>
-        protected IServiceProvider ServiceProvider => Host.Services;
+        protected IServiceProvider ServiceProvider => Fixture.Host.Services;
 
         /// <summary>
         /// Gets the Trepository.
@@ -664,61 +655,6 @@ namespace Pantry.Tests.StandardTestSupport
         {
             Skip.IfNot(Repository is TInterface);
             return (Repository as TInterface) !;
-        }
-
-        /// <summary>
-        /// Builds the test <see cref="IHost"/>.
-        /// </summary>
-        /// <returns>The <see cref="IHost"/>.</returns>
-        protected virtual IHost BuildHost()
-        {
-            var hostBuilder = Microsoft.Extensions.Hosting.Host
-                .CreateDefaultBuilder()
-                .ConfigureAppConfiguration(config =>
-                {
-                    config
-                        .AddInMemoryCollection(AdditionalConfigurationValues())
-                        .AddEnvironmentVariables();
-                })
-                .ConfigureLogging(logging =>
-                {
-                    logging
-                        .AddXUnit(OutputHelper)
-                        .AddFilter(_ => true);
-                })
-                .ConfigureServices((context, services) =>
-                {
-                    RegisterTestServices<TTestEntity>(context, services);
-                });
-
-            PostConfigureHostBuilder(hostBuilder);
-
-            return hostBuilder.Build();
-        }
-
-        /// <summary>
-        /// Registers the services under test.
-        /// </summary>
-        /// <typeparam name="TEntity">The test entity type.</typeparam>
-        /// <param name="context">The <see cref="HostBuilderContext"/>.</param>
-        /// <param name="services">The <see cref="IServiceCollection"/>.</param>
-        protected abstract void RegisterTestServices<TEntity>(HostBuilderContext context, IServiceCollection services)
-            where TEntity : class, IIdentifiable, IETaggable, new();
-
-        /// <summary>
-        /// Additional values to add to the <see cref="IConfiguration"/>.
-        /// Those can be overriden by environment variables after.
-        /// </summary>
-        /// <returns>The list of configuration variables.</returns>
-        protected virtual IEnumerable<KeyValuePair<string, string>> AdditionalConfigurationValues() => Enumerable.Empty<KeyValuePair<string, string>>();
-
-        /// <summary>
-        /// Any additional configuration to apply to the <see cref="IHostBuilder"/>.
-        /// </summary>
-        /// <param name="builder">The <see cref="IHostBuilder"/>.</param>
-        protected virtual void PostConfigureHostBuilder(IHostBuilder builder)
-        {
-            // No-op.
         }
     }
 }

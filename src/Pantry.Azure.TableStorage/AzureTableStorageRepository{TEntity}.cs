@@ -293,7 +293,7 @@ namespace Pantry.Azure.TableStorage
                 throw new ArgumentNullException(nameof(query));
             }
 
-            TableQuery<DynamicTableEntity> AddFilterCondition(TableQuery<DynamicTableEntity> tblQuery, PropertyCriterion criterion, string operation)
+            TableQuery<DynamicTableEntity> AddFilterCondition(TableQuery<DynamicTableEntity> tblQuery, PropertyValueCriterion criterion, string operation)
             {
                 var targetPropertyPaths = Mapper.ResolveQueryPropertyPaths(criterion.PropertyPath);
                 foreach (var targetPropertyPath in targetPropertyPaths)
