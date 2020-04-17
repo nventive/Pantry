@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Linq;
+using System.Linq.Dynamic.Core;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -287,7 +288,13 @@ namespace Pantry.InMemory
 
                 queryable = criterion switch
                 {
-                    IQueryableCriterion queryableCriterion => (IQueryable<TEntity>)queryableCriterion.Apply(queryable),
+                    EqualToPropertyCriterion equalTo => queryable.Where($"{equalTo.PropertyPath} == @0", equalTo.Value),
+                    GreaterThanPropertyCriterion gt => queryable.Where($"{gt.PropertyPath} > @0", gt.Value),
+                    GreaterThanOrEqualToPropertyCriterion gte => queryable.Where($"{gte.PropertyPath} >= @0", gte.Value),
+                    LessThanPropertyCriterion lt => queryable.Where($"{lt.PropertyPath} < @0", lt.Value),
+                    LessThanOrEqualToPropertyCriterion lte => queryable.Where($"{lte.PropertyPath} <= @0", lte.Value),
+                    StringContainsPropertyCriterion strCont => queryable.Where($"{strCont.PropertyPath}.Contains(@0)", strCont.Value),
+                    OrderCriterion order => queryable.OrderBy($"{order.PropertyPath} {(order.Ascending ? "ASC" : "DESC")}"),
                     _ => throw new UnsupportedFeatureException($"The {criterion} criterion is not supported by {this}."),
                 };
             }
