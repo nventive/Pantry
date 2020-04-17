@@ -37,6 +37,7 @@ namespace Microsoft.Extensions.DependencyInjection
             services.TryAddTimestampProvider();
 
             services.TryAddSingleton<ICosmosEntityMapper<TEntity>, CosmosEntityMapper<TEntity>>();
+            services.TryAddSingleton<CosmosQueryCompiler>();
 
             services.Configure<CosmosRepositoryOptions>(opt => { });
             services.TryAddSingleton<CosmosContainerFactory>();

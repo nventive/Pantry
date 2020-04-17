@@ -7,6 +7,7 @@ using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Cosmos.Linq;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using Pantry.Azure.Cosmos.Queries;
 using Pantry.Continuation;
 using Pantry.Exceptions;
 using Pantry.Generators;
@@ -14,6 +15,7 @@ using Pantry.Logging;
 using Pantry.Providers;
 using Pantry.Queries;
 using Pantry.Queries.Criteria;
+using Pantry.Traits;
 using SqlKata.Compilers;
 
 namespace Pantry.Azure.Cosmos
@@ -22,7 +24,9 @@ namespace Pantry.Azure.Cosmos
     /// Cosmos Repository Implementation.
     /// </summary>
     /// <typeparam name="TEntity">The entity type.</typeparam>
-    public class CosmosRepository<TEntity> : IRepository<TEntity>
+    public class CosmosRepository<TEntity> : IRepository<TEntity>,
+                                             IRepositoryFind<TEntity, TEntity, CosmosSqlBuilderQuery<TEntity>>,
+                                             IRepositoryFind<TEntity, TEntity, CosmosSqlQuery<TEntity>>
         where TEntity : class, IIdentifiable, new()
     {
         /// <summary>
@@ -32,18 +36,21 @@ namespace Pantry.Azure.Cosmos
         /// <param name="idGenerator">The <see cref="IIdGenerator{TEntity}"/>.</param>
         /// <param name="timestampProvider">The <see cref="ITimestampProvider"/>.</param>
         /// <param name="mapper">The <see cref="ICosmosEntityMapper{TEntity}"/>.</param>
+        /// <param name="queryCompiler">The SqlKata query compiler.</param>
         /// <param name="logger">The <see cref="ILogger"/>.</param>
         public CosmosRepository(
             CosmosContainerFor<TEntity> cosmosContainerFor,
             IIdGenerator<TEntity> idGenerator,
             ITimestampProvider timestampProvider,
             ICosmosEntityMapper<TEntity> mapper,
+            CosmosQueryCompiler queryCompiler,
             ILogger<CosmosRepository<TEntity>>? logger = null)
         {
             CosmosContainerFor = cosmosContainerFor ?? throw new ArgumentNullException(nameof(cosmosContainerFor));
             IdGenerator = idGenerator ?? throw new ArgumentNullException(nameof(idGenerator));
             TimestampProvider = timestampProvider ?? throw new ArgumentNullException(nameof(timestampProvider));
             Mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+            QueryCompiler = queryCompiler ?? throw new ArgumentNullException(nameof(queryCompiler));
             Logger = logger ?? NullLogger<CosmosRepository<TEntity>>.Instance;
         }
 
@@ -80,7 +87,7 @@ namespace Pantry.Azure.Cosmos
         /// <summary>
         /// Gets the SQL query <see cref="Compiler"/>.
         /// </summary>
-        private CosmosDbQueryCompiler QueryCompiler { get; } = new CosmosDbQueryCompiler();
+        private CosmosQueryCompiler QueryCompiler { get; }
 
         /// <inheritdoc/>
         public virtual async Task<TEntity> AddAsync(TEntity entity, CancellationToken cancellationToken = default)
@@ -320,13 +327,7 @@ namespace Pantry.Azure.Cosmos
 
             var queryBuilder = new SqlKata.Query("e")
                 .Select("*")
-                .Where($"e[\"{CosmosDocument.TypeAttribute}\"]", Mapper.GetEntityType());
-
-            string QuotedMappedPropertyPath(string propertyPath)
-            {
-                var mappedPropertyPath = Mapper.ResolveQueryPropertyPaths(propertyPath);
-                return $"e{string.Join(string.Empty, mappedPropertyPath.Split(".").Select(x => $"[\"{x}\"]"))}";
-            }
+                .Where($"e.{CosmosDocument.TypeAttribute}", Mapper.GetEntityType());
 
             foreach (var criterion in query)
             {
@@ -337,19 +338,72 @@ namespace Pantry.Azure.Cosmos
 
                 queryBuilder = criterion switch
                 {
-                    EqualToPropertyCriterion equalTo => queryBuilder.Where(QuotedMappedPropertyPath(equalTo.PropertyPath), equalTo.Value),
-                    GreaterThanPropertyCriterion gt => queryBuilder.Where(QuotedMappedPropertyPath(gt.PropertyPath), ">", gt.Value),
-                    GreaterThanOrEqualToPropertyCriterion gte => queryBuilder.Where(QuotedMappedPropertyPath(gte.PropertyPath), ">=", gte.Value),
-                    LessThanPropertyCriterion lt => queryBuilder.Where(QuotedMappedPropertyPath(lt.PropertyPath), "<", lt.Value),
-                    LessThanOrEqualToPropertyCriterion lte => queryBuilder.Where(QuotedMappedPropertyPath(lte.PropertyPath), "<=", lte.Value),
-                    StringContainsPropertyCriterion strCont => queryBuilder.WhereRaw($"CONTAINS({QuotedMappedPropertyPath(strCont.PropertyPath)}, ?)", strCont.Value),
-                    OrderCriterion order => queryBuilder.OrderByRaw($"{QuotedMappedPropertyPath(order.PropertyPath)} {(order.Ascending ? "ASC" : "DESC")}"),
+                    EqualToPropertyCriterion equalTo => queryBuilder.Where($"e.{Mapper.ResolveQueryPropertyPaths(equalTo.PropertyPath)}", equalTo.Value),
+                    GreaterThanPropertyCriterion gt => queryBuilder.Where($"e.{Mapper.ResolveQueryPropertyPaths(gt.PropertyPath)}", ">", gt.Value),
+                    GreaterThanOrEqualToPropertyCriterion gte => queryBuilder.Where($"e.{Mapper.ResolveQueryPropertyPaths(gte.PropertyPath)}", ">=", gte.Value),
+                    LessThanPropertyCriterion lt => queryBuilder.Where($"e.{Mapper.ResolveQueryPropertyPaths(lt.PropertyPath)}", "<", lt.Value),
+                    LessThanOrEqualToPropertyCriterion lte => queryBuilder.Where($"e.{Mapper.ResolveQueryPropertyPaths(lte.PropertyPath)}", "<=", lte.Value),
+                    StringContainsPropertyCriterion strCont => queryBuilder.WhereRaw($"CONTAINS(e.{Mapper.ResolveQueryPropertyPaths(strCont.PropertyPath)}, ?)", strCont.Value),
+                    OrderCriterion order => queryBuilder.OrderByRaw($"e.{Mapper.ResolveQueryPropertyPaths(order.PropertyPath)} {(order.Ascending ? "ASC" : "DESC")}"),
                     _ => throw new UnsupportedFeatureException($"The {criterion} criterion is not supported by {this}."),
                 };
             }
 
             var queryDefinition = QueryCompiler.ToQueryDefinition(queryBuilder);
-            Logger.LogTrace("FindAsync() {CosmosDbQueryText}", queryDefinition.QueryText);
+            return await ExecuteQueryAsync(query, queryDefinition, cancellationToken).ConfigureAwait(false);
+        }
+
+        /// <inheritdoc/>
+        public virtual async Task<IContinuationEnumerable<TEntity>> FindAsync(
+            CosmosSqlBuilderQuery<TEntity> query,
+            CancellationToken cancellationToken = default)
+        {
+            if (query is null)
+            {
+                throw new ArgumentNullException(nameof(query));
+            }
+
+            var queryDefinition = QueryCompiler.ToQueryDefinition(query.GetQuery());
+            return await ExecuteQueryAsync(query, queryDefinition, cancellationToken).ConfigureAwait(false);
+        }
+
+        /// <inheritdoc/>
+        public virtual async Task<IContinuationEnumerable<TEntity>> FindAsync(
+            CosmosSqlQuery<TEntity> query,
+            CancellationToken cancellationToken = default)
+        {
+            if (query is null)
+            {
+                throw new ArgumentNullException(nameof(query));
+            }
+
+            var queryDefinition = query.GetQueryDefinition();
+            return await ExecuteQueryAsync(query, queryDefinition, cancellationToken).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Executes a <paramref name="query"/> using a <paramref name="queryDefinition"/>.
+        /// </summary>
+        /// <param name="query">The pantry query.</param>
+        /// <param name="queryDefinition">The <see cref="QueryDefinition"/>.</param>
+        /// <param name="cancellationToken">The <see cref="CancellationToken"/>.</param>
+        /// <returns>The execution result.</returns>
+        protected virtual async Task<IContinuationEnumerable<TEntity>> ExecuteQueryAsync(
+            IQuery<TEntity> query,
+            QueryDefinition queryDefinition,
+            CancellationToken cancellationToken)
+        {
+            if (query is null)
+            {
+                throw new ArgumentNullException(nameof(query));
+            }
+
+            if (queryDefinition is null)
+            {
+                throw new ArgumentNullException(nameof(queryDefinition));
+            }
+
+            Logger.LogTrace("ExecuteQueryAsync() {CosmosDbQueryText}", queryDefinition.QueryText);
 
             var response = await Container.GetItemQueryIterator<CosmosDocument>(
                 queryDefinition,

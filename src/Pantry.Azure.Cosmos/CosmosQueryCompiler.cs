@@ -7,14 +7,14 @@ namespace Pantry.Azure.Cosmos
 {
     /// <summary>
     /// SqlKata <see cref="Compiler"/> for CosmosDb.
-    /// Support is EXTREMELY minimal. Handle with care.
+    /// Support is minimal. Handle with care.
     /// </summary>
-    internal class CosmosDbQueryCompiler : Compiler
+    public class CosmosQueryCompiler : Compiler
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="CosmosDbQueryCompiler"/> class.
+        /// Initializes a new instance of the <see cref="CosmosQueryCompiler"/> class.
         /// </summary>
-        public CosmosDbQueryCompiler()
+        public CosmosQueryCompiler()
         {
         }
 
