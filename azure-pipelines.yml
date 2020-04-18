@@ -28,6 +28,7 @@ steps:
   env:
     ConnectionStrings__StorageConnectionString: $(ConnectionStrings__StorageConnectionString)
     ConnectionStrings__CosmosDb: $(ConnectionStrings__CosmosDb)
+    ConnectionStrings__RedisConnectionString: $(ConnectionStrings__RedisConnectionString)
 
 - task: PublishTestResults@2
   displayName: Publish Tests Results
