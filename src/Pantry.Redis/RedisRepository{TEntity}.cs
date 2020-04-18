@@ -105,9 +105,22 @@ namespace Pantry.Redis
             }
 
             var key = Mapper.GetRedisKey(entity.Id);
-            var hashEntries = Mapper.MapToDestination(entity);
+            var hashEntries = Mapper.MapToDestination(entity).ToArray();
 
-            await Database.HashSetAsync(key, hashEntries.ToArray()).ConfigureAwait(false);
+            // This is how we can manage conflicts with StackExchange.Redis.
+            var wasSet = await Database.HashSetAsync(key, hashEntries[0].Name, hashEntries[0].Value, When.NotExists).ConfigureAwait(false);
+            if (!wasSet)
+            {
+                var conflictException = new ConflictException(typeof(TEntity).Name, entity.Id);
+                Logger.LogAddedWarning(
+                    entityType: typeof(TEntity),
+                    entityId: entity.Id,
+                    warning: "Conflict",
+                    exception: conflictException);
+                throw conflictException;
+            }
+
+            await Database.HashSetAsync(key, hashEntries).ConfigureAwait(false);
 
             var result = Mapper.MapToSource(hashEntries);
 
@@ -146,6 +159,11 @@ namespace Pantry.Redis
         /// <inheritdoc/>
         public virtual async Task<TEntity?> TryGetByIdAsync(string id, CancellationToken cancellationToken = default)
         {
+            if (string.IsNullOrEmpty(id))
+            {
+                throw new ArgumentNullException(nameof(id));
+            }
+
             var key = Mapper.GetRedisKey(id);
             var hashEntries = await Database.HashGetAllAsync(key).ConfigureAwait(false);
 
@@ -168,9 +186,58 @@ namespace Pantry.Redis
         }
 
         /// <inheritdoc/>
-        public virtual Task<TEntity> UpdateAsync(TEntity entity, CancellationToken cancellationToken = default)
+        public virtual async Task<TEntity> UpdateAsync(TEntity entity, CancellationToken cancellationToken = default)
         {
-            throw new UnsupportedFeatureException("Not supported yet.");
+            if (entity is null)
+            {
+                throw new ArgumentNullException(nameof(entity));
+            }
+
+            var needsConcurrencyControl = entity is IETaggable;
+            if (entity is IETaggable taggableEntity && string.IsNullOrEmpty(taggableEntity.ETag))
+            {
+                taggableEntity.ETag = await EtagGenerator.Generate(entity);
+                needsConcurrencyControl = false;
+            }
+
+            if (entity is ITimestamped timestampedEntity && timestampedEntity.Timestamp is null)
+            {
+                timestampedEntity.Timestamp = TimestampProvider.CurrentTimestamp();
+            }
+
+            var key = Mapper.GetRedisKey(entity.Id);
+
+            var exists = await Database.KeyExistsAsync(key).ConfigureAwait(false);
+            if (!exists)
+            {
+                var exception = new NotFoundException(typeof(TEntity).Name, entity.Id);
+                Logger.LogUpdatedWarning(
+                    entityType: typeof(TEntity),
+                    entityId: entity.Id,
+                    warning: "NotFound",
+                    exception: exception);
+
+                throw exception;
+            }
+
+            var hashEntries = Mapper.MapToDestination(entity).ToArray();
+
+            if (needsConcurrencyControl)
+            {
+                throw new UnsupportedFeatureException($"Redis does not support optimistic concurrency for now.");
+            }
+            else
+            {
+                await Database.HashSetAsync(key, hashEntries).ConfigureAwait(false);
+
+                var result = Mapper.MapToSource(hashEntries);
+
+                Logger.LogUpdated(
+                    entityType: typeof(TEntity),
+                    entityId: result.Id,
+                    entity: result);
+                return result;
+            }
         }
 
         /// <inheritdoc/>

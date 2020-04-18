@@ -30,7 +30,7 @@ namespace Pantry.Redis
 
             yield return new HashEntry(nameof(IIdentifiable.Id), source.Id);
 
-            if (source is IETaggable taggableEntity)
+            if (source is IETaggable taggableEntity && !string.IsNullOrEmpty(taggableEntity.ETag))
             {
                 yield return new HashEntry(nameof(IETaggable.ETag), taggableEntity.ETag);
             }
@@ -43,12 +43,15 @@ namespace Pantry.Redis
             foreach (var property in EntityAttributes.GetAttributeProperties<TEntity>())
             {
                 var value = property.GetValue(source);
-                if (!RedisEntityMapper.IsNativelySupportedAsProperty(property.PropertyType))
+                if (value != null)
                 {
-                    value = JsonSerializer.Serialize(value);
-                }
+                    if (!RedisEntityMapper.IsNativelySupportedAsProperty(property.PropertyType))
+                    {
+                        value = JsonSerializer.Serialize(value);
+                    }
 
-                yield return new HashEntry(property.Name, value.ToString());
+                    yield return new HashEntry(property.Name, value.ToString());
+                }
             }
         }
 
