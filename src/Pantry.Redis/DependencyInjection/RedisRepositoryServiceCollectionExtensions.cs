@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection.Extensions;
 using Pantry;
+using Pantry.Continuation;
 using Pantry.DependencyInjection;
 using Pantry.Redis;
 using Pantry.Redis.DependencyInjection;
@@ -35,6 +36,7 @@ namespace Microsoft.Extensions.DependencyInjection
             services.TryAddIdGeneratorFor<TEntity>();
             services.TryAddETagGeneratorFor<TEntity>();
             services.TryAddTimestampProvider();
+            services.TryAddContinuationTokenEncoderFor<LimitOffsetContinuationToken>();
 
             services.TryAddSingleton<IRedisEntityMapper<TEntity>, RedisEntityMapper<TEntity>>();
 

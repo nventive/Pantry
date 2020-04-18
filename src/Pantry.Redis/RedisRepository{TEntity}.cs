@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -29,6 +30,7 @@ namespace Pantry.Redis
         /// <param name="etagGenerator">The <see cref="IETagGenerator{T}"/>.</param>
         /// <param name="timestampProvider">The <see cref="ITimestampProvider"/>.</param>
         /// <param name="mapper">The <see cref="IRedisEntityMapper{TEntity}"/>.</param>
+        /// <param name="continuationTokenEncoder">The <see cref="IContinuationTokenEncoder{TContinuationToken}"/>.</param>
         /// <param name="logger">The <see cref="ILogger"/>.</param>
         public RedisRepository(
             RedisDatabaseFor<TEntity> databaseFor,
@@ -36,6 +38,7 @@ namespace Pantry.Redis
             IETagGenerator<TEntity> etagGenerator,
             ITimestampProvider timestampProvider,
             IRedisEntityMapper<TEntity> mapper,
+            IContinuationTokenEncoder<LimitOffsetContinuationToken> continuationTokenEncoder,
             ILogger<RedisRepository<TEntity>>? logger = null)
         {
             DatabaseFor = databaseFor ?? throw new ArgumentNullException(nameof(databaseFor));
@@ -43,6 +46,7 @@ namespace Pantry.Redis
             EtagGenerator = etagGenerator ?? throw new ArgumentNullException(nameof(etagGenerator));
             TimestampProvider = timestampProvider ?? throw new ArgumentNullException(nameof(timestampProvider));
             Mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+            ContinuationTokenEncoder = continuationTokenEncoder ?? throw new ArgumentNullException(nameof(continuationTokenEncoder));
             Logger = logger ?? NullLogger<RedisRepository<TEntity>>.Instance;
         }
 
@@ -72,9 +76,19 @@ namespace Pantry.Redis
         protected IRedisEntityMapper<TEntity> Mapper { get; }
 
         /// <summary>
+        /// Gets the <see cref="IContinuationTokenEncoder{LimitOffsetContinuationToken}"/>.
+        /// </summary>
+        protected IContinuationTokenEncoder<LimitOffsetContinuationToken> ContinuationTokenEncoder { get; }
+
+        /// <summary>
         /// Gets the <see cref="IDatabase"/>.
         /// </summary>
         protected IDatabase Database => DatabaseFor.Database;
+
+        /// <summary>
+        /// Gets an <see cref="IServer"/> to use for querying.
+        /// </summary>
+        protected virtual IServer ServerForQuerying => Database.Multiplexer.GetServer(Database.Multiplexer.GetEndPoints().Last());
 
         /// <summary>
         /// Gets the <see cref="ILogger"/>.
@@ -292,9 +306,41 @@ namespace Pantry.Redis
         }
 
         /// <inheritdoc/>
-        public virtual Task<IContinuationEnumerable<TEntity>> FindAllAsync(string? continuationToken, int limit = 50, CancellationToken cancellationToken = default)
+        public virtual async Task<IContinuationEnumerable<TEntity>> FindAllAsync(string? continuationToken, int limit = Query.DefaultLimit, CancellationToken cancellationToken = default)
         {
-            throw new UnsupportedFeatureException("Not supported yet.");
+            if (limit <= 0)
+            {
+                return ContinuationEnumerable.Empty<TEntity>();
+            }
+
+            var pagination = await ContinuationTokenEncoder.Decode(continuationToken);
+            if (pagination is null)
+            {
+                pagination = new LimitOffsetContinuationToken { Limit = limit, Offset = 0 };
+            }
+
+            var allKeys = ServerForQuerying.Keys(pattern: Mapper.GetRedisKeyPattern()).ToList();
+            var keys = allKeys
+                .Skip(pagination.Offset)
+                .Take(pagination.Limit)
+                .ToList();
+
+            var hashEntries = await Task.WhenAll(keys.Select(key => Database.HashGetAllAsync(key))).ConfigureAwait(false);
+
+            string? nextEncodedToken = null;
+            if ((hashEntries.Length + pagination.Offset) < allKeys.Count)
+            {
+                nextEncodedToken = await ContinuationTokenEncoder.Encode(
+                    new LimitOffsetContinuationToken { Offset = pagination.Offset + pagination.Limit, Limit = pagination.Limit });
+            }
+
+            var result = hashEntries
+                .Select(hashEntry => Mapper.MapToSource(hashEntry))
+                .ToContinuationEnumerable(nextEncodedToken);
+
+            Logger.LogFind($"(ct: {continuationToken ?? "<no-ct>"}, limit: {limit})", result);
+
+            return result;
         }
 
         /// <inheritdoc/>

@@ -19,6 +19,12 @@ namespace Pantry.Redis
         RedisKey GetRedisKey(string id);
 
         /// <summary>
+        /// Gets the key prefix to use when scanning.
+        /// </summary>
+        /// <returns>The <see cref="RedisValue"/> pattern.</returns>
+        RedisValue GetRedisKeyPattern();
+
+        /// <summary>
         /// Returns the name of the ETag field.
         /// </summary>
         /// <returns>The <see cref="RedisValue"/> ETag field.</returns>

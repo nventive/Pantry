@@ -291,7 +291,7 @@ namespace Pantry.Azure.Cosmos
         }
 
         /// <inheritdoc/>
-        public virtual async Task<IContinuationEnumerable<TEntity>> FindAllAsync(string? continuationToken, int limit = 50, CancellationToken cancellationToken = default)
+        public virtual async Task<IContinuationEnumerable<TEntity>> FindAllAsync(string? continuationToken, int limit = Query.DefaultLimit, CancellationToken cancellationToken = default)
         {
             if (limit <= 0)
             {

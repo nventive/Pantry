@@ -18,6 +18,9 @@ namespace Pantry.Redis
         public RedisKey GetRedisKey(string id) => new RedisKey($"{typeof(TEntity).Name}:{id}");
 
         /// <inheritdoc/>
+        public RedisValue GetRedisKeyPattern() => new RedisValue($"{typeof(TEntity).Name}:*");
+
+        /// <inheritdoc/>
         public RedisValue GetETagField() => new RedisValue(nameof(IETaggable.ETag));
 
         /// <inheritdoc/>
