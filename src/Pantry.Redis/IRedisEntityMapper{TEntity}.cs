@@ -17,5 +17,11 @@ namespace Pantry.Redis
         /// <param name="id">The entity id.</param>
         /// <returns>The <see cref="RedisKey"/>.</returns>
         RedisKey GetRedisKey(string id);
+
+        /// <summary>
+        /// Returns the name of the ETag field.
+        /// </summary>
+        /// <returns>The <see cref="RedisValue"/> ETag field.</returns>
+        RedisValue GetETagField();
     }
 }

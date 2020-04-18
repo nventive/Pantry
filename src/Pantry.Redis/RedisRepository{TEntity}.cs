@@ -74,7 +74,7 @@ namespace Pantry.Redis
         /// <summary>
         /// Gets the <see cref="IDatabase"/>.
         /// </summary>
-        protected IDatabaseAsync Database => DatabaseFor.Database;
+        protected IDatabase Database => DatabaseFor.Database;
 
         /// <summary>
         /// Gets the <see cref="ILogger"/>.
@@ -107,9 +107,14 @@ namespace Pantry.Redis
             var key = Mapper.GetRedisKey(entity.Id);
             var hashEntries = Mapper.MapToDestination(entity).ToArray();
 
-            // This is how we can manage conflicts with StackExchange.Redis.
-            var wasSet = await Database.HashSetAsync(key, hashEntries[0].Name, hashEntries[0].Value, When.NotExists).ConfigureAwait(false);
-            if (!wasSet)
+            var tran = Database.CreateTransaction();
+            tran.AddCondition(Condition.KeyNotExists(key));
+#pragma warning disable CS4014 // We can't await this one, as it is not "executed"; this is the way the API is built.
+            tran.HashSetAsync(key, hashEntries);
+#pragma warning restore CS4014
+
+            var executed = await tran.ExecuteAsync().ConfigureAwait(false);
+            if (!executed)
             {
                 var conflictException = new ConflictException(typeof(TEntity).Name, entity.Id);
                 Logger.LogAddedWarning(
@@ -119,8 +124,6 @@ namespace Pantry.Redis
                     exception: conflictException);
                 throw conflictException;
             }
-
-            await Database.HashSetAsync(key, hashEntries).ConfigureAwait(false);
 
             var result = Mapper.MapToSource(hashEntries);
 
@@ -193,11 +196,11 @@ namespace Pantry.Redis
                 throw new ArgumentNullException(nameof(entity));
             }
 
-            var needsConcurrencyControl = entity is IETaggable;
-            if (entity is IETaggable taggableEntity && string.IsNullOrEmpty(taggableEntity.ETag))
+            string? entryETag = null;
+            if (entity is IETaggable taggableEntity)
             {
+                entryETag = taggableEntity.ETag;
                 taggableEntity.ETag = await EtagGenerator.Generate(entity);
-                needsConcurrencyControl = false;
             }
 
             if (entity is ITimestamped timestampedEntity && timestampedEntity.Timestamp is null)
@@ -206,38 +209,54 @@ namespace Pantry.Redis
             }
 
             var key = Mapper.GetRedisKey(entity.Id);
-
-            var exists = await Database.KeyExistsAsync(key).ConfigureAwait(false);
-            if (!exists)
-            {
-                var exception = new NotFoundException(typeof(TEntity).Name, entity.Id);
-                Logger.LogUpdatedWarning(
-                    entityType: typeof(TEntity),
-                    entityId: entity.Id,
-                    warning: "NotFound",
-                    exception: exception);
-
-                throw exception;
-            }
-
             var hashEntries = Mapper.MapToDestination(entity).ToArray();
 
-            if (needsConcurrencyControl)
+            var tran = Database.CreateTransaction();
+            tran.AddCondition(Condition.KeyExists(key));
+            if (!string.IsNullOrEmpty(entryETag))
             {
-                throw new UnsupportedFeatureException($"Redis does not support optimistic concurrency for now.");
+                tran.AddCondition(Condition.HashEqual(key, Mapper.GetETagField(), entryETag));
             }
-            else
+
+#pragma warning disable CS4014 // We can't await this one, as it is not "executed"; this is the way the API is built.
+            tran.HashSetAsync(key, hashEntries);
+#pragma warning restore CS4014
+
+            var executed = await tran.ExecuteAsync().ConfigureAwait(false);
+            if (!executed)
             {
-                await Database.HashSetAsync(key, hashEntries).ConfigureAwait(false);
+                var exists = await Database.KeyExistsAsync(key).ConfigureAwait(false);
+                if (!exists)
+                {
+                    var exception = new NotFoundException(typeof(TEntity).Name, entity.Id);
+                    Logger.LogUpdatedWarning(
+                        entityType: typeof(TEntity),
+                        entityId: entity.Id,
+                        warning: "NotFound",
+                        exception: exception);
 
-                var result = Mapper.MapToSource(hashEntries);
+                    throw exception;
+                }
+                else
+                {
+                    var exception = new ConcurrencyException(typeof(TEntity).Name, entity.Id);
+                    Logger.LogUpdatedWarning(
+                        entityType: typeof(TEntity),
+                        entityId: entity.Id,
+                        warning: "Concurrency",
+                        exception: exception);
 
-                Logger.LogUpdated(
-                    entityType: typeof(TEntity),
-                    entityId: result.Id,
-                    entity: result);
-                return result;
+                    throw exception;
+                }
             }
+
+            var result = Mapper.MapToSource(hashEntries);
+
+            Logger.LogUpdated(
+                entityType: typeof(TEntity),
+                entityId: result.Id,
+                entity: result);
+            return result;
         }
 
         /// <inheritdoc/>

@@ -4,7 +4,7 @@ using StackExchange.Redis;
 namespace Pantry.Redis
 {
     /// <summary>
-    /// Encapsulates <see cref="IDatabaseAsync"/> for easier Dependency Injection.
+    /// Encapsulates <see cref="IDatabase"/> for easier Dependency Injection.
     /// </summary>
     /// <typeparam name="TEntity">The type related to the IDatabase itself. Probably an entity.</typeparam>
     public class RedisDatabaseFor<TEntity>
@@ -12,15 +12,15 @@ namespace Pantry.Redis
         /// <summary>
         /// Initializes a new instance of the <see cref="RedisDatabaseFor{T}"/> class.
         /// </summary>
-        /// <param name="database">The <see cref="IDatabaseAsync"/> To encapsulate.</param>
-        public RedisDatabaseFor(IDatabaseAsync database)
+        /// <param name="database">The <see cref="IDatabase"/> to encapsulate.</param>
+        public RedisDatabaseFor(IDatabase database)
         {
             Database = database ?? throw new ArgumentNullException(nameof(database));
         }
 
         /// <summary>
-        /// Gets the <see cref="IDatabaseAsync"/>.
+        /// Gets the <see cref="IDatabase"/>.
         /// </summary>
-        public IDatabaseAsync Database { get; }
+        public IDatabase Database { get; }
     }
 }

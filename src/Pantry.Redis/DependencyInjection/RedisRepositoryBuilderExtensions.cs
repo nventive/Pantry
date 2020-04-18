@@ -23,7 +23,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <returns>The udpated <see cref="IRedisRepositoryBuilder{TEntity}"/>.</returns>
         public static IRedisRepositoryBuilder<TEntity> WithRedisDatabaseFactory<TEntity>(
             this IRedisRepositoryBuilder<TEntity> builder,
-            Func<IServiceProvider, IDatabaseAsync> databaseFactory)
+            Func<IServiceProvider, IDatabase> databaseFactory)
             where TEntity : class, IIdentifiable
         {
             if (builder is null)

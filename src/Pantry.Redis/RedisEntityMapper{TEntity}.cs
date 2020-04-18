@@ -15,10 +15,10 @@ namespace Pantry.Redis
         where TEntity : class, IIdentifiable, new()
     {
         /// <inheritdoc/>
-        public RedisKey GetRedisKey(string id)
-        {
-            return new RedisKey($"{typeof(TEntity).Name}:{id}");
-        }
+        public RedisKey GetRedisKey(string id) => new RedisKey($"{typeof(TEntity).Name}:{id}");
+
+        /// <inheritdoc/>
+        public RedisValue GetETagField() => new RedisValue(nameof(IETaggable.ETag));
 
         /// <inheritdoc/>
         public IEnumerable<HashEntry> MapToDestination(TEntity source)
@@ -32,7 +32,7 @@ namespace Pantry.Redis
 
             if (source is IETaggable taggableEntity && !string.IsNullOrEmpty(taggableEntity.ETag))
             {
-                yield return new HashEntry(nameof(IETaggable.ETag), taggableEntity.ETag);
+                yield return new HashEntry(GetETagField(), taggableEntity.ETag);
             }
 
             if (source is ITimestamped timestampedEntity && timestampedEntity.Timestamp.HasValue)
