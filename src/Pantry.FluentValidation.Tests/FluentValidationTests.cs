@@ -86,6 +86,32 @@ namespace Pantry.FluentValidation.Tests
             act.Should().Throw<ValidationException>();
         }
 
+        [Fact]
+        public async Task ItShouldPerformReferenceValidation()
+        {
+            var services = GetServiceCollectionWithFluentValidation();
+            var provider = services.BuildServiceProvider();
+            var refRepo = provider.GetRequiredService<ICrudRepository<RefEntity>>();
+            var stdRepo = provider.GetRequiredService<ICrudRepository<StandardEntity>>();
+
+            var refEntity = new RefEntity();
+
+            Func<Task> act = async () => await refRepo.AddAsync(refEntity);
+            act.Should().NotThrow();
+
+            refEntity = new RefEntity { StandardEntityId = $"{Guid.NewGuid()}" };
+
+            act = async () => await refRepo.AddAsync(refEntity);
+            act.Should().Throw<ValidationException>();
+
+            var standardEntity = new StandardEntity { Age = 23 };
+            standardEntity = await stdRepo.AddAsync(standardEntity);
+
+            refEntity = new RefEntity { StandardEntityId = standardEntity.Id };
+            act = async () => await refRepo.AddAsync(refEntity);
+            act.Should().NotThrow();
+        }
+
         private IServiceCollection GetServiceCollectionWithFluentValidation()
         {
             var svc = new ServiceCollection();
@@ -96,8 +122,14 @@ namespace Pantry.FluentValidation.Tests
                         .AddXUnit(_outputHelper)
                         .AddFilter(_ => true);
                 })
-                .AddValidatorsFromAssemblyContaining<FluentValidationTests>()
+                .AddValidatorsFromAssemblyContaining<FluentValidationTests>();
+
+            svc
                 .AddConcurrentDictionaryRepository<StandardEntity>()
+                .WithFluentValidation();
+
+            svc
+                .AddConcurrentDictionaryRepository<RefEntity>()
                 .WithFluentValidation();
 
             return svc;
