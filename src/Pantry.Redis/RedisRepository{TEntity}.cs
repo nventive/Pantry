@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -6,6 +7,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Pantry.Continuation;
 using Pantry.Exceptions;
 using Pantry.Generators;
+using Pantry.Logging;
 using Pantry.Providers;
 using Pantry.Queries;
 using StackExchange.Redis;
@@ -24,18 +26,21 @@ namespace Pantry.Redis
         /// </summary>
         /// <param name="databaseFor">The <see cref="RedisDatabaseFor{TEntity}"/>.</param>
         /// <param name="idGenerator">The <see cref="IIdGenerator{TEntity}"/>.</param>
+        /// <param name="etagGenerator">The <see cref="IETagGenerator{T}"/>.</param>
         /// <param name="timestampProvider">The <see cref="ITimestampProvider"/>.</param>
         /// <param name="mapper">The <see cref="IRedisEntityMapper{TEntity}"/>.</param>
         /// <param name="logger">The <see cref="ILogger"/>.</param>
         public RedisRepository(
             RedisDatabaseFor<TEntity> databaseFor,
             IIdGenerator<TEntity> idGenerator,
+            IETagGenerator<TEntity> etagGenerator,
             ITimestampProvider timestampProvider,
             IRedisEntityMapper<TEntity> mapper,
             ILogger<RedisRepository<TEntity>>? logger = null)
         {
             DatabaseFor = databaseFor ?? throw new ArgumentNullException(nameof(databaseFor));
             IdGenerator = idGenerator ?? throw new ArgumentNullException(nameof(idGenerator));
+            EtagGenerator = etagGenerator ?? throw new ArgumentNullException(nameof(etagGenerator));
             TimestampProvider = timestampProvider ?? throw new ArgumentNullException(nameof(timestampProvider));
             Mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             Logger = logger ?? NullLogger<RedisRepository<TEntity>>.Instance;
@@ -50,6 +55,11 @@ namespace Pantry.Redis
         /// Gets the <see cref="IIdGenerator{T}"/>.
         /// </summary>
         protected IIdGenerator<TEntity> IdGenerator { get; }
+
+        /// <summary>
+        /// Gets the <see cref="IETagGenerator{T}"/>.
+        /// </summary>
+        protected IETagGenerator<TEntity> EtagGenerator { get; }
 
         /// <summary>
         /// Gets the <see cref="ITimestampProvider"/>.
@@ -72,9 +82,41 @@ namespace Pantry.Redis
         protected ILogger Logger { get; }
 
         /// <inheritdoc/>
-        public virtual Task<TEntity> AddAsync(TEntity entity, CancellationToken cancellationToken = default)
+        public virtual async Task<TEntity> AddAsync(TEntity entity, CancellationToken cancellationToken = default)
         {
-            throw new UnsupportedFeatureException("Not supported yet.");
+            if (entity is null)
+            {
+                throw new ArgumentNullException(nameof(entity));
+            }
+
+            if (string.IsNullOrEmpty(entity.Id))
+            {
+                entity.Id = await IdGenerator.Generate(entity);
+            }
+
+            if (entity is IETaggable taggableEntity && string.IsNullOrEmpty(taggableEntity.ETag))
+            {
+                taggableEntity.ETag = await EtagGenerator.Generate(entity);
+            }
+
+            if (entity is ITimestamped timestampedEntity && timestampedEntity.Timestamp is null)
+            {
+                timestampedEntity.Timestamp = TimestampProvider.CurrentTimestamp();
+            }
+
+            var key = Mapper.GetRedisKey(entity.Id);
+            var hashEntries = Mapper.MapToDestination(entity);
+
+            await Database.HashSetAsync(key, hashEntries.ToArray()).ConfigureAwait(false);
+
+            var result = Mapper.MapToSource(hashEntries);
+
+            Logger.LogAdded(
+                entityType: typeof(TEntity),
+                entityId: result.Id,
+                entity: result);
+
+            return result;
         }
 
         /// <inheritdoc/>
@@ -102,9 +144,27 @@ namespace Pantry.Redis
         }
 
         /// <inheritdoc/>
-        public virtual Task<TEntity?> TryGetByIdAsync(string id, CancellationToken cancellationToken = default)
+        public virtual async Task<TEntity?> TryGetByIdAsync(string id, CancellationToken cancellationToken = default)
         {
-            throw new UnsupportedFeatureException("Not supported yet.");
+            var key = Mapper.GetRedisKey(id);
+            var hashEntries = await Database.HashGetAllAsync(key).ConfigureAwait(false);
+
+            if (!hashEntries.Any())
+            {
+                Logger.LogGetById(
+                    entityType: typeof(TEntity),
+                    entityId: id,
+                    entity: null);
+                return null;
+            }
+
+            var result = Mapper.MapToSource(hashEntries);
+            Logger.LogGetById(
+                entityType: typeof(TEntity),
+                entityId: id,
+                entity: result);
+
+            return result;
         }
 
         /// <inheritdoc/>
@@ -114,9 +174,35 @@ namespace Pantry.Redis
         }
 
         /// <inheritdoc/>
-        public virtual Task<bool> TryRemoveAsync(string id, CancellationToken cancellationToken = default)
+        public virtual async Task<bool> TryRemoveAsync(string id, CancellationToken cancellationToken = default)
         {
-            throw new UnsupportedFeatureException("Not supported yet.");
+            if (string.IsNullOrEmpty(id))
+            {
+                Logger.LogDeletedWarning(
+                    entityType: typeof(TEntity),
+                    entityId: "(null)",
+                    warning: "NotFound");
+
+                return false;
+            }
+
+            var key = Mapper.GetRedisKey(id);
+            var result = await Database.KeyDeleteAsync(key).ConfigureAwait(false);
+
+            if (!result)
+            {
+                Logger.LogDeletedWarning(
+                    entityType: typeof(TEntity),
+                    entityId: id,
+                    warning: "NotFound");
+                return false;
+            }
+
+            Logger.LogDeleted(
+                entityType: typeof(TEntity),
+                entityId: id);
+
+            return true;
         }
 
         /// <inheritdoc/>

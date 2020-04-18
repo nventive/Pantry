@@ -33,8 +33,7 @@ namespace Microsoft.Extensions.DependencyInjection
             where TRepository : RedisRepository<TEntity>
         {
             services.TryAddIdGeneratorFor<TEntity>();
-
-            services.TryAddIdGeneratorFor<TEntity>();
+            services.TryAddETagGeneratorFor<TEntity>();
             services.TryAddTimestampProvider();
 
             services.TryAddSingleton<IRedisEntityMapper<TEntity>, RedisEntityMapper<TEntity>>();

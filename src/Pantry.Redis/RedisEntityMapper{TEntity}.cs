@@ -75,28 +75,21 @@ namespace Pantry.Redis
             if (result is ITimestamped timestampedEntity && allDestinationValues.ContainsKey(nameof(ITimestamped.Timestamp)))
             {
                 timestampedEntity.Timestamp = DateTimeOffset.FromUnixTimeMilliseconds(
-                    (long)allDestinationValues[nameof(IETaggable.ETag)].Value);
+                    (long)allDestinationValues[nameof(ITimestamped.Timestamp)].Value);
             }
 
             foreach (var property in EntityAttributes.GetAttributeProperties<TEntity>())
             {
                 if (allDestinationValues.ContainsKey(property.Name))
                 {
-                    object dynamicValue = allDestinationValues[property.Name].Value;
-                    if (dynamicValue != null)
+                    var redisValue = allDestinationValues[property.Name].Value;
+                    if (!RedisEntityMapper.IsNativelySupportedAsProperty(property.PropertyType))
                     {
-                        if (!RedisEntityMapper.IsNativelySupportedAsProperty(property.PropertyType))
-                        {
-                            dynamicValue = JsonSerializer.Deserialize(allDestinationValues[property.Name].Value.ToString(), property.PropertyType);
-                        }
-
-                        //if ((property.PropertyType == typeof(DateTimeOffset) || property.PropertyType == typeof(DateTimeOffset?))
-                        //    && dynamicValue is DateTime dateTimeValue)
-                        //{
-                        //    dynamicValue = new DateTimeOffset(dateTimeValue);
-                        //}
-
-                        property.SetValue(result, dynamicValue);
+                        property.SetValue(result, JsonSerializer.Deserialize(allDestinationValues[property.Name].Value.ToString(), property.PropertyType));
+                    }
+                    else
+                    {
+                        property.SetValueWithCastOperators(result, redisValue);
                     }
                 }
             }
