@@ -1,4 +1,5 @@
-﻿using Pantry;
+﻿using Microsoft.Extensions.DependencyInjection.Extensions;
+using Pantry;
 using Pantry.DependencyInjection;
 using Pantry.Redis;
 using Pantry.Redis.DependencyInjection;
@@ -32,6 +33,11 @@ namespace Microsoft.Extensions.DependencyInjection
             where TRepository : RedisRepository<TEntity>
         {
             services.TryAddIdGeneratorFor<TEntity>();
+
+            services.TryAddIdGeneratorFor<TEntity>();
+            services.TryAddTimestampProvider();
+
+            services.TryAddSingleton<IRedisEntityMapper<TEntity>, RedisEntityMapper<TEntity>>();
 
             var allInterfaces = services.TryAddAsSelfAndAllInterfaces<TRepository>();
 
