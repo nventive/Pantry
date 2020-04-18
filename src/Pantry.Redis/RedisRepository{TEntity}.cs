@@ -7,23 +7,23 @@ using Pantry.Continuation;
 using Pantry.Exceptions;
 using Pantry.Queries;
 
-namespace Pantry.ProviderTemplate
+namespace Pantry.Redis
 {
     /// <summary>
-    /// Provider Repository Implementation.
+    /// Redis Repository Implementation.
     /// </summary>
     /// <typeparam name="TEntity">The entity type.</typeparam>
-    public class ProviderRepository<TEntity> : IRepository<TEntity>
+    public class RedisRepository<TEntity> : IRepository<TEntity>
         where TEntity : class, IIdentifiable
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="ProviderRepository{TEntity}"/> class.
+        /// Initializes a new instance of the <see cref="RedisRepository{TEntity}"/> class.
         /// </summary>
         /// <param name="logger">The <see cref="ILogger"/>.</param>
-        public ProviderRepository(
-            ILogger<ProviderRepository<TEntity>>? logger = null)
+        public RedisRepository(
+            ILogger<RedisRepository<TEntity>>? logger = null)
         {
-            Logger = logger ?? NullLogger<ProviderRepository<TEntity>>.Instance;
+            Logger = logger ?? NullLogger<RedisRepository<TEntity>>.Instance;
         }
 
         /// <summary>

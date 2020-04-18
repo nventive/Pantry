@@ -2,9 +2,9 @@
 using Microsoft.Extensions.Hosting;
 using Pantry.Tests.StandardTestSupport;
 
-namespace Pantry.ProviderTemplate.Tests
+namespace Pantry.Redis.Tests
 {
-    public class ProviderStandardTestsFixture : StandardRepositoryImplementationTestsFixture
+    public class RedisStandardTestsFixture : StandardRepositoryImplementationTestsFixture
     {
         protected override void RegisterTestServices(HostBuilderContext context, IServiceCollection services)
         {
@@ -13,7 +13,7 @@ namespace Pantry.ProviderTemplate.Tests
                 throw new System.ArgumentNullException(nameof(context));
             }
 
-            services.AddProviderRepository<StandardEntity>();
+            services.AddRedisRepository<StandardEntity>();
         }
     }
 }
