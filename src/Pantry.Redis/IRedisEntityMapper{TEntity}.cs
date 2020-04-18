@@ -1,4 +1,5 @@
-﻿using Pantry.Mapping;
+﻿using System.Collections.Generic;
+using Pantry.Mapping;
 using StackExchange.Redis;
 
 namespace Pantry.Redis
@@ -7,7 +8,7 @@ namespace Pantry.Redis
     /// Mapper for Redis entities.
     /// </summary>
     /// <typeparam name="TEntity">The entity type.</typeparam>
-    public interface IRedisEntityMapper<TEntity> : IMapper<TEntity, HashEntry[]>
+    public interface IRedisEntityMapper<TEntity> : IMapper<TEntity, IEnumerable<HashEntry>>
         where TEntity : class, IIdentifiable, new()
     {
         /// <summary>

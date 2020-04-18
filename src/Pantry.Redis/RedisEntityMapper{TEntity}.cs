@@ -1,4 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.Json;
+using Pantry.Reflection;
 using StackExchange.Redis;
 
 namespace Pantry.Redis
@@ -17,15 +21,87 @@ namespace Pantry.Redis
         }
 
         /// <inheritdoc/>
-        public HashEntry[] MapToDestination(TEntity source)
+        public IEnumerable<HashEntry> MapToDestination(TEntity source)
         {
-            throw new NotImplementedException();
+            if (source is null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            yield return new HashEntry(nameof(IIdentifiable.Id), source.Id);
+
+            if (source is IETaggable taggableEntity)
+            {
+                yield return new HashEntry(nameof(IETaggable.ETag), taggableEntity.ETag);
+            }
+
+            if (source is ITimestamped timestampedEntity && timestampedEntity.Timestamp.HasValue)
+            {
+                yield return new HashEntry(nameof(ITimestamped.Timestamp), timestampedEntity.Timestamp.Value.ToUnixTimeMilliseconds());
+            }
+
+            foreach (var property in EntityAttributes.GetAttributeProperties<TEntity>())
+            {
+                var value = property.GetValue(source);
+                if (!RedisEntityMapper.IsNativelySupportedAsProperty(property.PropertyType))
+                {
+                    value = JsonSerializer.Serialize(value);
+                }
+
+                yield return new HashEntry(property.Name, value.ToString());
+            }
         }
 
         /// <inheritdoc/>
-        public TEntity MapToSource(HashEntry[] destination)
+        public TEntity MapToSource(IEnumerable<HashEntry> destination)
         {
-            throw new NotImplementedException();
+            if (destination is null)
+            {
+                throw new ArgumentNullException(nameof(destination));
+            }
+
+            var allDestinationValues = destination.ToDictionary(x => x.Name.ToString());
+
+            var result = new TEntity
+            {
+                Id = allDestinationValues[nameof(IIdentifiable.Id)].Value.ToString(),
+            };
+
+            if (result is IETaggable taggableEntity)
+            {
+                taggableEntity.ETag = allDestinationValues[nameof(IETaggable.ETag)].Value.ToString();
+            }
+
+            if (result is ITimestamped timestampedEntity && allDestinationValues.ContainsKey(nameof(ITimestamped.Timestamp)))
+            {
+                timestampedEntity.Timestamp = DateTimeOffset.FromUnixTimeMilliseconds(
+                    (long)allDestinationValues[nameof(IETaggable.ETag)].Value);
+            }
+
+            foreach (var property in EntityAttributes.GetAttributeProperties<TEntity>())
+            {
+                if (allDestinationValues.ContainsKey(property.Name))
+                {
+                    object dynamicValue = allDestinationValues[property.Name].Value;
+                    if (dynamicValue != null)
+                    {
+                        if (!RedisEntityMapper.IsNativelySupportedAsProperty(property.PropertyType))
+                        {
+                            dynamicValue = JsonSerializer.Deserialize(allDestinationValues[property.Name].Value.ToString(), property.PropertyType);
+                        }
+
+                        //if ((property.PropertyType == typeof(DateTimeOffset) || property.PropertyType == typeof(DateTimeOffset?))
+                        //    && dynamicValue is DateTime dateTimeValue)
+                        //{
+                        //    dynamicValue = new DateTimeOffset(dateTimeValue);
+                        //}
+
+                        property.SetValue(result, dynamicValue);
+                    }
+                }
+            }
+
+            return result;
         }
     }
 }
