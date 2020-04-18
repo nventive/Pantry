@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Pantry.Queries;
 using Pantry.Queries.Criteria;
 
@@ -54,6 +55,12 @@ namespace Pantry.Tests.StandardTestSupport
             set => this.LessThanOrEqualTo(x => x.Age, value);
         }
 
+        public IEnumerable<int>? AgeIn
+        {
+            get => this.InValue(x => x.Age);
+            set => this.In(x => x.Age, value);
+        }
+
         public DateTimeOffset? NotarizedAtEq
         {
             get => this.EqualToValue(x => x.NotarizedAt);
@@ -94,6 +101,12 @@ namespace Pantry.Tests.StandardTestSupport
         {
             get => this.StringContainsValue(x => x.Related!.Name);
             set => this.StringContains(x => x.Related!.Name, value);
+        }
+
+        public IEnumerable<string?>? RelatedNameIn
+        {
+            get => this.InValue(x => x.Related!.Name);
+            set => this.In(x => x.Related!.Name, value);
         }
 
         public string? LinesNameEq

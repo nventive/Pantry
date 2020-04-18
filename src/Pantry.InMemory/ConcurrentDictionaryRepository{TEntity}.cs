@@ -297,6 +297,13 @@ namespace Pantry.InMemory
                     LessThanPropertyCriterion lt => queryable.Where($"{lt.PropertyPath} < @0", lt.Value),
                     LessThanOrEqualToPropertyCriterion lte => queryable.Where($"{lte.PropertyPath} <= @0", lte.Value),
                     StringContainsPropertyCriterion strCont => queryable.Where($"{strCont.PropertyPath}.Contains(@0)", strCont.Value),
+                    InPropertyCriterion inProp => inProp.Values != null && inProp.Values.Any()
+                        ? queryable.Where(
+                            string.Join(
+                                " || ",
+                                inProp.Values.Select((val, i) => $"({inProp.PropertyPath} == @{i})")),
+                            inProp.Values.ToArray())
+                        : queryable,
                     OrderCriterion order => queryable.OrderBy($"{order.PropertyPath} {(order.Ascending ? "ASC" : "DESC")}"),
                     _ => throw new UnsupportedFeatureException($"The {criterion} criterion is not supported by {this}."),
                 };

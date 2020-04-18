@@ -344,6 +344,7 @@ namespace Pantry.Azure.Cosmos
                     LessThanPropertyCriterion lt => queryBuilder.Where($"e.{Mapper.ResolveQueryPropertyPaths(lt.PropertyPath)}", "<", lt.Value),
                     LessThanOrEqualToPropertyCriterion lte => queryBuilder.Where($"e.{Mapper.ResolveQueryPropertyPaths(lte.PropertyPath)}", "<=", lte.Value),
                     StringContainsPropertyCriterion strCont => queryBuilder.WhereRaw($"CONTAINS(e.{Mapper.ResolveQueryPropertyPaths(strCont.PropertyPath)}, ?)", strCont.Value),
+                    InPropertyCriterion inProp => queryBuilder.WhereIn($"e.{Mapper.ResolveQueryPropertyPaths(inProp.PropertyPath)}", inProp.Values),
                     OrderCriterion order => queryBuilder.OrderByRaw($"e.{Mapper.ResolveQueryPropertyPaths(order.PropertyPath)} {(order.Ascending ? "ASC" : "DESC")}"),
                     _ => throw new UnsupportedFeatureException($"The {criterion} criterion is not supported by {this}."),
                 };

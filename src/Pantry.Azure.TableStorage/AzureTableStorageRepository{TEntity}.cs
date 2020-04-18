@@ -295,24 +295,55 @@ namespace Pantry.Azure.TableStorage
                 throw new ArgumentNullException(nameof(query));
             }
 
+            string GenerateFilterCondtion(string targetPropertyPath, string operation, object value) => value switch
+            {
+                byte[] binary => TableQuery.GenerateFilterConditionForBinary(targetPropertyPath, operation, binary),
+                bool boolean => TableQuery.GenerateFilterConditionForBool(targetPropertyPath, operation, boolean),
+                DateTimeOffset date => TableQuery.GenerateFilterConditionForDate(targetPropertyPath, operation, date),
+                double dble => TableQuery.GenerateFilterConditionForDouble(targetPropertyPath, operation, dble),
+                Guid guid => TableQuery.GenerateFilterConditionForGuid(targetPropertyPath, operation, guid),
+                int integer => TableQuery.GenerateFilterConditionForInt(targetPropertyPath, operation, integer),
+                long lng => TableQuery.GenerateFilterConditionForLong(targetPropertyPath, operation, lng),
+                _ => TableQuery.GenerateFilterCondition(targetPropertyPath, operation, value?.ToString()),
+            };
+
             TableQuery<DynamicTableEntity> AddFilterCondition(TableQuery<DynamicTableEntity> tblQuery, PropertyValueCriterion criterion, string operation)
             {
                 var targetPropertyPaths = Mapper.ResolveQueryPropertyPaths(criterion.PropertyPath);
                 foreach (var targetPropertyPath in targetPropertyPaths)
                 {
                     Logger.LogTrace("AddFilterCondition() {TargetPropertyPath} {Operation} {Value}", targetPropertyPath, operation, criterion.Value);
-                    tblQuery = tblQuery.Where(
-                        criterion.Value switch
+                    tblQuery = tblQuery.Where(GenerateFilterCondtion(targetPropertyPath, operation, criterion.Value!));
+                }
+
+                return tblQuery;
+            }
+
+            TableQuery<DynamicTableEntity> AddInCriterion(TableQuery<DynamicTableEntity> tblQuery, InPropertyCriterion criterion)
+            {
+                if (criterion.Values is null || !criterion.Values.Any())
+                {
+                    return tblQuery;
+                }
+
+                var targetPropertyPaths = Mapper.ResolveQueryPropertyPaths(criterion.PropertyPath);
+                foreach (var targetPropertyPath in targetPropertyPaths)
+                {
+                    var currentFilter = string.Empty;
+                    foreach (var value in criterion.Values)
+                    {
+                        var additionalFilter = GenerateFilterCondtion(targetPropertyPath, QueryComparisons.Equal, value);
+                        if (string.IsNullOrEmpty(currentFilter))
                         {
-                            byte[] binary => TableQuery.GenerateFilterConditionForBinary(targetPropertyPath, operation, binary),
-                            bool boolean => TableQuery.GenerateFilterConditionForBool(targetPropertyPath, operation, boolean),
-                            DateTimeOffset date => TableQuery.GenerateFilterConditionForDate(targetPropertyPath, operation, date),
-                            double dble => TableQuery.GenerateFilterConditionForDouble(targetPropertyPath, operation, dble),
-                            Guid guid => TableQuery.GenerateFilterConditionForGuid(targetPropertyPath, operation, guid),
-                            int integer => TableQuery.GenerateFilterConditionForInt(targetPropertyPath, operation, integer),
-                            long lng => TableQuery.GenerateFilterConditionForLong(targetPropertyPath, operation, lng),
-                            _ => TableQuery.GenerateFilterCondition(targetPropertyPath, operation, criterion.Value?.ToString()),
-                        });
+                            currentFilter = additionalFilter;
+                        }
+                        else
+                        {
+                            currentFilter = TableQuery.CombineFilters(currentFilter, TableOperators.Or, additionalFilter);
+                        }
+                    }
+
+                    tblQuery = tblQuery.Where(currentFilter);
                 }
 
                 return tblQuery;
@@ -349,6 +380,7 @@ namespace Pantry.Azure.TableStorage
                             GreaterThanOrEqualToPropertyCriterion gte => AddFilterCondition(tableQuery, gte, QueryComparisons.GreaterThanOrEqual),
                             LessThanPropertyCriterion lt => AddFilterCondition(tableQuery, lt, QueryComparisons.LessThan),
                             LessThanOrEqualToPropertyCriterion lte => AddFilterCondition(tableQuery, lte, QueryComparisons.LessThanOrEqual),
+                            InPropertyCriterion inProp => AddInCriterion(tableQuery, inProp),
                             OrderCriterion order => AddOrderBy(tableQuery, order),
                             _ => throw new UnsupportedFeatureException($"The {criterion} criterion is not supported by {this}."),
                         };
