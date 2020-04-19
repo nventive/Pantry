@@ -16,6 +16,10 @@ namespace Pantry.Azure.Cosmos.Tests
             }
 
             services.AddCosmosRepository<StandardEntity>();
+
+            services
+                .AddHealthChecks()
+                .AddCosmosRepositoryCheck<StandardEntity>();
         }
 
         protected override IEnumerable<KeyValuePair<string, string>> AdditionalConfigurationValues()

@@ -14,6 +14,10 @@ namespace Pantry.Azure.TableStorage.Tests
             services
                 .AddAzureTableStorageRepository<StandardEntity>()
                 .WithConnectionStringNamed(StorageConnectionString);
+
+            services
+                .AddHealthChecks()
+                .AddAzureTableStorageRepositoryCheck<StandardEntity>();
         }
 
         protected override IEnumerable<KeyValuePair<string, string>> AdditionalConfigurationValues()

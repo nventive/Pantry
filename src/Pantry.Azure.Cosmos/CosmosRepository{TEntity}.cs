@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Cosmos.Linq;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Pantry.Azure.Cosmos.Queries;
@@ -26,7 +28,8 @@ namespace Pantry.Azure.Cosmos
     /// <typeparam name="TEntity">The entity type.</typeparam>
     public class CosmosRepository<TEntity> : IRepository<TEntity>,
                                              IRepositoryFind<TEntity, TEntity, CosmosSqlBuilderQuery<TEntity>>,
-                                             IRepositoryFind<TEntity, TEntity, CosmosSqlQuery<TEntity>>
+                                             IRepositoryFind<TEntity, TEntity, CosmosSqlQuery<TEntity>>,
+                                             IHealthCheck
         where TEntity : class, IIdentifiable, new()
     {
         /// <summary>
@@ -380,6 +383,34 @@ namespace Pantry.Azure.Cosmos
 
             var queryDefinition = query.GetQueryDefinition();
             return await ExecuteQueryAsync(query, queryDefinition, cancellationToken).ConfigureAwait(false);
+        }
+
+        /// <inheritdoc/>
+        public virtual async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
+        {
+            var data = new Dictionary<string, object>
+            {
+                { nameof(Container.Id), Container.Id },
+            };
+
+            try
+            {
+                var containerProperties = await Container.ReadContainerAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
+                data.Add(nameof(ContainerProperties.SelfLink), containerProperties.Resource.SelfLink);
+                data.Add(nameof(ContainerProperties.PartitionKeyPath), containerProperties.Resource.PartitionKeyPath);
+                data.Add(nameof(ContainerProperties.DefaultTimeToLive), containerProperties.Resource.DefaultTimeToLive ?? default);
+                data.Add($"{nameof(ContainerProperties.IndexingPolicy)}.{nameof(IndexingPolicy.Automatic)}", containerProperties.Resource.IndexingPolicy.Automatic);
+                data.Add($"{nameof(ContainerProperties.IndexingPolicy)}.{nameof(IndexingPolicy.IndexingMode)}", containerProperties.Resource.IndexingPolicy.IndexingMode.ToString());
+                return HealthCheckResult.Healthy(data: data);
+            }
+            catch (CosmosException ex)
+            {
+                Logger.LogError(ex, "An exception occured during the heatlh check: {Message}", ex.Message);
+                return HealthCheckResult.Unhealthy(
+                    description: $"A {nameof(CosmosException)} occured during the check.",
+                    exception: ex,
+                    data: data);
+            }
         }
 
         /// <summary>

@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.Cosmos.Table;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Pantry.Azure.TableStorage.Queries;
@@ -20,7 +22,9 @@ namespace Pantry.Azure.TableStorage
     /// Azure Table Storage Repository Implementation.
     /// </summary>
     /// <typeparam name="TEntity">The entity type.</typeparam>
-    public class AzureTableStorageRepository<TEntity> : IRepository<TEntity>, IRepositoryFind<TEntity, TEntity, AzureTableStorageTableQuery<TEntity>>
+    public class AzureTableStorageRepository<TEntity> : IRepository<TEntity>,
+                                                        IRepositoryFind<TEntity, TEntity, AzureTableStorageTableQuery<TEntity>>,
+                                                        IHealthCheck
         where TEntity : class, IIdentifiable, new()
     {
         /// <summary>
@@ -401,6 +405,37 @@ namespace Pantry.Azure.TableStorage
                 query,
                 tableQuery => query.Apply(tableQuery),
                 cancellationToken);
+        }
+
+        /// <inheritdoc/>
+        public virtual async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
+        {
+            var data = new Dictionary<string, object>
+            {
+                { nameof(CloudTable.StorageUri), CloudTable.StorageUri.ToString() },
+                { "TableName", CloudTable.Name },
+            };
+
+            try
+            {
+                var exists = await CloudTable.ExistsAsync(cancellationToken).ConfigureAwait(false);
+                if (exists)
+                {
+                    return HealthCheckResult.Healthy(data: data);
+                }
+                else
+                {
+                    return HealthCheckResult.Degraded($"The table {CloudTable.Name} does not appear to exists.", data: data);
+                }
+            }
+            catch (StorageException ex)
+            {
+                Logger.LogError(ex, "An exception occured during the heatlh check: {Message}", ex.Message);
+                return HealthCheckResult.Unhealthy(
+                    description: $"A {nameof(StorageException)} occured during the check.",
+                    exception: ex,
+                    data: data);
+            }
         }
 
         /// <summary>

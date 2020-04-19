@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Bogus;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Pantry.Exceptions;
 using Pantry.Generators;
 using Pantry.Traits;
@@ -648,6 +649,19 @@ namespace Pantry.Tests.StandardTestSupport
             var result = await GetRepositoryAs<IRepositoryFindAll<TTestEntity>>().FindAllAsync(null);
 
             result.Should().BeEmpty();
+        }
+
+        [SkippableFact(typeof(UnsupportedFeatureException))]
+        public virtual async Task ItShouldCheckHealth()
+        {
+            // This can skip if it does not implement health checks.
+            var check = GetRepositoryAs<IHealthCheck>();
+            // But we still want to unit test the registration as well.
+            var healthCheckService = ServiceProvider.GetRequiredService<HealthCheckService>();
+            var checkResult = await healthCheckService.CheckHealthAsync();
+            var healthCheckEntry = checkResult.Entries.First();
+            healthCheckEntry.Value.Status.Should().Be(HealthStatus.Healthy);
+            healthCheckEntry.Value.Data.Should().NotBeEmpty();
         }
 
         protected TInterface GetRepositoryAs<TInterface>()

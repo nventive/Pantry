@@ -14,6 +14,10 @@ namespace Pantry.Redis.Tests
             services
                 .AddRedisRepository<StandardEntity>()
                 .WithConnectionStringNamed(RedisConnectionString);
+
+            services
+                .AddHealthChecks()
+                .AddRedisRepositoryCheck<StandardEntity>();
         }
 
         protected override IEnumerable<KeyValuePair<string, string>> AdditionalConfigurationValues()

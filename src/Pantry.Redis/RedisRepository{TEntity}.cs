@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Pantry.Continuation;
@@ -19,7 +20,7 @@ namespace Pantry.Redis
     /// Redis Repository Implementation.
     /// </summary>
     /// <typeparam name="TEntity">The entity type.</typeparam>
-    public class RedisRepository<TEntity> : IRepository<TEntity>
+    public class RedisRepository<TEntity> : IRepository<TEntity>, IHealthCheck
         where TEntity : class, IIdentifiable, new()
     {
         /// <summary>
@@ -347,6 +348,31 @@ namespace Pantry.Redis
         public virtual Task<IContinuationEnumerable<TEntity>> FindAsync(ICriteriaQuery<TEntity> query, CancellationToken cancellationToken = default)
         {
             throw new UnsupportedFeatureException("Not supported yet.");
+        }
+
+        /// <inheritdoc/>
+        public virtual async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
+        {
+            var endpoints = Database.Multiplexer.GetEndPoints();
+            var data = new Dictionary<string, object>
+            {
+                { "Endpoints", string.Join(", ", endpoints.Select(x => x.ToString())) },
+            };
+
+            try
+            {
+                var latency = await Database.PingAsync().ConfigureAwait(false);
+                data.Add("Latency", latency);
+                return HealthCheckResult.Healthy(data: data);
+            }
+            catch (RedisException ex)
+            {
+                Logger.LogError(ex, "An exception occured during the heatlh check: {Message}", ex.Message);
+                return HealthCheckResult.Unhealthy(
+                    description: $"A {nameof(RedisException)} occured during the check.",
+                    exception: ex,
+                    data: data);
+            }
         }
     }
 }
