@@ -52,7 +52,11 @@ namespace Pantry.Tests.StandardTestSupport
 
             PostConfigureHostBuilder(hostBuilder);
 
-            return hostBuilder.Build();
+            var host = hostBuilder.Build();
+
+            PostHostBuilt(host);
+
+            return host;
         }
 
         /// <summary>
@@ -74,6 +78,15 @@ namespace Pantry.Tests.StandardTestSupport
         /// </summary>
         /// <param name="builder">The <see cref="IHostBuilder"/>.</param>
         protected virtual void PostConfigureHostBuilder(IHostBuilder builder)
+        {
+            // No-op.
+        }
+
+        /// <summary>
+        /// Any additional actions to apply after the <see cref="IHost"/> creation.
+        /// </summary>
+        /// <param name="host">The <see cref="IHost"/>.</param>
+        protected virtual void PostHostBuilt(IHost host)
         {
             // No-op.
         }

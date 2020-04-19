@@ -14,12 +14,12 @@ namespace Microsoft.Extensions.DependencyInjection
     public static class RedisRepositoryBuilderExtensions
     {
         /// <summary>
-        /// Configure the Redis Repository to use the <see cref="IDatabaseAsync"/>
+        /// Configure the Redis Repository to use the <see cref="IDatabase"/>
         /// resolved by the factory.
         /// </summary>
         /// <typeparam name="TEntity">The entity type.</typeparam>
         /// <param name="builder">The <see cref="IRedisRepositoryBuilder{TEntity}"/>.</param>
-        /// <param name="databaseFactory">The <see cref="IDatabaseAsync"/> factory.</param>
+        /// <param name="databaseFactory">The <see cref="IDatabase"/> factory.</param>
         /// <returns>The udpated <see cref="IRedisRepositoryBuilder{TEntity}"/>.</returns>
         public static IRedisRepositoryBuilder<TEntity> WithRedisDatabaseFactory<TEntity>(
             this IRedisRepositoryBuilder<TEntity> builder,
@@ -80,6 +80,27 @@ namespace Microsoft.Extensions.DependencyInjection
                     sp.GetRequiredService<IConfiguration>().GetConnectionString(connectionStringName)));
             builder.Services.TryAddTransient(
                 sp => new RedisDatabaseFor<TEntity>(sp.GetRequiredService<IConnectionMultiplexer>().GetDatabase()));
+            return builder;
+        }
+
+        /// <summary>
+        /// Sets a custom mapper for entities.
+        /// </summary>
+        /// <typeparam name="TEntity">The repository entity type.</typeparam>
+        /// <typeparam name="TMapper">The custom mapper type.</typeparam>
+        /// <param name="builder">The <see cref="IRedisRepositoryBuilder{T}"/>.</param>
+        /// <returns>The updated <see cref="IRedisRepositoryBuilder{T}"/>.</returns>
+        public static IRedisRepositoryBuilder<TEntity> WithEntityMapper<TEntity, TMapper>(
+            this IRedisRepositoryBuilder<TEntity> builder)
+            where TEntity : class, IIdentifiable, new()
+            where TMapper : class, IRedisEntityMapper<TEntity>
+        {
+            if (builder is null)
+            {
+                throw new ArgumentNullException(nameof(builder));
+            }
+
+            builder.Services.AddSingleton<IRedisEntityMapper<TEntity>, TMapper>();
             return builder;
         }
     }
