@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Pantry.Continuation;
@@ -13,7 +14,7 @@ namespace Pantry.ProviderTemplate
     /// Provider Repository Implementation.
     /// </summary>
     /// <typeparam name="TEntity">The entity type.</typeparam>
-    public class ProviderRepository<TEntity> : IRepository<TEntity>
+    public class ProviderRepository<TEntity> : IRepository<TEntity>, IHealthCheck
         where TEntity : class, IIdentifiable
     {
         /// <summary>
@@ -89,6 +90,17 @@ namespace Pantry.ProviderTemplate
         public virtual Task<IContinuationEnumerable<TEntity>> FindAsync(ICriteriaQuery<TEntity> query, CancellationToken cancellationToken = default)
         {
             throw new UnsupportedFeatureException("Not supported yet.");
+        }
+
+        /// <inheritdoc/>
+        public virtual async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
+        {
+            var data = new Dictionary<string, object>
+            {
+            };
+
+            // Check health
+            return HealthCheckResult.Healthy(data: data);
         }
     }
 }

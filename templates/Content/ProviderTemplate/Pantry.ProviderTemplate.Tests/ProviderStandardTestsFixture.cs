@@ -14,6 +14,10 @@ namespace Pantry.ProviderTemplate.Tests
             }
 
             services.AddProviderRepository<StandardEntity>();
+
+            services
+                .AddHealthChecks()
+                .AddProviderRepositoryCheck<StandardEntity>();
         }
     }
 }
