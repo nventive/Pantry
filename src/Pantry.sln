@@ -48,9 +48,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pantry.Redis", "Pantry.Redi
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pantry.Redis.Tests", "Pantry.Redis.Tests\Pantry.Redis.Tests.csproj", "{E70C74A6-9D30-46E1-B67E-1133BCB2BE23}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pantry.FluentValidation", "Pantry.FluentValidation\Pantry.FluentValidation.csproj", "{C368C243-4B26-4BF4-8D59-ACAB0684EE3B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pantry.FluentValidation", "Pantry.FluentValidation\Pantry.FluentValidation.csproj", "{C368C243-4B26-4BF4-8D59-ACAB0684EE3B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pantry.FluentValidation.Tests", "Pantry.FluentValidation.Tests\Pantry.FluentValidation.Tests.csproj", "{650A5641-42C6-43A9-AD1D-8086B6455D2A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pantry.FluentValidation.Tests", "Pantry.FluentValidation.Tests\Pantry.FluentValidation.Tests.csproj", "{650A5641-42C6-43A9-AD1D-8086B6455D2A}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pantry.PetaPoco", "Pantry.PetaPoco\Pantry.PetaPoco.csproj", "{1B15412D-2EB9-49C8-9FC0-DEB625140E4E}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pantry.PetaPoco.Tests", "Pantry.PetaPoco.Tests\Pantry.PetaPoco.Tests.csproj", "{0AAB4BD6-3C94-481B-85B9-5B7A1E4BA8D9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -126,6 +130,14 @@ Global
 		{650A5641-42C6-43A9-AD1D-8086B6455D2A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{650A5641-42C6-43A9-AD1D-8086B6455D2A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{650A5641-42C6-43A9-AD1D-8086B6455D2A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1B15412D-2EB9-49C8-9FC0-DEB625140E4E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1B15412D-2EB9-49C8-9FC0-DEB625140E4E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1B15412D-2EB9-49C8-9FC0-DEB625140E4E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1B15412D-2EB9-49C8-9FC0-DEB625140E4E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0AAB4BD6-3C94-481B-85B9-5B7A1E4BA8D9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0AAB4BD6-3C94-481B-85B9-5B7A1E4BA8D9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0AAB4BD6-3C94-481B-85B9-5B7A1E4BA8D9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0AAB4BD6-3C94-481B-85B9-5B7A1E4BA8D9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -148,6 +160,8 @@ Global
 		{E70C74A6-9D30-46E1-B67E-1133BCB2BE23} = {1801AC47-D834-4D59-B551-ECB1F342DF7B}
 		{C368C243-4B26-4BF4-8D59-ACAB0684EE3B} = {867296BC-8109-4293-87FD-801B332762D2}
 		{650A5641-42C6-43A9-AD1D-8086B6455D2A} = {867296BC-8109-4293-87FD-801B332762D2}
+		{1B15412D-2EB9-49C8-9FC0-DEB625140E4E} = {1801AC47-D834-4D59-B551-ECB1F342DF7B}
+		{0AAB4BD6-3C94-481B-85B9-5B7A1E4BA8D9} = {1801AC47-D834-4D59-B551-ECB1F342DF7B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {7188783E-71B0-444C-BB96-53ADB142F380}

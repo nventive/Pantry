@@ -9,23 +9,23 @@ using Pantry.Continuation;
 using Pantry.Exceptions;
 using Pantry.Queries;
 
-namespace Pantry.ProviderTemplate
+namespace Pantry.PetaPoco
 {
     /// <summary>
-    /// Provider Repository Implementation.
+    /// PetaPoco Repository Implementation.
     /// </summary>
     /// <typeparam name="TEntity">The entity type.</typeparam>
-    public class ProviderRepository<TEntity> : IRepository<TEntity>, IHealthCheck
+    public class PetaPocoRepository<TEntity> : IRepository<TEntity>, IHealthCheck
         where TEntity : class, IIdentifiable
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="ProviderRepository{TEntity}"/> class.
+        /// Initializes a new instance of the <see cref="PetaPocoRepository{TEntity}"/> class.
         /// </summary>
         /// <param name="logger">The <see cref="ILogger"/>.</param>
-        public ProviderRepository(
-            ILogger<ProviderRepository<TEntity>>? logger = null)
+        public PetaPocoRepository(
+            ILogger<PetaPocoRepository<TEntity>>? logger = null)
         {
-            Logger = logger ?? NullLogger<ProviderRepository<TEntity>>.Instance;
+            Logger = logger ?? NullLogger<PetaPocoRepository<TEntity>>.Instance;
         }
 
         /// <summary>
