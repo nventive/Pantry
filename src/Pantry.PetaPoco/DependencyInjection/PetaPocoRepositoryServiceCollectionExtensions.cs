@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection.Extensions;
-using Pantry;
+﻿using Pantry;
 using Pantry.Continuation;
 using Pantry.DependencyInjection;
 using Pantry.PetaPoco;
@@ -37,7 +36,7 @@ namespace Microsoft.Extensions.DependencyInjection
             services.TryAddIdGeneratorFor<TEntity>();
             services.TryAddETagGeneratorFor<TEntity>();
             services.TryAddTimestampProvider();
-            services.TryAddContinuationTokenEncoderFor<LimitOffsetContinuationToken>();
+            services.TryAddContinuationTokenEncoderFor<LimitPageContinuationToken>();
 
             Mappers.Register(typeof(TEntity).Assembly, new PetaPocoRegistryConventionMapper());
 

@@ -13,6 +13,7 @@ using Pantry.Generators;
 using Pantry.Logging;
 using Pantry.Providers;
 using Pantry.Queries;
+using Pantry.Traits;
 using PetaPoco;
 
 namespace Pantry.PetaPoco
@@ -21,7 +22,9 @@ namespace Pantry.PetaPoco
     /// PetaPoco Repository Implementation.
     /// </summary>
     /// <typeparam name="TEntity">The entity type.</typeparam>
-    public class PetaPocoRepository<TEntity> : IRepository<TEntity>, IHealthCheck
+    public class PetaPocoRepository<TEntity> : IRepository<TEntity>,
+                                               IRepositoryClear<TEntity>,
+                                               IHealthCheck
         where TEntity : class, IIdentifiable
     {
         /// <summary>
@@ -38,7 +41,7 @@ namespace Pantry.PetaPoco
             IIdGenerator<TEntity> idGenerator,
             IETagGenerator<TEntity> etagGenerator,
             ITimestampProvider timestampProvider,
-            IContinuationTokenEncoder<LimitOffsetContinuationToken> continuationTokenEncoder,
+            IContinuationTokenEncoder<LimitPageContinuationToken> continuationTokenEncoder,
             ILogger<PetaPocoRepository<TEntity>>? logger = null)
         {
             DatabaseFor = databaseFor ?? throw new ArgumentNullException(nameof(databaseFor));
@@ -81,9 +84,9 @@ namespace Pantry.PetaPoco
         protected ITimestampProvider TimestampProvider { get; }
 
         /// <summary>
-        /// Gets the <see cref="IContinuationTokenEncoder{LimitOffsetContinuationToken}"/>.
+        /// Gets the <see cref="IContinuationTokenEncoder{LimitPageContinuationToken}"/>.
         /// </summary>
-        protected IContinuationTokenEncoder<LimitOffsetContinuationToken> ContinuationTokenEncoder { get; }
+        protected IContinuationTokenEncoder<LimitPageContinuationToken> ContinuationTokenEncoder { get; }
 
         /// <summary>
         /// Gets the <see cref="ILogger"/>.
@@ -308,9 +311,34 @@ namespace Pantry.PetaPoco
         }
 
         /// <inheritdoc/>
-        public virtual Task<IContinuationEnumerable<TEntity>> FindAllAsync(string? continuationToken, int limit = Query.DefaultLimit, CancellationToken cancellationToken = default)
+        public virtual async Task<IContinuationEnumerable<TEntity>> FindAllAsync(string? continuationToken, int limit = Query.DefaultLimit, CancellationToken cancellationToken = default)
         {
-            throw new UnsupportedFeatureException("Not supported yet.");
+            if (limit <= 0)
+            {
+                return ContinuationEnumerable.Empty<TEntity>();
+            }
+
+            var pagination = await ContinuationTokenEncoder.Decode(continuationToken);
+            if (pagination is null)
+            {
+                pagination = new LimitPageContinuationToken { Limit = limit, Page = 0 };
+            }
+
+            var pagedItems = await Database.PageAsync<TEntity>(cancellationToken, pagination.Page, pagination.Limit).ConfigureAwait(false);
+
+            var result = pagedItems.Items.ToContinuationEnumerable(
+                pagedItems.TotalPages <= pagination.Page
+                    ? null
+                    : await ContinuationTokenEncoder.Encode(
+                        new LimitPageContinuationToken
+                        {
+                            Page = Convert.ToInt32(pagedItems.CurrentPage + 1),
+                            Limit = pagination.Limit,
+                        }));
+
+            Logger.LogFind($"(ct: {continuationToken ?? "<no-ct>"}, limit: {limit})", result);
+
+            return result;
         }
 
         /// <inheritdoc/>
@@ -340,6 +368,13 @@ namespace Pantry.PetaPoco
                     exception: ex,
                     data: data);
             }
+        }
+
+        /// <inheritdoc/>
+        public virtual async Task ClearAsync(CancellationToken cancellationToken = default)
+        {
+            await Database.DeleteAsync<TEntity>(cancellationToken, string.Empty).ConfigureAwait(false);
+            Logger.LogClear(typeof(TEntity));
         }
     }
 }
