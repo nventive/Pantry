@@ -2,9 +2,6 @@
 using System.Collections.Generic;
 using System.Text.Json;
 using Microsoft.Azure.Cosmos.Table;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
-using Pantry.Logging;
 using Pantry.Reflection;
 
 namespace Pantry.Azure.TableStorage
@@ -16,17 +13,6 @@ namespace Pantry.Azure.TableStorage
     public class DynamicTableEntityMapper<TEntity> : IDynamicTableEntityMapper<TEntity>
         where TEntity : class, IIdentifiable, new()
     {
-        private readonly ILogger _logger;
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="DynamicTableEntityMapper{T}"/> class.
-        /// </summary>
-        /// <param name="logger">The <see cref="ILogger"/>.</param>
-        public DynamicTableEntityMapper(ILogger<DynamicTableEntityMapper<TEntity>>? logger = null)
-        {
-            _logger = logger ?? NullLogger<DynamicTableEntityMapper<TEntity>>.Instance;
-        }
-
         /// <inheritdoc/>
         public virtual DynamicTableEntity MapToDestination(TEntity source)
         {
@@ -57,11 +43,6 @@ namespace Pantry.Azure.TableStorage
                 }
 
                 dynamicTableEntity[property.Name] = EntityProperty.CreateEntityPropertyFromObject(value);
-                _logger.LogMapped(
-                    entityType: typeof(DynamicTableEntity),
-                    entityId: dynamicTableEntity.RowKey,
-                    propertyName: property.Name,
-                    propertyValue: value);
             }
 
             return dynamicTableEntity;
@@ -109,11 +90,6 @@ namespace Pantry.Azure.TableStorage
                         }
 
                         property.SetValue(result, dynamicValue);
-                        _logger.LogMapped(
-                            entityType: typeof(TEntity),
-                            entityId: result.Id,
-                            propertyName: property.Name,
-                            propertyValue: dynamicValue);
                     }
                 }
             }

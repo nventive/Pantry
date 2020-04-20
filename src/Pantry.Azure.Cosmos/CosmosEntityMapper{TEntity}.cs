@@ -1,9 +1,6 @@
 ﻿using System;
 using Microsoft.Azure.Cosmos;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 using Newtonsoft.Json.Linq;
-using Pantry.Logging;
 using Pantry.Reflection;
 
 namespace Pantry.Azure.Cosmos
@@ -15,18 +12,6 @@ namespace Pantry.Azure.Cosmos
     public class CosmosEntityMapper<TEntity> : ICosmosEntityMapper<TEntity>
         where TEntity : class, IIdentifiable, new()
     {
-        private readonly ILogger _logger;
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="CosmosEntityMapper{TEntity}"/> class.
-        /// </summary>
-        /// <param name="logger">The <see cref="ILogger"/>.</param>
-        public CosmosEntityMapper(
-            ILogger<CosmosEntityMapper<TEntity>>? logger = null)
-        {
-            _logger = logger ?? NullLogger<CosmosEntityMapper<TEntity>>.Instance;
-        }
-
         /// <inheritdoc/>
         public virtual PartitionKey GetPartitionKey(string id) => new PartitionKey(id);
 
@@ -67,11 +52,6 @@ namespace Pantry.Azure.Cosmos
                     }
 
                     document.Attributes[property.Name] = JToken.FromObject(value);
-                    _logger.LogMapped(
-                    entityType: typeof(CosmosDocument),
-                    entityId: document.Id,
-                    propertyName: property.Name,
-                    propertyValue: document.Attributes[property.Name]);
                 }
             }
 
@@ -121,11 +101,6 @@ namespace Pantry.Azure.Cosmos
                     }
 
                     property.SetValue(result, value);
-                    _logger.LogMapped(
-                        entityType: typeof(TEntity),
-                        entityId: result.Id,
-                        propertyName: property.Name,
-                        propertyValue: value);
                 }
             }
 

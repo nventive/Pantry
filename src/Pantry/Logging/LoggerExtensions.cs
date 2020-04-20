@@ -12,12 +12,6 @@ namespace Pantry.Logging
         private const int EventIdBase = 10000;
         private const int EventIdWarningBase = 11000;
 
-        private static readonly Action<ILogger, string?, string?, string?, string?, object?, Exception?> _logMapped =
-            LoggerMessage.Define<string?, string?, string?, string?, object?>(
-                LogLevel.Trace,
-                new EventId(EventIdBase + 1, "PantryMapped"),
-                "{Method}() {EntityType}.{EntityId}.{PropertyName}={PropertyValue}");
-
         private static readonly Action<ILogger, string?, string?, string?, object?, Exception?> _logGetById =
             LoggerMessage.Define<string?, string?, string?, object?>(
                 LogLevel.Trace,
@@ -71,33 +65,6 @@ namespace Pantry.Logging
                 LogLevel.Information,
                 new EventId(EventIdBase + 7, "PantryClear"),
                 "{Method}() = {EntityType}");
-
-        /// <summary>
-        /// Logs a mapping operation.
-        /// </summary>
-        /// <param name="logger">The <see cref="ILogger"/>.</param>
-        /// <param name="entityType">The destination entity type.</param>
-        /// <param name="entityId">The destination entity id.</param>
-        /// <param name="propertyName">The property name.</param>
-        /// <param name="propertyValue">The property value.</param>
-        /// <param name="methodName">The method name, taken from <see cref="CallerMemberNameAttribute"/>.</param>
-        public static void LogMapped(
-            this ILogger logger,
-            Type? entityType,
-            string entityId,
-            string propertyName,
-            object propertyValue,
-            [CallerMemberName] string? methodName = null)
-        {
-            _logMapped(
-                logger,
-                methodName,
-                entityType?.Name,
-                entityId,
-                propertyName,
-                propertyValue,
-                null);
-        }
 
         /// <summary>
         /// Logs a get by id operation.
