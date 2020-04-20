@@ -39,10 +39,6 @@ namespace Microsoft.Extensions.DependencyInjection
             services.TryAddSingleton<ICosmosEntityMapper<TEntity>, CosmosEntityMapper<TEntity>>();
             services.TryAddSingleton<CosmosQueryCompiler>();
 
-            services.Configure<CosmosRepositoryOptions>(opt => { });
-            services.TryAddSingleton<CosmosContainerFactory>();
-            services.TryAddTransient(sp => new CosmosContainerFor<TEntity>(sp.GetRequiredService<CosmosContainerFactory>().Container));
-
             var allInterfaces = services.TryAddAsSelfAndAllInterfaces<TRepository>();
 
             return new CosmosRepositoryBuilder<TEntity>(services, allInterfaces);

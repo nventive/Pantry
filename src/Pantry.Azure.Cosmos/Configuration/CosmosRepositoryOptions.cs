@@ -8,11 +8,6 @@ namespace Pantry.Azure.Cosmos.Configuration
     public class CosmosRepositoryOptions
     {
         /// <summary>
-        /// Gets the default connection string name.
-        /// </summary>
-        public const string DefaultConnectionStringName = "CosmosDb";
-
-        /// <summary>
         /// Gets the default database name.
         /// </summary>
         public const string DefaultDatabaseName = "data";
@@ -26,16 +21,6 @@ namespace Pantry.Azure.Cosmos.Configuration
         /// Gets the default partition key path.
         /// </summary>
         public const string DefaultPartitionKeyPath = "/id";
-
-        /// <summary>
-        /// Gets or sets the Connection string.
-        /// </summary>
-        public string? ConnectionString { get; set; }
-
-        /// <summary>
-        /// Gets or sets the Connection string name.
-        /// </summary>
-        public string? ConnectionStringName { get; set; } = DefaultConnectionStringName;
 
         /// <summary>
         /// Gets or sets the database name.
