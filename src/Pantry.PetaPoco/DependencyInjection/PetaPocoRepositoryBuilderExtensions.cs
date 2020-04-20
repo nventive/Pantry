@@ -33,26 +33,5 @@ namespace Microsoft.Extensions.DependencyInjection
             builder.Services.TryAddTransient(sp => new PetaPocoDatabaseFor<TEntity>(databaseFactory(sp)));
             return builder;
         }
-
-        /// <summary>
-        /// Sets a custom mapper for entities.
-        /// </summary>
-        /// <typeparam name="TEntity">The repository entity type.</typeparam>
-        /// <typeparam name="TMapper">The custom mapper type.</typeparam>
-        /// <param name="builder">The <see cref="IPetaPocoRepositoryBuilder{T}"/>.</param>
-        /// <returns>The updated <see cref="IPetaPocoRepositoryBuilder{T}"/>.</returns>
-        public static IPetaPocoRepositoryBuilder<TEntity> WithEntityMapper<TEntity, TMapper>(
-            this IPetaPocoRepositoryBuilder<TEntity> builder)
-            where TEntity : class, IIdentifiable, new()
-            where TMapper : class, IPetaPocoEntityMapper<TEntity>
-        {
-            if (builder is null)
-            {
-                throw new ArgumentNullException(nameof(builder));
-            }
-
-            builder.Services.AddSingleton<IPetaPocoEntityMapper<TEntity>, TMapper>();
-            return builder;
-        }
     }
 }

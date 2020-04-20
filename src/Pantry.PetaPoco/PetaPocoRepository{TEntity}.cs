@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Dynamic;
+using System.Data.Common;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -30,7 +31,6 @@ namespace Pantry.PetaPoco
         /// <param name="idGenerator">The <see cref="IIdGenerator{TEntity}"/>.</param>
         /// <param name="etagGenerator">The <see cref="IETagGenerator{T}"/>.</param>
         /// <param name="timestampProvider">The <see cref="ITimestampProvider"/>.</param>
-        /// <param name="mapper">The <see cref="IPetaPocoEntityMapper{TEntity}"/>.</param>
         /// <param name="continuationTokenEncoder">The <see cref="IContinuationTokenEncoder{TContinuationToken}"/>.</param>
         /// <param name="logger">The <see cref="ILogger"/>.</param>
         public PetaPocoRepository(
@@ -38,7 +38,6 @@ namespace Pantry.PetaPoco
             IIdGenerator<TEntity> idGenerator,
             IETagGenerator<TEntity> etagGenerator,
             ITimestampProvider timestampProvider,
-            IPetaPocoEntityMapper<TEntity> mapper,
             IContinuationTokenEncoder<LimitOffsetContinuationToken> continuationTokenEncoder,
             ILogger<PetaPocoRepository<TEntity>>? logger = null)
         {
@@ -46,9 +45,19 @@ namespace Pantry.PetaPoco
             IdGenerator = idGenerator ?? throw new ArgumentNullException(nameof(idGenerator));
             EtagGenerator = etagGenerator ?? throw new ArgumentNullException(nameof(etagGenerator));
             TimestampProvider = timestampProvider ?? throw new ArgumentNullException(nameof(timestampProvider));
-            Mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             ContinuationTokenEncoder = continuationTokenEncoder ?? throw new ArgumentNullException(nameof(continuationTokenEncoder));
             Logger = logger ?? NullLogger<PetaPocoRepository<TEntity>>.Instance;
+
+            if (Logger.IsEnabled(LogLevel.Trace))
+            {
+                Database.CommandExecuting += (_, args) =>
+                {
+                    Logger.LogTrace(
+                        "[CommandExecuting] : {CommandText} {CommandParameters}",
+                        args.Command.CommandText,
+                        string.Join(", ", args.Command.Parameters.Cast<DbParameter>().Select(x => $"{x.ParameterName}={x.Value}")));
+                };
+            }
         }
 
         /// <summary>
@@ -70,11 +79,6 @@ namespace Pantry.PetaPoco
         /// Gets the <see cref="ITimestampProvider"/>.
         /// </summary>
         protected ITimestampProvider TimestampProvider { get; }
-
-        /// <summary>
-        /// Gets the <see cref="IPetaPocoEntityMapper{TEntity}"/>.
-        /// </summary>
-        protected IPetaPocoEntityMapper<TEntity> Mapper { get; }
 
         /// <summary>
         /// Gets the <see cref="IContinuationTokenEncoder{LimitOffsetContinuationToken}"/>.
@@ -114,25 +118,32 @@ namespace Pantry.PetaPoco
                 timestampedEntity.Timestamp = TimestampProvider.CurrentTimestamp();
             }
 
-            var poco = Mapper.MapToDestination(entity);
             try
             {
-                var pocoResult = (ExpandoObject)Database.Insert(
-                    Mapper.GetTableName(),
-                    Mapper.GetPrimaryKeyName(),
-                    poco);
-                var result = Mapper.MapToSource(pocoResult);
+                await Database.InsertAsync(cancellationToken, entity).ConfigureAwait(false);
 
                 Logger.LogAdded(
                     entityType: typeof(TEntity),
-                    entityId: result.Id,
-                    entity: result);
+                    entityId: entity.Id,
+                    entity: entity);
 
-                return result;
+                return entity;
             }
-            catch (Exception ex)
+            catch (DbException dbEx)
             {
-                var s = ex;
+                // This is probably the simplest way to check for conflict errors cross-database provider :-(
+                var exists = await Database.SingleOrDefaultAsync<TEntity>(cancellationToken, (object)entity.Id).ConfigureAwait(false);
+                if (exists != null)
+                {
+                    var conflictException = new ConflictException(typeof(TEntity).Name, entity.Id, dbEx);
+                    Logger.LogAddedWarning(
+                        entityType: typeof(TEntity),
+                        entityId: entity.Id,
+                        warning: "Conflict",
+                        exception: conflictException);
+                    throw conflictException;
+                }
+
                 throw;
             }
         }
@@ -164,22 +175,13 @@ namespace Pantry.PetaPoco
         /// <inheritdoc/>
         public virtual async Task<TEntity?> TryGetByIdAsync(string id, CancellationToken cancellationToken = default)
         {
-            var primaryKey = Mapper.GetPrimaryKey(id);
-
-            var pocoResult = await Database.SingleOrDefaultAsync<ExpandoObject>(
-                cancellationToken,
-                primaryKey).ConfigureAwait(false);
-
-            if (pocoResult is null)
+            if (string.IsNullOrEmpty(id))
             {
-                Logger.LogGetById(
-                    entityType: typeof(TEntity),
-                    entityId: id,
-                    entity: null);
-                return null;
+                throw new ArgumentNullException(nameof(id));
             }
 
-            var result = Mapper.MapToSource(pocoResult);
+            var result = await Database.SingleOrDefaultAsync<TEntity>(cancellationToken, (object)id).ConfigureAwait(false);
+
             Logger.LogGetById(
                 entityType: typeof(TEntity),
                 entityId: id,
@@ -207,12 +209,7 @@ namespace Pantry.PetaPoco
                 return false;
             }
 
-            var primaryKey = Mapper.GetPrimaryKey(id);
-            var result = await Database.DeleteAsync(
-                cancellationToken,
-                Mapper.GetTableName(),
-                Mapper.GetPrimaryKeyName(),
-                primaryKey).ConfigureAwait(false);
+            var result = await Database.DeleteAsync<TEntity>(cancellationToken, (object)id).ConfigureAwait(false);
             if (result != 1)
             {
                 Logger.LogDeletedWarning(
@@ -246,10 +243,22 @@ namespace Pantry.PetaPoco
         {
             var data = new Dictionary<string, object>
             {
+                { nameof(Database.Provider), Database.Provider.ToString() },
             };
 
-            // Check health
-            return HealthCheckResult.Healthy(data: data);
+            try
+            {
+                await Database.FirstOrDefaultAsync<TEntity>(cancellationToken, string.Empty).ConfigureAwait(false);
+                return HealthCheckResult.Healthy(data: data);
+            }
+            catch (DbException ex)
+            {
+                Logger.LogError(ex, "An exception occured during the heatlh check: {Message}", ex.Message);
+                return HealthCheckResult.Unhealthy(
+                    description: $"A {nameof(DbException)} occured during the check.",
+                    exception: ex,
+                    data: data);
+            }
         }
     }
 }

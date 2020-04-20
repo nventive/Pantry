@@ -30,7 +30,7 @@ namespace Pantry.PetaPoco.Tests
                         .ScanIn(typeof(PetaPocoStandardTestsFixture).Assembly).For.Migrations();
                 })
                 .AddPetaPocoRepository<StandardEntity>()
-                .WithPetaPocoDatabaseFactory(sp => new Database($"Data Source={TestDbPath}", SqliteFactory.Instance));
+                .WithPetaPocoDatabaseFactory(sp => new Database($"Data Source={TestDbPath}", SqliteFactory.Instance, new PetaPocoRegistryConventionMapper()));
 
             services
                 .AddHealthChecks()

@@ -654,9 +654,7 @@ namespace Pantry.Tests.StandardTestSupport
         [SkippableFact(typeof(UnsupportedFeatureException))]
         public virtual async Task ItShouldCheckHealth()
         {
-            // This can skip if it does not implement health checks.
-            var check = GetRepositoryAs<IHealthCheck>();
-            // But we still want to unit test the registration as well.
+            Skip.IfNot(Repository is IHealthCheck);
             var healthCheckService = ServiceProvider.GetRequiredService<HealthCheckService>();
             var checkResult = await healthCheckService.CheckHealthAsync();
             var healthCheckEntry = checkResult.Entries.First();

@@ -4,6 +4,7 @@ using Pantry.Continuation;
 using Pantry.DependencyInjection;
 using Pantry.PetaPoco;
 using Pantry.PetaPoco.DependencyInjection;
+using PetaPoco;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -37,7 +38,6 @@ namespace Microsoft.Extensions.DependencyInjection
             services.TryAddETagGeneratorFor<TEntity>();
             services.TryAddTimestampProvider();
             services.TryAddContinuationTokenEncoderFor<LimitOffsetContinuationToken>();
-            services.TryAddSingleton<IPetaPocoEntityMapper<TEntity>, PetaPocoEntityMapper<TEntity>>();
 
             var allInterfaces = services.TryAddAsSelfAndAllInterfaces<TRepository>();
 
