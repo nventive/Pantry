@@ -44,11 +44,13 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <param name="builder">The <see cref="IPetaPocoRepositoryBuilder{TEntity}"/>.</param>
         /// <param name="dbProviderFactory">The <see cref="DbProviderFactory"/> to use - determines the Database type.</param>
         /// <param name="connectionString">The connection string.</param>
+        /// <param name="petaPocoMapper">The custom PetaPoco <see cref="IMapper"/> to use.</param>
         /// <returns>The udpated <see cref="IPetaPocoRepositoryBuilder{TEntity}"/>.</returns>
         public static IPetaPocoRepositoryBuilder<TEntity> WithConnectionString<TEntity>(
             this IPetaPocoRepositoryBuilder<TEntity> builder,
             DbProviderFactory dbProviderFactory,
-            string connectionString)
+            string connectionString,
+            IMapper? petaPocoMapper = null)
             where TEntity : class, IIdentifiable
         {
             if (builder is null)
@@ -56,7 +58,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 throw new ArgumentNullException(nameof(builder));
             }
 
-            return builder.WithPetaPocoDatabaseFactory(sp => new Database(connectionString, dbProviderFactory));
+            return builder.WithPetaPocoDatabaseFactory(sp => new Database(connectionString, dbProviderFactory, petaPocoMapper));
         }
 
         /// <summary>
@@ -67,11 +69,13 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <param name="builder">The <see cref="IPetaPocoRepositoryBuilder{TEntity}"/>.</param>
         /// <param name="dbProviderFactory">The <see cref="DbProviderFactory"/> to use - determines the Database type.</param>
         /// <param name="connectionStringName">The name of the connection string.</param>
+        /// <param name="petaPocoMapper">The custom PetaPoco <see cref="IMapper"/> to use.</param>
         /// <returns>The udpated <see cref="IPetaPocoRepositoryBuilder{TEntity}"/>.</returns>
         public static IPetaPocoRepositoryBuilder<TEntity> WithConnectionStringNamed<TEntity>(
             this IPetaPocoRepositoryBuilder<TEntity> builder,
             DbProviderFactory dbProviderFactory,
-            string connectionStringName)
+            string connectionStringName,
+            IMapper? petaPocoMapper = null)
             where TEntity : class, IIdentifiable
         {
             if (builder is null)
@@ -80,7 +84,7 @@ namespace Microsoft.Extensions.DependencyInjection
             }
 
             return builder.WithPetaPocoDatabaseFactory(
-                sp => new Database(sp.GetRequiredService<IConfiguration>().GetConnectionString(connectionStringName), dbProviderFactory));
+                sp => new Database(sp.GetRequiredService<IConfiguration>().GetConnectionString(connectionStringName), dbProviderFactory, petaPocoMapper));
         }
     }
 }
