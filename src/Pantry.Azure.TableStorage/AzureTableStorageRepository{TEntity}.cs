@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -184,7 +185,13 @@ namespace Pantry.Azure.TableStorage
                     cancellationToken)
                     .ConfigureAwait(false);
 
-                var result = Mapper.MapToSource((DynamicTableEntity)operationResult.Result);
+                var dynamicTableEntity = (DynamicTableEntity)operationResult.Result;
+                if (dynamicTableEntity.Timestamp == default)
+                {
+                    dynamicTableEntity.Timestamp = ParseETagForTimestamp(operationResult.Etag);
+                }
+
+                var result = Mapper.MapToSource(dynamicTableEntity);
                 Logger.LogUpdated(
                     entityType: typeof(TEntity),
                     entityId: result.Id,
@@ -436,6 +443,32 @@ namespace Pantry.Azure.TableStorage
                     exception: ex,
                     data: data);
             }
+        }
+
+        /// <summary>
+        /// Parses Etags to extract timestamp.
+        /// See https://github.com/Azure/azure-storage-net/blob/68c3ee55a3a6f62a0159cea58005d3fe027312a8/Lib/WindowsRuntime/Table/Protocol/TableOperationHttpResponseParsers.cs#L754
+        /// and https://stackoverflow.com/questions/5500139/updating-an-object-to-azure-table-storage-is-there-any-way-to-get-the-new-time.
+        /// </summary>
+        /// <param name="etag">The ETag.</param>
+        /// <returns>Parsed Timestamp.</returns>
+        protected DateTimeOffset ParseETagForTimestamp(string etag)
+        {
+            if (etag is null)
+            {
+                throw new ArgumentNullException(nameof(etag));
+            }
+
+            const string ETagPrefix = "\"datetime'";
+            // Handle strong ETags as well.
+            if (etag.StartsWith("W/", StringComparison.Ordinal))
+            {
+                etag = etag.Substring(2);
+            }
+
+            // DateTimeOffset.ParseExact can't be used because the decimal part after seconds may not be present for rounded times.
+            etag = etag.Substring(ETagPrefix.Length, etag.Length - 2 - ETagPrefix.Length);
+            return DateTimeOffset.Parse(Uri.UnescapeDataString(etag), CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal);
         }
 
         /// <summary>

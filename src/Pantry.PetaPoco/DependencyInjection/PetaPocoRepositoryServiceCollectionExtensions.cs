@@ -39,6 +39,8 @@ namespace Microsoft.Extensions.DependencyInjection
             services.TryAddTimestampProvider();
             services.TryAddContinuationTokenEncoderFor<LimitOffsetContinuationToken>();
 
+            Mappers.Register(typeof(TEntity).Assembly, new PetaPocoRegistryConventionMapper());
+
             var allInterfaces = services.TryAddAsSelfAndAllInterfaces<TRepository>();
 
             return new PetaPocoRepositoryBuilder<TEntity>(services, allInterfaces);

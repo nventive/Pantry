@@ -5,7 +5,6 @@ using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Pantry.Tests.StandardTestSupport;
-using PetaPoco;
 
 namespace Pantry.PetaPoco.Tests
 {
@@ -30,7 +29,7 @@ namespace Pantry.PetaPoco.Tests
                         .ScanIn(typeof(PetaPocoStandardTestsFixture).Assembly).For.Migrations();
                 })
                 .AddPetaPocoRepository<StandardEntity>()
-                .WithPetaPocoDatabaseFactory(sp => new Database($"Data Source={TestDbPath}", SqliteFactory.Instance, new PetaPocoRegistryConventionMapper()));
+                .WithConnectionString(SqliteFactory.Instance, $"Data Source={TestDbPath}");
 
             services
                 .AddHealthChecks()

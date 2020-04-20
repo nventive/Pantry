@@ -191,9 +191,90 @@ namespace Pantry.PetaPoco
         }
 
         /// <inheritdoc/>
-        public virtual Task<TEntity> UpdateAsync(TEntity entity, CancellationToken cancellationToken = default)
+        public virtual async Task<TEntity> UpdateAsync(TEntity entity, CancellationToken cancellationToken = default)
         {
-            throw new UnsupportedFeatureException("Not supported yet.");
+            if (entity is null)
+            {
+                throw new ArgumentNullException(nameof(entity));
+            }
+
+            string? entryETag = null;
+            if (entity is IETaggable taggableEntity)
+            {
+                entryETag = taggableEntity.ETag;
+                taggableEntity.ETag = await EtagGenerator.Generate(entity);
+            }
+
+            if (entity is ITimestamped timestampedEntity && timestampedEntity.Timestamp is null)
+            {
+                timestampedEntity.Timestamp = TimestampProvider.CurrentTimestamp();
+            }
+
+            if (!string.IsNullOrEmpty(entryETag))
+            {
+                // This might get better with PetaPoco 6.5 with support for Version - optimistic concurrency).
+                try
+                {
+                    await Database.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
+                    var currentEntityVersion = await Database.SingleOrDefaultAsync<TEntity>((object)entity.Id).ConfigureAwait(false);
+                    if (currentEntityVersion is null)
+                    {
+                        var exception = new NotFoundException(typeof(TEntity).Name, entity.Id);
+                        Logger.LogUpdatedWarning(
+                            entityType: typeof(TEntity),
+                            entityId: entity.Id,
+                            warning: "NotFound",
+                            exception: exception);
+
+                        throw exception;
+                    }
+
+                    if (((IETaggable)currentEntityVersion).ETag != entryETag)
+                    {
+                        var exception = new ConcurrencyException(typeof(TEntity).Name, entity.Id);
+                        Logger.LogUpdatedWarning(
+                            entityType: typeof(TEntity),
+                            entityId: entity.Id,
+                            warning: "Concurrency",
+                            exception: exception);
+
+                        throw exception;
+                    }
+
+                    await Database.UpdateAsync(cancellationToken, entity).ConfigureAwait(false);
+                    Database.CompleteTransaction();
+
+                    return entity;
+                }
+                catch (Exception)
+                {
+                    Database.AbortTransaction();
+                    throw;
+                }
+            }
+            else
+            {
+                var numberOfRecordsAffected = await Database.UpdateAsync(cancellationToken, entity).ConfigureAwait(false);
+
+                if (numberOfRecordsAffected == 0)
+                {
+                    var exception = new NotFoundException(typeof(TEntity).Name, entity.Id);
+                    Logger.LogUpdatedWarning(
+                        entityType: typeof(TEntity),
+                        entityId: entity.Id,
+                        warning: "NotFound",
+                        exception: exception);
+
+                    throw exception;
+                }
+
+                Logger.LogUpdated(
+                    entityType: typeof(TEntity),
+                    entityId: entity.Id,
+                    entity: entity);
+
+                return entity;
+            }
         }
 
         /// <inheritdoc/>

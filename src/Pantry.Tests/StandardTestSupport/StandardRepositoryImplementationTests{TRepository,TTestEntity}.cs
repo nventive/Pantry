@@ -358,6 +358,9 @@ namespace Pantry.Tests.StandardTestSupport
             result.Timestamp.Should().NotBeNull();
             result.Should().BeEquivalentTo(updatedEntity, opt => opt.Excluding(x => x.ETag).Excluding(x => x.Timestamp));
             result.Should().NotBeEquivalentTo(existingEntity, opt => opt.Excluding(x => x.ETag).Excluding(x => x.Timestamp));
+
+            var afterUpdateResult = await GetRepositoryAs<IRepositoryGet<TTestEntity>>().GetByIdAsync(result.Id);
+            afterUpdateResult.Should().BeEquivalentTo(result);
         }
 
         [SkippableFact(typeof(UnsupportedFeatureException))]
@@ -378,6 +381,9 @@ namespace Pantry.Tests.StandardTestSupport
             result.Timestamp.Should().NotBeNull();
             result.Should().BeEquivalentTo(updatedEntity, opt => opt.Excluding(x => x.ETag).Excluding(x => x.Timestamp));
             result.Should().NotBeEquivalentTo(existingEntity);
+
+            var afterUpdateResult = await GetRepositoryAs<IRepositoryGet<TTestEntity>>().GetByIdAsync(result.Id);
+            afterUpdateResult.Should().BeEquivalentTo(result);
         }
 
         [SkippableFact(typeof(UnsupportedFeatureException))]
