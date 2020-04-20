@@ -11,6 +11,7 @@ using Pantry.Continuation;
 using Pantry.Exceptions;
 using Pantry.Generators;
 using Pantry.Logging;
+using Pantry.PetaPoco.Queries;
 using Pantry.Providers;
 using Pantry.Queries;
 using Pantry.Queries.Criteria;
@@ -25,6 +26,7 @@ namespace Pantry.PetaPoco
     /// </summary>
     /// <typeparam name="TEntity">The entity type.</typeparam>
     public class PetaPocoRepository<TEntity> : IRepository<TEntity>,
+                                               IRepositoryFind<TEntity, TEntity, PetaPocoSqlBuilderQuery<TEntity>>,
                                                IRepositoryClear<TEntity>,
                                                IHealthCheck
         where TEntity : class, IIdentifiable
@@ -329,27 +331,82 @@ namespace Pantry.PetaPoco
                 throw new ArgumentNullException(nameof(query));
             }
 
+            // Thanks PGSQL for being so complex / so different with JSON...:-(
+            static string JsonPathForPostgres(string[] columnPath, object? comparingValue)
+            {
+                var columnName = columnPath[0];
+                columnPath = columnPath.Skip(1).Select(x => $"'{x}'").ToArray();
+                var jsonExpression = columnName + string.Join("-­>", columnPath, 0, columnPath.Length - 1) + "->>" + columnPath.LastOrDefault();
+                switch (comparingValue)
+                {
+                    case int _:
+                    case IEnumerable<int> e_:
+                        return $"CAST({jsonExpression} AS INTEGER)";
+                    case double _:
+                    case IEnumerable<double> e_:
+                        return $"CAST({jsonExpression} AS FLOAT8)";
+                    case bool _:
+                    case IEnumerable<bool> e_:
+                        return $"CAST({jsonExpression} AS BOOLEAN)";
+                    case DateTime _:
+                    case IEnumerable<DateTime> e_:
+                        return $"CAST({jsonExpression} AS TIMESTAMP)";
+                    case DateTimeOffset _:
+                    case IEnumerable<DateTimeOffset> e_:
+                        return $"CAST({jsonExpression} AS TIMESTAMPZ)";
+                    case decimal _:
+                    case IEnumerable<decimal> e_:
+                        return $"CAST({jsonExpression} AS DECIMAL(19,5))";
+                    case Guid _:
+                    case IEnumerable<Guid> e_:
+                        return $"CAST({jsonExpression} AS UUID)";
+                    default:
+                        return jsonExpression;
+                }
+            }
+
             return await ExecuteFindAsync(
                 query,
                 (queryBuilder) =>
                 {
                     foreach (var criterion in query)
                     {
-                        if (criterion is PropertyCriterion propertyCriterion && propertyCriterion.PropertyPathContainsSubPath)
+                        if (criterion is PropertyCriterion propertyCriterion && propertyCriterion.PropertyPathContainsIndexer)
                         {
                             throw new UnsupportedFeatureException($"{GetType().Name} does not support property indexers ({propertyCriterion.PropertyPath}).");
                         }
 
+                        var column = criterion is PropertyCriterion propertyPathCriterion ? propertyPathCriterion.PropertyPath : string.Empty;
+                        if (column.Contains(".", StringComparison.Ordinal))
+                        {
+                            var columnPath = column.Split(".");
+                            var columnName = columnPath[0];
+                            var remainingPath = string.Join(".", columnPath.Skip(1));
+                            // This is where we enter an untested/unreliable portion. There be dragons.
+                            column = GetSqlKataCompilerType() switch
+                            {
+                                CompilerType.SqlServer => $"JSON_VALUE({columnName}, '$.{remainingPath}')",
+                                CompilerType.SQLite => $"json_extract({columnName}, '$.{remainingPath}')",
+                                CompilerType.MySql => $"JSON_UNQUOTE(JSON_EXTRACT({columnName}, '$.{remainingPath}'))",
+                                CompilerType.Postgres => JsonPathForPostgres(columnPath, criterion is PropertyValueCriterion pvc ? pvc.Value : null),
+                                _ => throw new UnsupportedFeatureException($"{GetType().Name} does not support property selection with path ({column}) on {GetSqlKataCompilerType()}."),
+                            };
+                        }
+                        else
+                        {
+                            column = Database.Provider.EscapeSqlIdentifier(column);
+                        }
+
                         queryBuilder = criterion switch
                         {
-                            EqualToPropertyCriterion equalTo => queryBuilder.Where(equalTo.PropertyPath, equalTo.Value),
-                            GreaterThanPropertyCriterion gt => queryBuilder.Where(gt.PropertyPath, ">", gt.Value),
-                            GreaterThanOrEqualToPropertyCriterion gte => queryBuilder.Where(gte.PropertyPath, ">=", gte.Value),
-                            LessThanPropertyCriterion lt => queryBuilder.Where(lt.PropertyPath, "<", lt.Value),
-                            LessThanOrEqualToPropertyCriterion lte => queryBuilder.Where(lte.PropertyPath, "<=", lte.Value),
-                            StringContainsPropertyCriterion strCont => queryBuilder.WhereLike(strCont.PropertyPath, $"%{strCont.Value}%"),
-                            InPropertyCriterion inProp => queryBuilder.WhereIn(inProp.PropertyPath, inProp.Values),
-                            OrderCriterion order => order.Ascending ? queryBuilder.OrderBy(order.PropertyPath) : queryBuilder.OrderByDesc(order.PropertyPath),
+                            EqualToPropertyCriterion equalTo => queryBuilder.WhereRaw($"{column} = ?", equalTo.Value),
+                            GreaterThanPropertyCriterion gt => queryBuilder.WhereRaw($"{column} > ?", gt.Value),
+                            GreaterThanOrEqualToPropertyCriterion gte => queryBuilder.WhereRaw($"{column} >= ?", gte.Value),
+                            LessThanPropertyCriterion lt => queryBuilder.WhereRaw($"{column} < ?", lt.Value),
+                            LessThanOrEqualToPropertyCriterion lte => queryBuilder.WhereRaw($"{column} <= ?", lte.Value),
+                            StringContainsPropertyCriterion strCont => queryBuilder.WhereRaw($"{column} LIKE ?", $"%{strCont.Value}%"),
+                            InPropertyCriterion inProp => queryBuilder.WhereRaw($"{column} IN (?)", inProp.Values.ToArray()),
+                            OrderCriterion order => queryBuilder.OrderByRaw($"{column} {(order.Ascending ? "ASC" : "DESC")}"),
                             _ => throw new UnsupportedFeatureException($"The {criterion} criterion is not supported by {this}."),
                         };
                     }
@@ -378,6 +435,15 @@ namespace Pantry.PetaPoco
                     exception: ex,
                     data: data);
             }
+        }
+
+        /// <inheritdoc/>
+        public virtual Task<IContinuationEnumerable<TEntity>> FindAsync(PetaPocoSqlBuilderQuery<TEntity> query, CancellationToken cancellationToken = default)
+        {
+            return ExecuteFindAsync(
+                query,
+                x => query.Apply(x),
+                cancellationToken);
         }
 
         /// <inheritdoc/>
