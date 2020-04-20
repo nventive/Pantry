@@ -13,8 +13,10 @@ using Pantry.Generators;
 using Pantry.Logging;
 using Pantry.Providers;
 using Pantry.Queries;
+using Pantry.Queries.Criteria;
 using Pantry.Traits;
 using PetaPoco;
+using PetaPoco.SqlKata;
 
 namespace Pantry.PetaPoco
 {
@@ -41,7 +43,7 @@ namespace Pantry.PetaPoco
             IIdGenerator<TEntity> idGenerator,
             IETagGenerator<TEntity> etagGenerator,
             ITimestampProvider timestampProvider,
-            IContinuationTokenEncoder<LimitPageContinuationToken> continuationTokenEncoder,
+            IContinuationTokenEncoder<PageContinuationToken> continuationTokenEncoder,
             ILogger<PetaPocoRepository<TEntity>>? logger = null)
         {
             DatabaseFor = databaseFor ?? throw new ArgumentNullException(nameof(databaseFor));
@@ -86,7 +88,7 @@ namespace Pantry.PetaPoco
         /// <summary>
         /// Gets the <see cref="IContinuationTokenEncoder{LimitPageContinuationToken}"/>.
         /// </summary>
-        protected IContinuationTokenEncoder<LimitPageContinuationToken> ContinuationTokenEncoder { get; }
+        protected IContinuationTokenEncoder<PageContinuationToken> ContinuationTokenEncoder { get; }
 
         /// <summary>
         /// Gets the <see cref="ILogger"/>.
@@ -311,40 +313,48 @@ namespace Pantry.PetaPoco
         }
 
         /// <inheritdoc/>
-        public virtual async Task<IContinuationEnumerable<TEntity>> FindAllAsync(string? continuationToken, int limit = Query.DefaultLimit, CancellationToken cancellationToken = default)
+        public virtual Task<IContinuationEnumerable<TEntity>> FindAllAsync(string? continuationToken, int limit = Query.DefaultLimit, CancellationToken cancellationToken = default)
         {
-            if (limit <= 0)
-            {
-                return ContinuationEnumerable.Empty<TEntity>();
-            }
-
-            var pagination = await ContinuationTokenEncoder.Decode(continuationToken);
-            if (pagination is null)
-            {
-                pagination = new LimitPageContinuationToken { Limit = limit, Page = 0 };
-            }
-
-            var pagedItems = await Database.PageAsync<TEntity>(cancellationToken, pagination.Page, pagination.Limit).ConfigureAwait(false);
-
-            var result = pagedItems.Items.ToContinuationEnumerable(
-                pagedItems.TotalPages <= pagination.Page
-                    ? null
-                    : await ContinuationTokenEncoder.Encode(
-                        new LimitPageContinuationToken
-                        {
-                            Page = Convert.ToInt32(pagedItems.CurrentPage + 1),
-                            Limit = pagination.Limit,
-                        }));
-
-            Logger.LogFind($"(ct: {continuationToken ?? "<no-ct>"}, limit: {limit})", result);
-
-            return result;
+            return ExecuteFindAsync(
+                new FindAllQuery<TEntity> { ContinuationToken = continuationToken, Limit = limit },
+                _ => { },
+                cancellationToken);
         }
 
         /// <inheritdoc/>
-        public virtual Task<IContinuationEnumerable<TEntity>> FindAsync(ICriteriaQuery<TEntity> query, CancellationToken cancellationToken = default)
+        public virtual async Task<IContinuationEnumerable<TEntity>> FindAsync(ICriteriaQuery<TEntity> query, CancellationToken cancellationToken = default)
         {
-            throw new UnsupportedFeatureException("Not supported yet.");
+            if (query is null)
+            {
+                throw new ArgumentNullException(nameof(query));
+            }
+
+            return await ExecuteFindAsync(
+                query,
+                (queryBuilder) =>
+                {
+                    foreach (var criterion in query)
+                    {
+                        if (criterion is PropertyCriterion propertyCriterion && propertyCriterion.PropertyPathContainsSubPath)
+                        {
+                            throw new UnsupportedFeatureException($"{GetType().Name} does not support property indexers ({propertyCriterion.PropertyPath}).");
+                        }
+
+                        queryBuilder = criterion switch
+                        {
+                            EqualToPropertyCriterion equalTo => queryBuilder.Where(equalTo.PropertyPath, equalTo.Value),
+                            GreaterThanPropertyCriterion gt => queryBuilder.Where(gt.PropertyPath, ">", gt.Value),
+                            GreaterThanOrEqualToPropertyCriterion gte => queryBuilder.Where(gte.PropertyPath, ">=", gte.Value),
+                            LessThanPropertyCriterion lt => queryBuilder.Where(lt.PropertyPath, "<", lt.Value),
+                            LessThanOrEqualToPropertyCriterion lte => queryBuilder.Where(lte.PropertyPath, "<=", lte.Value),
+                            StringContainsPropertyCriterion strCont => queryBuilder.WhereLike(strCont.PropertyPath, $"%{strCont.Value}%"),
+                            InPropertyCriterion inProp => queryBuilder.WhereIn(inProp.PropertyPath, inProp.Values),
+                            OrderCriterion order => order.Ascending ? queryBuilder.OrderBy(order.PropertyPath) : queryBuilder.OrderByDesc(order.PropertyPath),
+                            _ => throw new UnsupportedFeatureException($"The {criterion} criterion is not supported by {this}."),
+                        };
+                    }
+                },
+                cancellationToken).ConfigureAwait(false);
         }
 
         /// <inheritdoc/>
@@ -376,5 +386,100 @@ namespace Pantry.PetaPoco
             await Database.DeleteAsync<TEntity>(cancellationToken, string.Empty).ConfigureAwait(false);
             Logger.LogClear(typeof(TEntity));
         }
+
+        /// <summary>
+        /// Executes a query with proper pagination.
+        /// Prepares the SqlKata query with the proper select statement.
+        /// </summary>
+        /// <param name="query">The <see cref="IQuery{TResult}"/>.</param>
+        /// <param name="queryBuilder">Builds additional criterias.</param>
+        /// <param name="cancellationToken">The <see cref="CancellationToken"/>.</param>
+        /// <returns>The <see cref="IContinuationEnumerable{TEntity}"/> with continuation token set.</returns>
+        protected virtual Task<IContinuationEnumerable<TEntity>> ExecuteFindAsync(
+            IQuery<TEntity> query,
+            Action<SqlKata.Query> queryBuilder,
+            CancellationToken cancellationToken)
+        {
+            if (queryBuilder is null)
+            {
+                throw new ArgumentNullException(nameof(queryBuilder));
+            }
+
+            var sqlQuery = new SqlKata.Query().GenerateSelect<TEntity>(GetDatabaseMapperForTheEntity());
+            queryBuilder(sqlQuery);
+
+            return ExecuteFindAsync(query, sqlQuery, cancellationToken);
+        }
+
+        /// <summary>
+        /// Executes a query with proper pagination.
+        /// </summary>
+        /// <param name="query">The <see cref="IQuery{TResult}"/>.</param>
+        /// <param name="sqlQuery">The SQLKata query to execute.</param>
+        /// <param name="cancellationToken">The <see cref="CancellationToken"/>.</param>
+        /// <returns>The <see cref="IContinuationEnumerable{TEntity}"/> with continuation token set.</returns>
+        protected virtual async Task<IContinuationEnumerable<TEntity>> ExecuteFindAsync(
+            IQuery<TEntity> query,
+            SqlKata.Query sqlQuery,
+            CancellationToken cancellationToken)
+        {
+            if (query is null)
+            {
+                throw new ArgumentNullException(nameof(query));
+            }
+
+            if (query.Limit <= 0)
+            {
+                return ContinuationEnumerable.Empty<TEntity>();
+            }
+
+            var pagination = await ContinuationTokenEncoder.Decode(query.ContinuationToken);
+            if (pagination is null)
+            {
+                pagination = new PageContinuationToken { PerPage = query.Limit, Page = 1 };
+            }
+
+            var pagedItems = await Database.PageAsync<TEntity>(cancellationToken, pagination.Page, pagination.PerPage, sqlQuery.ToSql(GetSqlKataCompilerType())).ConfigureAwait(false);
+
+            var result = pagedItems.Items.ToContinuationEnumerable(
+                pagedItems.TotalPages <= pagination.Page
+                    ? null
+                    : await ContinuationTokenEncoder.Encode(
+                        new PageContinuationToken
+                        {
+                            Page = Convert.ToInt32(pagedItems.CurrentPage + 1),
+                            PerPage = pagination.PerPage,
+                        }));
+
+            Logger.LogFind(query, result);
+
+            return result;
+        }
+
+        /// <summary>
+        /// Gets the actual registered mapper for <typeparamref name="TEntity"/>.
+        /// </summary>
+        /// <returns>The <see cref="IMapper"/>.</returns>
+        protected virtual IMapper GetDatabaseMapperForTheEntity()
+            => Mappers.GetMapper(typeof(TEntity), Database.DefaultMapper);
+
+        /// <summary>
+        /// Gets the SqlKata Compiler type from the current <see cref="Database"/>.
+        /// </summary>
+        /// <returns>The compiler type.</returns>
+        protected virtual CompilerType GetSqlKataCompilerType()
+            => Database.Provider switch
+            {
+                global::PetaPoco.Providers.FirebirdDbDatabaseProvider _ => CompilerType.Firebird,
+                global::PetaPoco.Providers.MariaDbDatabaseProvider _ => CompilerType.MySql,
+                global::PetaPoco.Providers.MsAccessDbDatabaseProvider _ => CompilerType.SqlServer,
+                global::PetaPoco.Providers.MySqlDatabaseProvider _ => CompilerType.MySql,
+                global::PetaPoco.Providers.OracleDatabaseProvider _ => CompilerType.Oracle,
+                global::PetaPoco.Providers.PostgreSQLDatabaseProvider _ => CompilerType.Postgres,
+                global::PetaPoco.Providers.SQLiteDatabaseProvider _ => CompilerType.SQLite,
+                global::PetaPoco.Providers.SqlServerCEDatabaseProviders _ => CompilerType.SqlServer,
+                global::PetaPoco.Providers.SqlServerDatabaseProvider _ => CompilerType.SqlServer,
+                _ => throw new UnsupportedFeatureException($"Unable to select an appropriate Compiler Type for SqlKata given the PetaPoco provider {Database.Provider}"),
+            };
     }
 }

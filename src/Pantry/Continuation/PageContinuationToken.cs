@@ -5,16 +5,16 @@ namespace Pantry.Continuation
     /// <summary>
     /// Continuation token support adapted for page number/limit paginations systems.
     /// </summary>
-    public class LimitPageContinuationToken
+    public class PageContinuationToken
     {
         /// <summary>
-        /// Gets or sets the limit.
+        /// Gets or sets the number of item per page.
         /// </summary>
-        public int Limit { get; set; } = Query.DefaultLimit;
+        public int PerPage { get; set; } = Query.DefaultLimit;
 
         /// <summary>
-        /// Gets or sets the page number.
+        /// Gets or sets the page number. Starts at 1.
         /// </summary>
-        public int Page { get; set; } = 0;
+        public int Page { get; set; } = 1;
     }
 }

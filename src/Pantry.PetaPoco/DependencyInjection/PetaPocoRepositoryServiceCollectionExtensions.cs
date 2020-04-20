@@ -36,7 +36,7 @@ namespace Microsoft.Extensions.DependencyInjection
             services.TryAddIdGeneratorFor<TEntity>();
             services.TryAddETagGeneratorFor<TEntity>();
             services.TryAddTimestampProvider();
-            services.TryAddContinuationTokenEncoderFor<LimitPageContinuationToken>();
+            services.TryAddContinuationTokenEncoderFor<PageContinuationToken>();
 
             Mappers.Register(typeof(TEntity).Assembly, new PetaPocoRegistryConventionMapper());
 
