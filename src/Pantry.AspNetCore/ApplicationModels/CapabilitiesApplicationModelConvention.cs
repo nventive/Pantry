@@ -22,7 +22,7 @@ namespace Pantry.AspNetCore.ApplicationModels
             foreach (var controller in application.Controllers.Where(x => typeof(ICapabilitiesProvider).IsAssignableFrom(x.ControllerType)))
             {
                 var exposeCapabilitiesAttribute = controller.Attributes.OfType<ExposeCapabilitiesAttribute>().FirstOrDefault();
-                var exposeCapabilities = exposeCapabilitiesAttribute?.Capabilities ?? Capabilities.All;
+                var exposeCapabilities = exposeCapabilitiesAttribute?.Capabilities ?? Capabilities.CRUD;
 
                 var actionsToRemove = controller
                     .Actions

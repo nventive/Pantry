@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using System.Linq;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
@@ -11,9 +12,9 @@ using Xunit.Abstractions;
 
 namespace Pantry.AspNetCore.Tests.Controllers
 {
-    public class StandardEntityAllControllerTests : WebTests
+    public class StandardEntityQueryControllerTests : WebTests
     {
-        public StandardEntityAllControllerTests(TestWebApplicationFactory factory, ITestOutputHelper outputHelper)
+        public StandardEntityQueryControllerTests(TestWebApplicationFactory factory, ITestOutputHelper outputHelper)
             : base(factory, outputHelper)
         {
         }
@@ -21,7 +22,7 @@ namespace Pantry.AspNetCore.Tests.Controllers
         [Fact]
         public async Task ItShouldCreate()
         {
-            var client = GetRepositoryApiClient("/api/standard-entities-all");
+            var client = GetRepositoryApiClient("/api/standard-entities-query");
             var attributes = StandardEntityAttributesGenerator.Generate();
 
             var result = await client.Create(attributes);
@@ -35,7 +36,7 @@ namespace Pantry.AspNetCore.Tests.Controllers
         [Fact]
         public async Task ItShouldCreateAndGet()
         {
-            var client = GetRepositoryApiClient("/api/standard-entities-all");
+            var client = GetRepositoryApiClient("/api/standard-entities-query");
             var attributes = StandardEntityAttributesGenerator.Generate();
 
             var createResult = await client.Create(attributes);
@@ -50,7 +51,7 @@ namespace Pantry.AspNetCore.Tests.Controllers
         {
             var entity = StandardEntityGenerator.Generate();
             await Factory.Services.GetRequiredService<IRepositoryAdd<StandardEntity>>().AddAsync(entity);
-            var client = GetRepositoryApiClient("/api/standard-entities-all");
+            var client = GetRepositoryApiClient("/api/standard-entities-query");
 
             var result = await client.GetById(entity.Id);
 
@@ -65,7 +66,7 @@ namespace Pantry.AspNetCore.Tests.Controllers
             var entities = StandardEntityGenerator.Generate(2);
             await Factory.Services.GetRequiredService<IRepositoryAdd<StandardEntity>>().AddAsync(entities[0]);
             await Factory.Services.GetRequiredService<IRepositoryAdd<StandardEntity>>().AddAsync(entities[1]);
-            var client = GetRepositoryApiClient("/api/standard-entities-all");
+            var client = GetRepositoryApiClient("/api/standard-entities-query");
 
             var result = await client.FindAll(limit: 1);
 
@@ -85,7 +86,7 @@ namespace Pantry.AspNetCore.Tests.Controllers
         {
             var entity = StandardEntityGenerator.Generate();
             await Factory.Services.GetRequiredService<IRepositoryAdd<StandardEntity>>().AddAsync(entity);
-            var client = GetRepositoryApiClient("/api/standard-entities-all");
+            var client = GetRepositoryApiClient("/api/standard-entities-query");
 
             var result = await client.GetById(
                 entity.Id,
@@ -99,7 +100,7 @@ namespace Pantry.AspNetCore.Tests.Controllers
         {
             var entity = StandardEntityGenerator.Generate();
             await Factory.Services.GetRequiredService<IRepositoryAdd<StandardEntity>>().AddAsync(entity);
-            var client = GetRepositoryApiClient("/api/standard-entities-all");
+            var client = GetRepositoryApiClient("/api/standard-entities-query");
 
             var result = await client.GetById(
                 entity.Id,
@@ -111,7 +112,7 @@ namespace Pantry.AspNetCore.Tests.Controllers
         [Fact]
         public async Task ItShouldNotGetIfNotFound()
         {
-            var client = GetRepositoryApiClient("/api/standard-entities-all");
+            var client = GetRepositoryApiClient("/api/standard-entities-query");
 
             var result = await client.GetById(StandardEntityGenerator.Generate().Id);
 
@@ -121,7 +122,7 @@ namespace Pantry.AspNetCore.Tests.Controllers
         [Fact]
         public async Task ItShouldCreateAndUpdateUnconditionally()
         {
-            var client = GetRepositoryApiClient("/api/standard-entities-all");
+            var client = GetRepositoryApiClient("/api/standard-entities-query");
             var attributes = StandardEntityAttributesGenerator.Generate();
             var updatedAttributes = StandardEntityAttributesGenerator.Generate();
 
@@ -135,7 +136,7 @@ namespace Pantry.AspNetCore.Tests.Controllers
         [Fact]
         public async Task ItShouldCreateAndUpdateConditionally()
         {
-            var client = GetRepositoryApiClient("/api/standard-entities-all");
+            var client = GetRepositoryApiClient("/api/standard-entities-query");
             var attributes = StandardEntityAttributesGenerator.Generate();
             var updatedAttributes = StandardEntityAttributesGenerator.Generate();
 
@@ -152,7 +153,7 @@ namespace Pantry.AspNetCore.Tests.Controllers
         [Fact]
         public async Task ItShouldNotUpdateIfNotFound()
         {
-            var client = GetRepositoryApiClient("/api/standard-entities-all");
+            var client = GetRepositoryApiClient("/api/standard-entities-query");
 
             var result = await client.Update(
                 StandardEntityGenerator.Generate().Id,
@@ -164,7 +165,7 @@ namespace Pantry.AspNetCore.Tests.Controllers
         [Fact]
         public async Task ItShouldNotUpdateIfPreconditionFailed()
         {
-            var client = GetRepositoryApiClient("/api/standard-entities-all");
+            var client = GetRepositoryApiClient("/api/standard-entities-query");
             var attributes = StandardEntityAttributesGenerator.Generate();
             var updatedAttributes = StandardEntityAttributesGenerator.Generate();
 
@@ -180,7 +181,7 @@ namespace Pantry.AspNetCore.Tests.Controllers
         [Fact]
         public async Task ItShouldCreateAndDelete()
         {
-            var client = GetRepositoryApiClient("/api/standard-entities-all");
+            var client = GetRepositoryApiClient("/api/standard-entities-query");
             var attributes = StandardEntityAttributesGenerator.Generate();
 
             var createResult = await client.Create(attributes);
@@ -192,7 +193,7 @@ namespace Pantry.AspNetCore.Tests.Controllers
         [Fact]
         public async Task ItShouldNotDeleteIfNotFound()
         {
-            var client = GetRepositoryApiClient("/api/standard-entities-all");
+            var client = GetRepositoryApiClient("/api/standard-entities-query");
 
             var result = await client.Delete(StandardEntityGenerator.Generate().Id);
 

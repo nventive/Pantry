@@ -50,10 +50,5 @@ namespace Pantry.AspNetCore.Controllers
         /// FindAll without query.
         /// </summary>
         FindAll = 0b_0010_0000,
-
-        /// <summary>
-        /// All capabilities.
-        /// </summary>
-        All = CRUD | FindAll,
     }
 }

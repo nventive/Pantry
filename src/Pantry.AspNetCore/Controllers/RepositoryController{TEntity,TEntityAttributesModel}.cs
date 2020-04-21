@@ -29,10 +29,8 @@ namespace Pantry.AspNetCore.Controllers
         /// <summary>
         /// Initializes a new instance of the <see cref="RepositoryController{TEntity, TEntityAttributesModel}"/> class.
         /// </summary>
-        /// <param name="serviceProvider">The <see cref="IServiceProvider"/>.</param>
-        public RepositoryController(IServiceProvider serviceProvider)
+        protected RepositoryController()
         {
-            ServiceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
             Capabilities = GetCapabilities();
         }
 
@@ -44,7 +42,7 @@ namespace Pantry.AspNetCore.Controllers
         /// <summary>
         /// Gets the <see cref="IServiceProvider"/>.
         /// </summary>
-        protected IServiceProvider ServiceProvider { get; }
+        protected IServiceProvider Services => HttpContext.RequestServices;
 
         /// <summary>
         /// Create a <typeparamref name="TEntity"/> from <typeparamref name="TEntityAttributesModel"/>.
@@ -63,8 +61,8 @@ namespace Pantry.AspNetCore.Controllers
                 return StatusCode(StatusCodes.Status405MethodNotAllowed);
             }
 
-            var repository = ServiceProvider.GetRequiredService<IRepositoryAdd<TEntity>>();
-            var mapper = ServiceProvider.GetService<IMapper<TEntityAttributesModel, TEntity>>();
+            var repository = Services.GetRequiredService<IRepositoryAdd<TEntity>>();
+            var mapper = Services.GetService<IMapper<TEntityAttributesModel, TEntity>>();
 
             TEntity entity;
             if (mapper != null)
@@ -104,7 +102,7 @@ namespace Pantry.AspNetCore.Controllers
                 return StatusCode(StatusCodes.Status405MethodNotAllowed);
             }
 
-            var repository = ServiceProvider.GetRequiredService<IRepositoryGet<TEntity>>();
+            var repository = Services.GetRequiredService<IRepositoryGet<TEntity>>();
 
             var result = await repository.TryGetByIdAsync(id).ConfigureAwait(false);
 
@@ -139,7 +137,7 @@ namespace Pantry.AspNetCore.Controllers
 
             query ??= new FindAllQuery<TEntity>();
 
-            var repository = ServiceProvider.GetRequiredService<IRepositoryFindAll<TEntity>>();
+            var repository = Services.GetRequiredService<IRepositoryFindAll<TEntity>>();
 
             return Ok(
                 new ContinuationEnumerableModel<TEntity>(
@@ -168,8 +166,8 @@ namespace Pantry.AspNetCore.Controllers
                 return StatusCode(StatusCodes.Status405MethodNotAllowed);
             }
 
-            var repository = ServiceProvider.GetRequiredService<IRepositoryUpdate<TEntity>>();
-            var mapper = ServiceProvider.GetService<IMapper<TEntityAttributesModel, TEntity>>();
+            var repository = Services.GetRequiredService<IRepositoryUpdate<TEntity>>();
+            var mapper = Services.GetService<IMapper<TEntityAttributesModel, TEntity>>();
 
             TEntity entity;
             if (mapper != null)
@@ -282,7 +280,7 @@ namespace Pantry.AspNetCore.Controllers
                 return StatusCode(StatusCodes.Status405MethodNotAllowed);
             }
 
-            var repository = ServiceProvider.GetRequiredService<IRepositoryRemove<TEntity>>();
+            var repository = Services.GetRequiredService<IRepositoryRemove<TEntity>>();
 
             var result = await repository.TryRemoveAsync(id).ConfigureAwait(false);
 

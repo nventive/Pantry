@@ -1,5 +1,4 @@
-﻿using System;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Pantry.AspNetCore.Controllers;
 
 namespace Pantry.AspNetCore.Tests.Server.Controllers
@@ -8,9 +7,5 @@ namespace Pantry.AspNetCore.Tests.Server.Controllers
     [ExposeCapabilities(Capabilities.Create)]
     public class StandardEntityCreateController : RepositoryController<StandardEntity, StandardEntityAttributes>
     {
-        public StandardEntityCreateController(IServiceProvider serviceProvider)
-            : base(serviceProvider)
-        {
-        }
     }
 }
