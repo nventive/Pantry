@@ -47,7 +47,7 @@ namespace Pantry.AspNetCore.Filters
 
                     if (context.HttpContext.Request.GetTypedHeaders().IfNoneMatch != null
                      && context.HttpContext.Request.GetTypedHeaders().IfNoneMatch.Any()
-                     && context.HttpContext.Request.GetTypedHeaders().IfNoneMatch.First().Compare(context.HttpContext.Response.GetTypedHeaders().ETag, false))
+                     && context.HttpContext.Request.GetTypedHeaders().IfNoneMatch.First().Compare(context.HttpContext.Response.GetTypedHeaders().ETag, !context.HttpContext.Response.GetTypedHeaders().ETag.IsWeak))
                     {
                         context.Result = new StatusCodeResult(StatusCodes.Status304NotModified);
                     }
