@@ -29,6 +29,9 @@ namespace Pantry.AspNetCore.Tests.Controllers
             result = await client.GetById(entity.Id);
             result.StatusCode.Should().Be(HttpStatusCode.NotFound);
 
+            var collectionResult = await client.FindAll();
+            collectionResult.StatusCode.Should().Be(HttpStatusCode.MethodNotAllowed);
+
             result = await client.Update(
                 entity.Id,
                 StandardEntityAttributesGenerator.Generate());
@@ -50,6 +53,9 @@ namespace Pantry.AspNetCore.Tests.Controllers
 
             result = await client.GetById(entity.Id);
             result.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            var collectionResult = await client.FindAll();
+            collectionResult.StatusCode.Should().Be(HttpStatusCode.NotFound);
 
             result = await client.Update(
                 entity.Id,
@@ -74,6 +80,9 @@ namespace Pantry.AspNetCore.Tests.Controllers
             result = await client.GetById(entity.Id);
             result.StatusCode.Should().Be(HttpStatusCode.MethodNotAllowed);
 
+            var collectionResult = await client.FindAll();
+            collectionResult.StatusCode.Should().Be(HttpStatusCode.NotFound);
+
             result = await client.Update(
                 entity.Id,
                 StandardEntityAttributesGenerator.Generate());
@@ -97,10 +106,65 @@ namespace Pantry.AspNetCore.Tests.Controllers
             result = await client.GetById(entity.Id);
             result.StatusCode.Should().Be(HttpStatusCode.MethodNotAllowed);
 
+            var collectionResult = await client.FindAll();
+            collectionResult.StatusCode.Should().Be(HttpStatusCode.NotFound);
+
             result = await client.Update(
                 entity.Id,
                 StandardEntityAttributesGenerator.Generate());
             result.StatusCode.Should().Be(HttpStatusCode.MethodNotAllowed);
+
+            var response = await client.Delete(entity.Id);
+            response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        }
+
+        [Fact]
+        public async Task ItShouldOnlyExposeCrud()
+        {
+            var client = GetRepositoryApiClient("/api/standard-entities-crud");
+
+            var entity = StandardEntityGenerator.Generate();
+            await Factory.Services.GetRequiredService<IRepositoryAdd<StandardEntity>>().AddAsync(entity);
+
+            var result = await client.Create(StandardEntityAttributesGenerator.Generate());
+            result.StatusCode.Should().Be(HttpStatusCode.Created);
+
+            result = await client.GetById(entity.Id);
+            result.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            var collectionResult = await client.FindAll();
+            collectionResult.StatusCode.Should().Be(HttpStatusCode.MethodNotAllowed);
+
+            result = await client.Update(
+                entity.Id,
+                StandardEntityAttributesGenerator.Generate());
+            result.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            var response = await client.Delete(entity.Id);
+            response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        }
+
+        [Fact]
+        public async Task ItShouldOnlyExposeAll()
+        {
+            var client = GetRepositoryApiClient("/api/standard-entities-all");
+
+            var entity = StandardEntityGenerator.Generate();
+            await Factory.Services.GetRequiredService<IRepositoryAdd<StandardEntity>>().AddAsync(entity);
+
+            var result = await client.Create(StandardEntityAttributesGenerator.Generate());
+            result.StatusCode.Should().Be(HttpStatusCode.Created);
+
+            result = await client.GetById(entity.Id);
+            result.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            var collectionResult = await client.FindAll();
+            collectionResult.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            result = await client.Update(
+                entity.Id,
+                StandardEntityAttributesGenerator.Generate());
+            result.StatusCode.Should().Be(HttpStatusCode.OK);
 
             var response = await client.Delete(entity.Id);
             response.StatusCode.Should().Be(HttpStatusCode.NoContent);

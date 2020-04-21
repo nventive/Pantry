@@ -1,5 +1,8 @@
-﻿using System.Net.Http;
+﻿using System.Collections.Generic;
+using System.Net.Http;
 using System.Threading.Tasks;
+using Pantry.AspNetCore.Models;
+
 using Refit;
 
 namespace Pantry.AspNetCore.Tests
@@ -16,6 +19,11 @@ namespace Pantry.AspNetCore.Tests
             string id,
             [Header("If-Modified-Since")] string ifModifiedSince = null,
             [Header("If-None-Match")] string ifNoneMatch = null);
+
+        [Get("")]
+        Task<ApiResponse<ContinuationEnumerableModel<TEntity>>> FindAll(
+            [Query] string continuationToken = null,
+            [Query] int? limit = null);
 
         [Put("/{id}")]
         Task<ApiResponse<TEntity>> Update(

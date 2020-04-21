@@ -7,8 +7,11 @@ using Microsoft.Extensions.DependencyInjection;
 using Omu.ValueInjecter;
 using Pantry.AspNetCore.ApplicationModels;
 using Pantry.AspNetCore.Filters;
+using Pantry.AspNetCore.Models;
+using Pantry.Continuation;
 using Pantry.Exceptions;
 using Pantry.Mapping;
+using Pantry.Queries;
 using Pantry.Traits;
 
 namespace Pantry.AspNetCore.Controllers
@@ -115,6 +118,32 @@ namespace Pantry.AspNetCore.Controllers
             {
                 return Ok(result);
             }
+        }
+
+        /// <summary>
+        /// Find all <typeparamref name="TEntity"/>.
+        /// </summary>
+        /// <param name="query">The query parameters.</param>
+        /// <returns>An <see cref="ActionResult{TEntity}"/>.</returns>
+        [CapabilitiesApiExplorerVisibility(Capabilities.FindAll)]
+        [HttpGet("")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesDefaultResponseType]
+        public virtual async Task<ActionResult<ContinuationEnumerableModel<TEntity>>> FindAll(
+            [FromQuery] FindAllQuery<TEntity> query)
+        {
+            if (!Capabilities.HasFlag(Capabilities.FindAll))
+            {
+                return StatusCode(StatusCodes.Status405MethodNotAllowed);
+            }
+
+            query ??= new FindAllQuery<TEntity>();
+
+            var repository = ServiceProvider.GetRequiredService<IRepositoryFindAll<TEntity>>();
+
+            return Ok(
+                new ContinuationEnumerableModel<TEntity>(
+                    await repository.FindAllAsync(query.ContinuationToken, query.Limit).ConfigureAwait(false)));
         }
 
         /// <summary>

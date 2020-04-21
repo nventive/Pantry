@@ -2,7 +2,9 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Pantry.AspNetCore.ApplicationModels;
 using Pantry.AspNetCore.Controllers;
+using Pantry.AspNetCore.Filters;
 
 namespace Pantry.AspNetCore.Tests.Server
 {
@@ -21,7 +23,11 @@ namespace Pantry.AspNetCore.Tests.Server
         {
             services.AddConcurrentDictionaryRepository<StandardEntity>();
             services
-                .AddControllers()
+                .AddControllers(options =>
+                {
+                    options.Conventions.Add(new CapabilitiesApplicationModelConvention());
+                    options.Filters.Add<EntityHttpCacheResponseHeadersAttribute>();
+                })
                 .AddRepositoryController<StandardEntity>("/api/standard-entities-2", Capabilities.GetById);
             services.AddOpenApiDocument();
         }

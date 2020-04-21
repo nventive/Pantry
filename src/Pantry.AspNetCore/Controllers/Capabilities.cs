@@ -45,5 +45,15 @@ namespace Pantry.AspNetCore.Controllers
         /// All CRUD actions.
         /// </summary>
         CRUD = Create | GetById | Update | Delete,
+
+        /// <summary>
+        /// FindAll without query.
+        /// </summary>
+        FindAll = 0b_0010_0000,
+
+        /// <summary>
+        /// All capabilities.
+        /// </summary>
+        All = CRUD | FindAll,
     }
 }
