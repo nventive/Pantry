@@ -387,6 +387,7 @@ namespace Pantry.Azure.TableStorage
                         tableQuery = criterion switch
                         {
                             EqualToPropertyCriterion equalTo => AddFilterCondition(tableQuery, equalTo, QueryComparisons.Equal),
+                            NotEqualToPropertyCriterion notEqualTo => AddFilterCondition(tableQuery, notEqualTo, QueryComparisons.NotEqual),
                             GreaterThanPropertyCriterion gt => AddFilterCondition(tableQuery, gt, QueryComparisons.GreaterThan),
                             GreaterThanOrEqualToPropertyCriterion gte => AddFilterCondition(tableQuery, gte, QueryComparisons.GreaterThanOrEqual),
                             LessThanPropertyCriterion lt => AddFilterCondition(tableQuery, lt, QueryComparisons.LessThan),

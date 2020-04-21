@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Threading;
@@ -342,6 +343,9 @@ namespace Pantry.Azure.Cosmos
                 queryBuilder = criterion switch
                 {
                     EqualToPropertyCriterion equalTo => queryBuilder.Where($"e.{Mapper.ResolveQueryPropertyPaths(equalTo.PropertyPath)}", equalTo.Value),
+                    NotEqualToPropertyCriterion notEqualTo => queryBuilder.Where($"e.{Mapper.ResolveQueryPropertyPaths(notEqualTo.PropertyPath)}", "!=", notEqualTo.Value),
+                    NullPropertyCriterion nullCrit => queryBuilder.WhereRaw(
+                        $"IS_NULL(e.{Mapper.ResolveQueryPropertyPaths(nullCrit.PropertyPath)}) = {nullCrit.IsNull.ToString(CultureInfo.InvariantCulture).ToLowerInvariant()}"),
                     GreaterThanPropertyCriterion gt => queryBuilder.Where($"e.{Mapper.ResolveQueryPropertyPaths(gt.PropertyPath)}", ">", gt.Value),
                     GreaterThanOrEqualToPropertyCriterion gte => queryBuilder.Where($"e.{Mapper.ResolveQueryPropertyPaths(gte.PropertyPath)}", ">=", gte.Value),
                     LessThanPropertyCriterion lt => queryBuilder.Where($"e.{Mapper.ResolveQueryPropertyPaths(lt.PropertyPath)}", "<", lt.Value),

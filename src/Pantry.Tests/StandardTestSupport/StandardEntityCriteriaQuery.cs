@@ -25,6 +25,12 @@ namespace Pantry.Tests.StandardTestSupport
             set => this.StringContains(x => x.Name, value);
         }
 
+        public string? NameNeq
+        {
+            get => this.NotEqualToValue(x => x.Name);
+            set => this.NotEqualTo(x => x.Name, value);
+        }
+
         public int? AgeEq
         {
             get => this.EqualToValue(x => x.Age);
@@ -89,6 +95,12 @@ namespace Pantry.Tests.StandardTestSupport
         {
             get => this.LessThanOrEqualToValue(x => x.NotarizedAt);
             set => this.LessThanOrEqualTo(x => x.NotarizedAt, value);
+        }
+
+        public bool? IsNotarized
+        {
+            get => !this.IsNullValue(x => x.NotarizedAt);
+            set => this.IsNull(x => x.NotarizedAt, !value);
         }
 
         public string? RelatedNameEq

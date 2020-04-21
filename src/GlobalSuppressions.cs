@@ -9,4 +9,5 @@
 
 [assembly: SuppressMessage("Design", "CA1040:Avoid empty interfaces", Justification = "Necessary for DI injection of generic interfaces.")]
 [assembly: SuppressMessage("Globalization", "CA1303:Do not pass literals as localized parameters", Justification = "No Localization support.")]
+[assembly: SuppressMessage("Globalization", "CA1308:Normalize strings to uppercase", Justification = "Why?")]
 [assembly: SuppressMessage("Naming", "CA1710:Identifiers should have correct suffix", Justification = "Often wrong.")]

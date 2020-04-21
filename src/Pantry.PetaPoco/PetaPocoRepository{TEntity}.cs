@@ -400,6 +400,8 @@ namespace Pantry.PetaPoco
                         queryBuilder = criterion switch
                         {
                             EqualToPropertyCriterion equalTo => queryBuilder.WhereRaw($"{column} = ?", equalTo.Value),
+                            NotEqualToPropertyCriterion notEqualTo => queryBuilder.WhereRaw($"{column} <> ?", notEqualTo.Value),
+                            NullPropertyCriterion nullCrit => queryBuilder.WhereRaw($"{column} IS {(nullCrit.IsNull ? string.Empty : "NOT ")}NULL"),
                             GreaterThanPropertyCriterion gt => queryBuilder.WhereRaw($"{column} > ?", gt.Value),
                             GreaterThanOrEqualToPropertyCriterion gte => queryBuilder.WhereRaw($"{column} >= ?", gte.Value),
                             LessThanPropertyCriterion lt => queryBuilder.WhereRaw($"{column} < ?", lt.Value),

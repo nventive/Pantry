@@ -2,9 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using Pantry.Queries.Criteria;
 using Pantry.Reflection;
 
-namespace Pantry.Queries.Criteria
+namespace Pantry.Queries
 {
     /// <summary>
     /// <see cref="ICriteriaQuery{TResult}"/> extension methods.

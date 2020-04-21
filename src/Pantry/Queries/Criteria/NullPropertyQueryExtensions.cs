@@ -9,78 +9,81 @@ namespace Pantry.Queries
     /// <summary>
     /// <see cref="ICriteriaQuery{TResult}"/> extension methods.
     /// </summary>
-    public static class LessThanPropertyQueryExtensions
+    public static class NullPropertyQueryExtensions
     {
         /// <summary>
-        /// Adds a criterion for property value less than.
+        /// Adds a criterion for property null.
         /// </summary>
         /// <typeparam name="TResult">The type of result for the query.</typeparam>
         /// <param name="query">The <see cref="ICriteriaQuery{TResult}"/>.</param>
         /// <param name="propertyPath">The property path.</param>
-        /// <param name="value">The equality value to compare to.</param>
+        /// <param name="isNull">A value indicating whether to query for NULL (true) or NOT NULL (false) values.</param>
         /// <returns>The updated <see cref="ICriteriaQuery{TResult}"/>.</returns>
-        public static ICriteriaQuery<TResult> LessThan<TResult>(this ICriteriaQuery<TResult> query, string propertyPath, object? value)
+        public static ICriteriaQuery<TResult> IsNull<TResult>(this ICriteriaQuery<TResult> query, string propertyPath, bool? isNull = true)
         {
             if (query is null)
             {
                 throw new ArgumentNullException(nameof(query));
             }
 
-            query.AddCriterions(new LessThanPropertyCriterion(propertyPath, value));
+            if (isNull.HasValue)
+            {
+                query.AddCriterions(new NullPropertyCriterion(propertyPath, isNull.Value));
+            }
 
             return query;
         }
 
         /// <summary>
-        /// Adds a criterion for property value less than.
+        /// Adds a criterion for property null.
         /// </summary>
         /// <typeparam name="TResult">The type of result for the query.</typeparam>
         /// <typeparam name="TProperty">The type of property.</typeparam>
         /// <param name="query">The <see cref="ICriteriaQuery{TResult}"/>.</param>
         /// <param name="propertyPath">The property path.</param>
-        /// <param name="value">The equality value to compare to.</param>
+        /// <param name="isNull">A value indicating whether to query for NULL (true) or NOT NULL (false) values.</param>
         /// <returns>The updated <see cref="ICriteriaQuery{TResult}"/>.</returns>
-        public static ICriteriaQuery<TResult> LessThan<TResult, TProperty>(
+        public static ICriteriaQuery<TResult> IsNull<TResult, TProperty>(
             this ICriteriaQuery<TResult> query,
             Expression<Func<TResult, TProperty>> propertyPath,
-            TProperty value)
-            => query.LessThan(PropertyVisitor.GetPropertyPath(propertyPath), value);
+            bool? isNull = true)
+            => query.IsNull(PropertyVisitor.GetPropertyPath(propertyPath), isNull);
 
         /// <summary>
-        /// Finds the first set value for value less than comparison of <paramref name="propertyPath"/>.
-        /// This is the "inverse" of <see cref="LessThan{TResult}(ICriteriaQuery{TResult}, string, object?)"/>.
+        /// Finds the first set value for inequality comparison of <paramref name="propertyPath"/>.
+        /// This is the "inverse" of <see cref="IsNull{TResult, TProperty}(ICriteriaQuery{TResult}, Expression{Func{TResult, TProperty}}, bool?)"/>.
         /// </summary>
         /// <typeparam name="TResult">The type of result for the query.</typeparam>
         /// <typeparam name="TValue">The type of value.</typeparam>
         /// <param name="query">The <see cref="ICriteriaQuery{TResult}"/>.</param>
         /// <param name="propertyPath">The property path.</param>
         /// <returns>The found value, or default if not found.</returns>
-        public static TValue LessThanValue<TResult, TValue>(this ICriteriaQuery<TResult> query, string propertyPath)
+        public static bool? IsNullValue<TResult, TValue>(this ICriteriaQuery<TResult> query, string propertyPath)
         {
             if (query is null)
             {
                 throw new ArgumentNullException(nameof(query));
             }
 
-            return (TValue)query
+            return query
                 .GetCriterions()
-                .OfType<LessThanPropertyCriterion>()
+                .OfType<NullPropertyCriterion>()
                 .FirstOrDefault(x => x.PropertyPath == propertyPath)?
-                .Value!;
+                .IsNull;
         }
 
         /// <summary>
-        /// Finds the first set value for value less than comparison of <paramref name="propertyPath"/>.
-        /// This is the "inverse" of <see cref="LessThan{TResult, TProperty}(ICriteriaQuery{TResult}, Expression{Func{TResult, TProperty}}, TProperty)"/>.
+        /// Finds the first set value for inequality comparison of <paramref name="propertyPath"/>.
+        /// This is the "inverse" of <see cref="IsNull{TResult, TProperty}(ICriteriaQuery{TResult}, Expression{Func{TResult, TProperty}}, bool?)"/>.
         /// </summary>
         /// <typeparam name="TResult">The type of result for the query.</typeparam>
         /// <typeparam name="TValue">The type of value.</typeparam>
         /// <param name="query">The <see cref="ICriteriaQuery{TResult}"/>.</param>
         /// <param name="propertyPath">The property path.</param>
         /// <returns>The found value, or default if not found.</returns>
-        public static TValue LessThanValue<TResult, TValue>(
+        public static bool? IsNullValue<TResult, TValue>(
             this ICriteriaQuery<TResult> query,
             Expression<Func<TResult, TValue>> propertyPath)
-            => query.LessThanValue<TResult, TValue>(PropertyVisitor.GetPropertyPath(propertyPath));
+            => query.IsNullValue<TResult, TValue>(PropertyVisitor.GetPropertyPath(propertyPath));
     }
 }

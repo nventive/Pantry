@@ -292,6 +292,8 @@ namespace Pantry.InMemory
                 queryable = criterion switch
                 {
                     EqualToPropertyCriterion equalTo => queryable.Where($"{equalTo.PropertyPath} == @0", equalTo.Value),
+                    NotEqualToPropertyCriterion notEqualTo => queryable.Where($"{notEqualTo.PropertyPath} != @0", notEqualTo.Value),
+                    NullPropertyCriterion nullCrit => queryable.Where($"{nullCrit.PropertyPath} {(nullCrit.IsNull ? "==" : "!=")} null"),
                     GreaterThanPropertyCriterion gt => queryable.Where($"{gt.PropertyPath} > @0", gt.Value),
                     GreaterThanOrEqualToPropertyCriterion gte => queryable.Where($"{gte.PropertyPath} >= @0", gte.Value),
                     LessThanPropertyCriterion lt => queryable.Where($"{lt.PropertyPath} < @0", lt.Value),
