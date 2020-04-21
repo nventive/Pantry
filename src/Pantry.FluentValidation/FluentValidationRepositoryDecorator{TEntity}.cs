@@ -2,6 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using FluentValidation;
+using Microsoft.Extensions.DependencyInjection;
 using Pantry.Decorators;
 
 namespace Pantry.FluentValidation
@@ -18,23 +19,32 @@ namespace Pantry.FluentValidation
         /// <summary>
         /// Initializes a new instance of the <see cref="FluentValidationRepositoryDecorator{TEntity}"/> class.
         /// </summary>
-        /// <param name="validator">The <see cref="IValidator"/>.</param>
+        /// <param name="serviceProvider">The <see cref="IServiceProvider"/>.</param>
         /// <param name="innerRepository">The inner repository.</param>
         /// <param name="includeDefaultRuleSet">true to include the default RuleSet when validating, false otherwise.</param>
+        /// <remarks>
+        /// We use <see cref="IServiceProvider"/> here instead of resolving the <see cref="IValidator"/> directly
+        /// to avoid circular resolution on the same provider instance.
+        /// </remarks>
         public FluentValidationRepositoryDecorator(
-            IValidator<TEntity> validator,
+            IServiceProvider serviceProvider,
             object innerRepository,
             bool includeDefaultRuleSet = true)
             : base(innerRepository)
         {
-            Validator = validator ?? throw new ArgumentNullException(nameof(validator));
+            ServiceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
             IncludeDefaultRuleSet = includeDefaultRuleSet;
         }
 
         /// <summary>
+        /// Gets the <see cref="ServiceProvider"/>.
+        /// </summary>
+        protected IServiceProvider ServiceProvider { get; }
+
+        /// <summary>
         /// Gets the validator.
         /// </summary>
-        protected IValidator<TEntity> Validator { get; }
+        protected IValidator<TEntity> Validator => ServiceProvider.GetRequiredService<IValidator<TEntity>>();
 
         /// <summary>
         /// Gets a value indicating whether to include the default RuleSet when validating.

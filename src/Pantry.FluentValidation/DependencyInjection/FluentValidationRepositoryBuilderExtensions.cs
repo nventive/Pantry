@@ -30,10 +30,7 @@ namespace Microsoft.Extensions.DependencyInjection
             }
 
             builder.AddRepositoryDecorator(
-                (repo, sp) => new FluentValidationRepositoryDecorator<TEntity>(
-                    sp.GetRequiredService<IValidator<TEntity>>(),
-                    repo,
-                    includeDefaultRuleSet));
+                (repo, sp) => new FluentValidationRepositoryDecorator<TEntity>(sp, repo, includeDefaultRuleSet));
 
             return builder;
         }
