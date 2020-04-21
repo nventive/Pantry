@@ -25,7 +25,7 @@ namespace Pantry.Queries.Criteria
                 throw new ArgumentNullException(nameof(query));
             }
 
-            query.Add(new GreaterThanOrEqualToPropertyCriterion(propertyPath, value));
+            query.AddCriterions(new GreaterThanOrEqualToPropertyCriterion(propertyPath, value));
 
             return query;
         }
@@ -62,6 +62,7 @@ namespace Pantry.Queries.Criteria
             }
 
             return (TValue)query
+                .GetCriterions()
                 .OfType<GreaterThanOrEqualToPropertyCriterion>()
                 .FirstOrDefault(x => x.PropertyPath == propertyPath)?
                 .Value!;

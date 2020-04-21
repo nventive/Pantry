@@ -25,7 +25,7 @@ namespace Pantry.Queries.Criteria
                 throw new ArgumentNullException(nameof(query));
             }
 
-            query.Add(new OrderCriterion(propertyPath, ascending));
+            query.AddCriterions(new OrderCriterion(propertyPath, ascending));
 
             return query;
         }
@@ -50,13 +50,13 @@ namespace Pantry.Queries.Criteria
                 switch (firstLetter)
                 {
                     case '+':
-                        query.Add(new OrderCriterion(propertyPathAndAscending.Substring(1), true));
+                        query.AddCriterions(new OrderCriterion(propertyPathAndAscending.Substring(1), true));
                         break;
                     case '-':
-                        query.Add(new OrderCriterion(propertyPathAndAscending.Substring(1), false));
+                        query.AddCriterions(new OrderCriterion(propertyPathAndAscending.Substring(1), false));
                         break;
                     default:
-                        query.Add(new OrderCriterion(propertyPathAndAscending));
+                        query.AddCriterions(new OrderCriterion(propertyPathAndAscending));
                         break;
                 }
             }
@@ -94,6 +94,7 @@ namespace Pantry.Queries.Criteria
             }
 
             var orderCriterion = query
+                .GetCriterions()
                 .OfType<OrderCriterion>()
                 .FirstOrDefault();
 

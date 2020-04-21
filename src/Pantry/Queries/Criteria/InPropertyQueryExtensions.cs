@@ -28,7 +28,7 @@ namespace Pantry.Queries.Criteria
 
             if (values != null)
             {
-                query.Add(new InPropertyCriterion(propertyPath, values));
+                query.AddCriterions(new InPropertyCriterion(propertyPath, values));
             }
 
             return query;
@@ -66,6 +66,7 @@ namespace Pantry.Queries.Criteria
             }
 
             return (IEnumerable<TValue>)query
+                .GetCriterions()
                 .OfType<InPropertyCriterion>()
                 .FirstOrDefault(x => x.PropertyPath == propertyPath)?
                 .Values!;

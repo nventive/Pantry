@@ -28,7 +28,7 @@ namespace Pantry.Queries.Criteria
 
             if (!string.IsNullOrEmpty(value))
             {
-                query.Add(new StringContainsPropertyCriterion(propertyPath, value));
+                query.AddCriterions(new StringContainsPropertyCriterion(propertyPath, value));
             }
 
             return query;
@@ -65,6 +65,7 @@ namespace Pantry.Queries.Criteria
             }
 
             return (TValue)query
+                .GetCriterions()
                 .OfType<StringContainsPropertyCriterion>()
                 .FirstOrDefault(x => x.PropertyPath == propertyPath)?
                 .Value!;

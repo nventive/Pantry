@@ -369,7 +369,7 @@ namespace Pantry.PetaPoco
                 query,
                 (queryBuilder) =>
                 {
-                    foreach (var criterion in query)
+                    foreach (var criterion in query.GetCriterions())
                     {
                         if (criterion is PropertyCriterion propertyCriterion && propertyCriterion.PropertyPathContainsIndexer)
                         {

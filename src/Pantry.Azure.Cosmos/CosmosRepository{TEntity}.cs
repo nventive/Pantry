@@ -332,7 +332,7 @@ namespace Pantry.Azure.Cosmos
                 .Select("*")
                 .Where($"e.{CosmosDocument.TypeAttribute}", Mapper.GetEntityType());
 
-            foreach (var criterion in query)
+            foreach (var criterion in query.GetCriterions())
             {
                 if (criterion is PropertyCriterion propertyCriterion && propertyCriterion.PropertyPathContainsIndexer)
                 {

@@ -377,7 +377,7 @@ namespace Pantry.Azure.TableStorage
                 query,
                 tableQuery =>
                 {
-                    foreach (var criterion in query)
+                    foreach (var criterion in query.GetCriterions())
                     {
                         if (criterion is PropertyCriterion propertyCriterion && propertyCriterion.PropertyPathContainsSubPath)
                         {

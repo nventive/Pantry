@@ -6,8 +6,10 @@ namespace Pantry.Queries
     /// <see cref="ICriteriaQuery{TResult}"/> implementation.
     /// </summary>
     /// <typeparam name="TResult">The return type.</typeparam>
-    public class CriteriaQuery<TResult> : List<ICriterion>, ICriteriaQuery<TResult>
+    public class CriteriaQuery<TResult> : ICriteriaQuery<TResult>
     {
+        private readonly List<ICriterion> _criterions = new List<ICriterion>();
+
         /// <inheritdoc/>
         public int Limit { get; set; } = Query.DefaultLimit;
 
@@ -15,6 +17,15 @@ namespace Pantry.Queries
         public string? ContinuationToken { get; set; }
 
         /// <inheritdoc/>
-        public override string ToString() => $"[{GetType().Name}]: {string.Join(", ", this)}";
+        public void AddCriterions(params ICriterion[] criterions) => _criterions.AddRange(criterions);
+
+        /// <inheritdoc/>
+        public IEnumerable<ICriterion> GetCriterions() => _criterions;
+
+        /// <inheritdoc/>
+        public void RemoveCriterion(ICriterion criterion) => _criterions.Remove(criterion);
+
+        /// <inheritdoc/>
+        public override string ToString() => $"[{GetType().Name}]: {string.Join(", ", _criterions)}";
     }
 }
