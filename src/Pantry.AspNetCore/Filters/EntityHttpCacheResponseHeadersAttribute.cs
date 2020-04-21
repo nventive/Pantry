@@ -36,7 +36,14 @@ namespace Pantry.AspNetCore.Filters
 
                 if (objectResult.Value is IETaggable taggable && !string.IsNullOrEmpty(taggable.ETag))
                 {
-                    context.HttpContext.Response.GetTypedHeaders().ETag = new EntityTagHeaderValue($"\"{taggable.ETag}\"", true);
+                    if (EntityTagHeaderValue.TryParse(taggable.ETag, out var parsedEtag))
+                    {
+                        context.HttpContext.Response.GetTypedHeaders().ETag = parsedEtag;
+                    }
+                    else
+                    {
+                        context.HttpContext.Response.GetTypedHeaders().ETag = new EntityTagHeaderValue($"\"{taggable.ETag}\"", true);
+                    }
 
                     if (context.HttpContext.Request.GetTypedHeaders().IfNoneMatch != null
                      && context.HttpContext.Request.GetTypedHeaders().IfNoneMatch.Any()

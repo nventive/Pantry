@@ -101,9 +101,11 @@ namespace Pantry.AspNetCore.Tests.Controllers
             await Factory.Services.GetRequiredService<IRepositoryAdd<StandardEntity>>().AddAsync(entity);
             var client = GetRepositoryApiClient("/api/standard-entities-all");
 
-            var result = await client.GetById(
+            var result = await client.GetById(entity.Id);
+
+            result = await client.GetById(
                 entity.Id,
-                ifNoneMatch: new EntityTagHeaderValue($"\"{entity.ETag}\"", true).ToString());
+                ifNoneMatch: result.Headers.ETag.ToString());
 
             result.StatusCode.Should().Be(HttpStatusCode.NotModified);
         }
