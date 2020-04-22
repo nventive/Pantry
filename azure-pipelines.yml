@@ -68,6 +68,17 @@ steps:
     command: custom
     arguments: pack templates/Pantry.Templates.nuspec -OutputDirectory $(build.artifactStagingDirectory) -version $(GitVersion.NuGetVersionV2) -NoDefaultExcludes
 
+- powershell: |
+    choco install docfx -y
+    docfx docfx.json -o $(build.artifactStagingDirectory)\docs
+    if ($lastexitcode -ne 0){
+      throw ("Error generating document")
+    }
+  workingDirectory: docs
+  env:
+    build.artifactStagingDirectory: $(build.artifactStagingDirectory)
+  displayName: "Build documentation"
+
 - task: PublishBuildArtifacts@1
   displayName: 'Publish Build Artifacts'
 
