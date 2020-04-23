@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace Pantry.Generators
 {
     /// <summary>
-    /// <see cref="IETagGenerator{T}"/> that uses MD5.
+    /// <see cref="IETagGenerator{T}"/> that uses SHA1.
     /// </summary>
     /// <typeparam name="T">The type to generate etags for.</typeparam>
     public class SHA1ETagGenerator<T> : IETagGenerator<T>
