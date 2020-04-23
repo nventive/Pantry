@@ -4,8 +4,7 @@ using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.DependencyInjection;
 using Pantry.Continuation;
 using Pantry.Exceptions;
 using Pantry.Generators;
@@ -22,7 +21,7 @@ namespace Pantry.InMemory
     /// <see cref="IRepository{T}"/> implementation using in-memory storage.
     /// </summary>
     /// <typeparam name="TEntity">The entity type.</typeparam>
-    public class ConcurrentDictionaryRepository<TEntity> : IRepository<TEntity>,
+    public class ConcurrentDictionaryRepository<TEntity> : Repository<TEntity>,
                                                            IRepositoryClear<TEntity>,
                                                            IRepositoryFind<TEntity, TEntity, InMemoryLinqQuery<TEntity>>
         where TEntity : class, IIdentifiable
@@ -31,25 +30,13 @@ namespace Pantry.InMemory
         /// Initializes a new instance of the <see cref="ConcurrentDictionaryRepository{T}"/> class.
         /// </summary>
         /// <param name="storage">The storage.</param>
-        /// <param name="idGenerator">The <see cref="IIdGenerator{T}"/>.</param>
-        /// <param name="etagGenerator">The <see cref="IETagGenerator{T}"/>.</param>
-        /// <param name="timestampProvider">The <see cref="ITimestampProvider"/>.</param>
-        /// <param name="continuationTokenEncoder">The <see cref="IContinuationTokenEncoder{TContinuationToken}"/>.</param>
-        /// <param name="logger">The <see cref="ILogger"/>.</param>
+        /// <param name="serviceProvider">The <see cref="IServiceProvider"/>.</param>
         public ConcurrentDictionaryRepository(
             ConcurrentDictionary<string, TEntity> storage,
-            IIdGenerator<TEntity> idGenerator,
-            IETagGenerator<TEntity> etagGenerator,
-            ITimestampProvider timestampProvider,
-            IContinuationTokenEncoder<LimitOffsetContinuationToken> continuationTokenEncoder,
-            ILogger<ConcurrentDictionaryRepository<TEntity>>? logger = null)
+            IServiceProvider serviceProvider)
+            : base(serviceProvider)
         {
-            Storage = storage;
-            IdGenerator = idGenerator ?? throw new ArgumentNullException(nameof(idGenerator));
-            EtagGenerator = etagGenerator ?? throw new ArgumentNullException(nameof(etagGenerator));
-            TimestampProvider = timestampProvider ?? throw new ArgumentNullException(nameof(timestampProvider));
-            ContinuationTokenEncoder = continuationTokenEncoder ?? throw new ArgumentNullException(nameof(continuationTokenEncoder));
-            Logger = logger ?? NullLogger<ConcurrentDictionaryRepository<TEntity>>.Instance;
+            Storage = storage ?? throw new ArgumentNullException(nameof(storage));
         }
 
         /// <summary>
@@ -58,32 +45,12 @@ namespace Pantry.InMemory
         protected ConcurrentDictionary<string, TEntity> Storage { get; }
 
         /// <summary>
-        /// Gets the <see cref="IIdGenerator{T}"/>.
-        /// </summary>
-        protected IIdGenerator<TEntity> IdGenerator { get; }
-
-        /// <summary>
-        /// Gets the <see cref="IETagGenerator{T}"/>.
-        /// </summary>
-        protected IETagGenerator<TEntity> EtagGenerator { get; }
-
-        /// <summary>
-        /// Gets the <see cref="ITimestampProvider"/>.
-        /// </summary>
-        protected ITimestampProvider TimestampProvider { get; }
-
-        /// <summary>
         /// Gets the <see cref="IContinuationTokenEncoder{LimitOffsetContinuationToken}"/>.
         /// </summary>
-        protected IContinuationTokenEncoder<LimitOffsetContinuationToken> ContinuationTokenEncoder { get; }
-
-        /// <summary>
-        /// Gets the <see cref="ILogger"/>.
-        /// </summary>
-        protected ILogger Logger { get; }
+        protected IContinuationTokenEncoder<LimitOffsetContinuationToken> ContinuationTokenEncoder => ServiceProvider.GetRequiredService<IContinuationTokenEncoder<LimitOffsetContinuationToken>>();
 
         /// <inheritdoc/>
-        public virtual async Task<TEntity> AddAsync(TEntity entity, CancellationToken cancellationToken = default)
+        public override async Task<TEntity> AddAsync(TEntity entity, CancellationToken cancellationToken = default)
         {
             if (entity is null)
             {
@@ -125,31 +92,7 @@ namespace Pantry.InMemory
         }
 
         /// <inheritdoc/>
-        public virtual async Task<(TEntity, bool)> AddOrUpdateAsync(TEntity entity, CancellationToken cancellationToken = default)
-        {
-            if (entity is null)
-            {
-                throw new ArgumentNullException(nameof(entity));
-            }
-
-            if (string.IsNullOrEmpty(entity.Id))
-            {
-                return (await AddAsync(entity, cancellationToken).ConfigureAwait(false), true);
-            }
-
-            var existingEntity = await TryGetByIdAsync(entity.Id, cancellationToken).ConfigureAwait(false);
-            if (existingEntity is null)
-            {
-                return (await AddAsync(entity, cancellationToken).ConfigureAwait(false), true);
-            }
-            else
-            {
-                return (await UpdateAsync(entity, cancellationToken).ConfigureAwait(false), false);
-            }
-        }
-
-        /// <inheritdoc/>
-        public virtual async Task<TEntity?> TryGetByIdAsync(string id, CancellationToken cancellationToken = default)
+        public override async Task<TEntity?> TryGetByIdAsync(string id, CancellationToken cancellationToken = default)
         {
             Storage.TryGetValue(id, out var result);
 
@@ -162,7 +105,7 @@ namespace Pantry.InMemory
         }
 
         /// <inheritdoc/>
-        public virtual async Task<TEntity> UpdateAsync(TEntity entity, CancellationToken cancellationToken = default)
+        public override async Task<TEntity> UpdateAsync(TEntity entity, CancellationToken cancellationToken = default)
         {
             if (entity is null)
             {
@@ -233,7 +176,7 @@ namespace Pantry.InMemory
         }
 
         /// <inheritdoc/>
-        public virtual async Task<bool> TryRemoveAsync(string id, CancellationToken cancellationToken = default)
+        public override async Task<bool> TryRemoveAsync(string id, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrEmpty(id))
             {
@@ -262,7 +205,7 @@ namespace Pantry.InMemory
         }
 
         /// <inheritdoc/>
-        public virtual async Task<IContinuationEnumerable<TEntity>> FindAllAsync(string? continuationToken, int limit = Query.DefaultLimit, CancellationToken cancellationToken = default)
+        public override async Task<IContinuationEnumerable<TEntity>> FindAllAsync(string? continuationToken, int limit = Query.DefaultLimit, CancellationToken cancellationToken = default)
         {
             var result = await ContinuationTokenEncoder.ToContinuationEnumerable(
                 Storage.Values,
@@ -273,7 +216,7 @@ namespace Pantry.InMemory
         }
 
         /// <inheritdoc/>
-        public virtual async Task<IContinuationEnumerable<TEntity>> FindAsync(ICriteriaQuery<TEntity> query, CancellationToken cancellationToken = default)
+        public override async Task<IContinuationEnumerable<TEntity>> FindAsync(ICriteriaQuery<TEntity> query, CancellationToken cancellationToken = default)
         {
             if (query is null)
             {

@@ -4,15 +4,13 @@ using System.Data.Common;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 using Pantry.Continuation;
 using Pantry.Exceptions;
-using Pantry.Generators;
 using Pantry.Logging;
 using Pantry.PetaPoco.Queries;
-using Pantry.Providers;
 using Pantry.Queries;
 using Pantry.Queries.Criteria;
 using Pantry.Traits;
@@ -25,7 +23,7 @@ namespace Pantry.PetaPoco
     /// PetaPoco Repository Implementation.
     /// </summary>
     /// <typeparam name="TEntity">The entity type.</typeparam>
-    public class PetaPocoRepository<TEntity> : IRepository<TEntity>,
+    public class PetaPocoRepository<TEntity> : Repository<TEntity>,
                                                IRepositoryFind<TEntity, TEntity, PetaPocoSqlBuilderQuery<TEntity>>,
                                                IRepositoryClear<TEntity>,
                                                IHealthCheck
@@ -35,26 +33,13 @@ namespace Pantry.PetaPoco
         /// Initializes a new instance of the <see cref="PetaPocoRepository{TEntity}"/> class.
         /// </summary>
         /// <param name="databaseFor">The <see cref="PetaPocoDatabaseFor{TEntity}"/>.</param>
-        /// <param name="idGenerator">The <see cref="IIdGenerator{TEntity}"/>.</param>
-        /// <param name="etagGenerator">The <see cref="IETagGenerator{T}"/>.</param>
-        /// <param name="timestampProvider">The <see cref="ITimestampProvider"/>.</param>
-        /// <param name="continuationTokenEncoder">The <see cref="IContinuationTokenEncoder{TContinuationToken}"/>.</param>
-        /// <param name="logger">The <see cref="ILogger"/>.</param>
+        /// <param name="serviceProvider">The <see cref="IServiceProvider"/>.</param>
         public PetaPocoRepository(
             PetaPocoDatabaseFor<TEntity> databaseFor,
-            IIdGenerator<TEntity> idGenerator,
-            IETagGenerator<TEntity> etagGenerator,
-            ITimestampProvider timestampProvider,
-            IContinuationTokenEncoder<PageContinuationToken> continuationTokenEncoder,
-            ILogger<PetaPocoRepository<TEntity>>? logger = null)
+            IServiceProvider serviceProvider)
+            : base(serviceProvider)
         {
             DatabaseFor = databaseFor ?? throw new ArgumentNullException(nameof(databaseFor));
-            IdGenerator = idGenerator ?? throw new ArgumentNullException(nameof(idGenerator));
-            EtagGenerator = etagGenerator ?? throw new ArgumentNullException(nameof(etagGenerator));
-            TimestampProvider = timestampProvider ?? throw new ArgumentNullException(nameof(timestampProvider));
-            ContinuationTokenEncoder = continuationTokenEncoder ?? throw new ArgumentNullException(nameof(continuationTokenEncoder));
-            Logger = logger ?? NullLogger<PetaPocoRepository<TEntity>>.Instance;
-
             if (Logger.IsEnabled(LogLevel.Trace))
             {
                 Database.CommandExecuting += (_, args) =>
@@ -73,29 +58,9 @@ namespace Pantry.PetaPoco
         protected PetaPocoDatabaseFor<TEntity> DatabaseFor { get; }
 
         /// <summary>
-        /// Gets the <see cref="IIdGenerator{T}"/>.
-        /// </summary>
-        protected IIdGenerator<TEntity> IdGenerator { get; }
-
-        /// <summary>
-        /// Gets the <see cref="IETagGenerator{T}"/>.
-        /// </summary>
-        protected IETagGenerator<TEntity> EtagGenerator { get; }
-
-        /// <summary>
-        /// Gets the <see cref="ITimestampProvider"/>.
-        /// </summary>
-        protected ITimestampProvider TimestampProvider { get; }
-
-        /// <summary>
         /// Gets the <see cref="IContinuationTokenEncoder{LimitPageContinuationToken}"/>.
         /// </summary>
-        protected IContinuationTokenEncoder<PageContinuationToken> ContinuationTokenEncoder { get; }
-
-        /// <summary>
-        /// Gets the <see cref="ILogger"/>.
-        /// </summary>
-        protected ILogger Logger { get; }
+        protected IContinuationTokenEncoder<PageContinuationToken> ContinuationTokenEncoder => ServiceProvider.GetRequiredService<IContinuationTokenEncoder<PageContinuationToken>>();
 
         /// <summary>
         /// Gets the <see cref="IDatabase"/>.
@@ -103,7 +68,7 @@ namespace Pantry.PetaPoco
         protected IDatabase Database => DatabaseFor.Database;
 
         /// <inheritdoc/>
-        public virtual async Task<TEntity> AddAsync(TEntity entity, CancellationToken cancellationToken = default)
+        public override async Task<TEntity> AddAsync(TEntity entity, CancellationToken cancellationToken = default)
         {
             if (entity is null)
             {
@@ -156,31 +121,7 @@ namespace Pantry.PetaPoco
         }
 
         /// <inheritdoc/>
-        public virtual async Task<(TEntity, bool)> AddOrUpdateAsync(TEntity entity, CancellationToken cancellationToken = default)
-        {
-            if (entity is null)
-            {
-                throw new ArgumentNullException(nameof(entity));
-            }
-
-            if (string.IsNullOrEmpty(entity.Id))
-            {
-                return (await AddAsync(entity, cancellationToken).ConfigureAwait(false), true);
-            }
-
-            var existingEntity = await TryGetByIdAsync(entity.Id, cancellationToken).ConfigureAwait(false);
-            if (existingEntity is null)
-            {
-                return (await AddAsync(entity, cancellationToken).ConfigureAwait(false), true);
-            }
-            else
-            {
-                return (await UpdateAsync(entity, cancellationToken).ConfigureAwait(false), false);
-            }
-        }
-
-        /// <inheritdoc/>
-        public virtual async Task<TEntity?> TryGetByIdAsync(string id, CancellationToken cancellationToken = default)
+        public override async Task<TEntity?> TryGetByIdAsync(string id, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrEmpty(id))
             {
@@ -198,7 +139,7 @@ namespace Pantry.PetaPoco
         }
 
         /// <inheritdoc/>
-        public virtual async Task<TEntity> UpdateAsync(TEntity entity, CancellationToken cancellationToken = default)
+        public override async Task<TEntity> UpdateAsync(TEntity entity, CancellationToken cancellationToken = default)
         {
             if (entity is null)
             {
@@ -285,7 +226,7 @@ namespace Pantry.PetaPoco
         }
 
         /// <inheritdoc/>
-        public virtual async Task<bool> TryRemoveAsync(string id, CancellationToken cancellationToken = default)
+        public override async Task<bool> TryRemoveAsync(string id, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrEmpty(id))
             {
@@ -315,7 +256,7 @@ namespace Pantry.PetaPoco
         }
 
         /// <inheritdoc/>
-        public virtual Task<IContinuationEnumerable<TEntity>> FindAllAsync(string? continuationToken, int limit = Query.DefaultLimit, CancellationToken cancellationToken = default)
+        public override Task<IContinuationEnumerable<TEntity>> FindAllAsync(string? continuationToken, int limit = Query.DefaultLimit, CancellationToken cancellationToken = default)
         {
             return ExecuteFindAsync(
                 new FindAllQuery<TEntity> { ContinuationToken = continuationToken, Limit = limit },
@@ -324,7 +265,7 @@ namespace Pantry.PetaPoco
         }
 
         /// <inheritdoc/>
-        public virtual async Task<IContinuationEnumerable<TEntity>> FindAsync(ICriteriaQuery<TEntity> query, CancellationToken cancellationToken = default)
+        public override async Task<IContinuationEnumerable<TEntity>> FindAsync(ICriteriaQuery<TEntity> query, CancellationToken cancellationToken = default)
         {
             if (query is null)
             {

@@ -5,13 +5,12 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.Cosmos.Table;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 using Pantry.Azure.TableStorage.Queries;
 using Pantry.Continuation;
 using Pantry.Exceptions;
-using Pantry.Generators;
 using Pantry.Logging;
 using Pantry.Queries;
 using Pantry.Queries.Criteria;
@@ -23,7 +22,7 @@ namespace Pantry.Azure.TableStorage
     /// Azure Table Storage Repository Implementation.
     /// </summary>
     /// <typeparam name="TEntity">The entity type.</typeparam>
-    public class AzureTableStorageRepository<TEntity> : IRepository<TEntity>,
+    public class AzureTableStorageRepository<TEntity> : Repository<TEntity>,
                                                         IRepositoryFind<TEntity, TEntity, AzureTableStorageTableQuery<TEntity>>,
                                                         IHealthCheck
         where TEntity : class, IIdentifiable, new()
@@ -32,22 +31,13 @@ namespace Pantry.Azure.TableStorage
         /// Initializes a new instance of the <see cref="AzureTableStorageRepository{T}"/> class.
         /// </summary>
         /// <param name="cloudTableFor">The <see cref="CloudTableFor{T}"/> instance to use.</param>
-        /// <param name="idGenerator">The <see cref="IIdGenerator{T}"/>.</param>
-        /// <param name="mapper">The mapper to <see cref="DynamicTableEntity"/>.</param>
-        /// <param name="continuationTokenEncoder">The <see cref="IContinuationTokenEncoder{TableContinuationToken}"/>.</param>
-        /// <param name="logger">The <see cref="ILogger"/>.</param>
+        /// <param name="serviceProvider">The <see cref="IServiceProvider"/>.</param>
         public AzureTableStorageRepository(
             CloudTableFor<TEntity> cloudTableFor,
-            IIdGenerator<TEntity> idGenerator,
-            IDynamicTableEntityMapper<TEntity> mapper,
-            IContinuationTokenEncoder<TableContinuationToken> continuationTokenEncoder,
-            ILogger<AzureTableStorageRepository<TEntity>>? logger = null)
+            IServiceProvider serviceProvider)
+            : base(serviceProvider)
         {
             CloudTable = cloudTableFor?.CloudTable ?? throw new ArgumentNullException(nameof(cloudTableFor));
-            IdGenerator = idGenerator ?? throw new ArgumentNullException(nameof(idGenerator));
-            Mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
-            ContinuationTokenEncoder = continuationTokenEncoder ?? throw new ArgumentNullException(nameof(continuationTokenEncoder));
-            Logger = logger ?? NullLogger<AzureTableStorageRepository<TEntity>>.Instance;
         }
 
         /// <summary>
@@ -56,27 +46,17 @@ namespace Pantry.Azure.TableStorage
         protected CloudTable CloudTable { get; }
 
         /// <summary>
-        /// Gets the <see cref="IIdGenerator{T}"/>.
-        /// </summary>
-        protected IIdGenerator<TEntity> IdGenerator { get; }
-
-        /// <summary>
         /// Gets the <see cref="IDynamicTableEntityMapper{TEntity}"/>.
         /// </summary>
-        protected IDynamicTableEntityMapper<TEntity> Mapper { get; }
+        protected IDynamicTableEntityMapper<TEntity> Mapper => ServiceProvider.GetRequiredService<IDynamicTableEntityMapper<TEntity>>();
 
         /// <summary>
         /// Gets the <see cref="IContinuationTokenEncoder{TableContinuationToken}"/>.
         /// </summary>
-        protected IContinuationTokenEncoder<TableContinuationToken> ContinuationTokenEncoder { get; }
-
-        /// <summary>
-        /// Gets the <see cref="ILogger"/>.
-        /// </summary>
-        protected ILogger Logger { get; }
+        protected IContinuationTokenEncoder<TableContinuationToken> ContinuationTokenEncoder => ServiceProvider.GetRequiredService<IContinuationTokenEncoder<TableContinuationToken>>();
 
         /// <inheritdoc/>
-        public virtual async Task<TEntity> AddAsync(TEntity entity, CancellationToken cancellationToken = default)
+        public override async Task<TEntity> AddAsync(TEntity entity, CancellationToken cancellationToken = default)
         {
             if (entity is null)
             {
@@ -119,31 +99,7 @@ namespace Pantry.Azure.TableStorage
         }
 
         /// <inheritdoc/>
-        public virtual async Task<(TEntity, bool)> AddOrUpdateAsync(TEntity entity, CancellationToken cancellationToken = default)
-        {
-            if (entity is null)
-            {
-                throw new ArgumentNullException(nameof(entity));
-            }
-
-            if (string.IsNullOrEmpty(entity.Id))
-            {
-                return (await AddAsync(entity, cancellationToken).ConfigureAwait(false), true);
-            }
-
-            var existingEntity = await TryGetByIdAsync(entity.Id, cancellationToken).ConfigureAwait(false);
-            if (existingEntity is null)
-            {
-                return (await AddAsync(entity, cancellationToken).ConfigureAwait(false), true);
-            }
-            else
-            {
-                return (await UpdateAsync(entity, cancellationToken).ConfigureAwait(false), false);
-            }
-        }
-
-        /// <inheritdoc/>
-        public virtual async Task<TEntity?> TryGetByIdAsync(string id, CancellationToken cancellationToken = default)
+        public override async Task<TEntity?> TryGetByIdAsync(string id, CancellationToken cancellationToken = default)
         {
             var (partitionKey, rowKey) = Mapper.GetStorageKeys(id);
             var operationResult = await CloudTable.ExecuteAsync(
@@ -163,7 +119,7 @@ namespace Pantry.Azure.TableStorage
         }
 
         /// <inheritdoc/>
-        public virtual async Task<TEntity> UpdateAsync(TEntity entity, CancellationToken cancellationToken = default)
+        public override async Task<TEntity> UpdateAsync(TEntity entity, CancellationToken cancellationToken = default)
         {
             if (entity is null)
             {
@@ -245,7 +201,7 @@ namespace Pantry.Azure.TableStorage
         }
 
         /// <inheritdoc/>
-        public virtual async Task<bool> TryRemoveAsync(string id, CancellationToken cancellationToken = default)
+        public override async Task<bool> TryRemoveAsync(string id, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrEmpty(id))
             {
@@ -285,7 +241,7 @@ namespace Pantry.Azure.TableStorage
         }
 
         /// <inheritdoc/>
-        public virtual Task<IContinuationEnumerable<TEntity>> FindAllAsync(string? continuationToken, int limit = Query.DefaultLimit, CancellationToken cancellationToken = default)
+        public override Task<IContinuationEnumerable<TEntity>> FindAllAsync(string? continuationToken, int limit = Query.DefaultLimit, CancellationToken cancellationToken = default)
         {
             if (limit <= 0)
             {
@@ -299,7 +255,7 @@ namespace Pantry.Azure.TableStorage
         }
 
         /// <inheritdoc/>
-        public virtual Task<IContinuationEnumerable<TEntity>> FindAsync(ICriteriaQuery<TEntity> query, CancellationToken cancellationToken = default)
+        public override Task<IContinuationEnumerable<TEntity>> FindAsync(ICriteriaQuery<TEntity> query, CancellationToken cancellationToken = default)
         {
             if (query is null)
             {

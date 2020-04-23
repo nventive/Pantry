@@ -7,15 +7,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Cosmos.Linq;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 using Pantry.Azure.Cosmos.Queries;
 using Pantry.Continuation;
 using Pantry.Exceptions;
-using Pantry.Generators;
 using Pantry.Logging;
-using Pantry.Providers;
 using Pantry.Queries;
 using Pantry.Queries.Criteria;
 using Pantry.Traits;
@@ -27,7 +25,7 @@ namespace Pantry.Azure.Cosmos
     /// Cosmos Repository Implementation.
     /// </summary>
     /// <typeparam name="TEntity">The entity type.</typeparam>
-    public class CosmosRepository<TEntity> : IRepository<TEntity>,
+    public class CosmosRepository<TEntity> : Repository<TEntity>,
                                              IRepositoryFind<TEntity, TEntity, CosmosSqlBuilderQuery<TEntity>>,
                                              IRepositoryFind<TEntity, TEntity, CosmosSqlQuery<TEntity>>,
                                              IHealthCheck
@@ -37,25 +35,13 @@ namespace Pantry.Azure.Cosmos
         /// Initializes a new instance of the <see cref="CosmosRepository{TEntity}"/> class.
         /// </summary>
         /// <param name="cosmosContainerFor">The <see cref="CosmosContainerFor{TEntity}"/>.</param>
-        /// <param name="idGenerator">The <see cref="IIdGenerator{TEntity}"/>.</param>
-        /// <param name="timestampProvider">The <see cref="ITimestampProvider"/>.</param>
-        /// <param name="mapper">The <see cref="ICosmosEntityMapper{TEntity}"/>.</param>
-        /// <param name="queryCompiler">The SqlKata query compiler.</param>
-        /// <param name="logger">The <see cref="ILogger"/>.</param>
+        /// <param name="serviceProvider">The <see cref="IServiceProvider"/>.</param>
         public CosmosRepository(
             CosmosContainerFor<TEntity> cosmosContainerFor,
-            IIdGenerator<TEntity> idGenerator,
-            ITimestampProvider timestampProvider,
-            ICosmosEntityMapper<TEntity> mapper,
-            CosmosQueryCompiler queryCompiler,
-            ILogger<CosmosRepository<TEntity>>? logger = null)
+            IServiceProvider serviceProvider)
+            : base(serviceProvider)
         {
             CosmosContainerFor = cosmosContainerFor ?? throw new ArgumentNullException(nameof(cosmosContainerFor));
-            IdGenerator = idGenerator ?? throw new ArgumentNullException(nameof(idGenerator));
-            TimestampProvider = timestampProvider ?? throw new ArgumentNullException(nameof(timestampProvider));
-            Mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
-            QueryCompiler = queryCompiler ?? throw new ArgumentNullException(nameof(queryCompiler));
-            Logger = logger ?? NullLogger<CosmosRepository<TEntity>>.Instance;
         }
 
         /// <summary>
@@ -64,29 +50,14 @@ namespace Pantry.Azure.Cosmos
         protected CosmosContainerFor<TEntity> CosmosContainerFor { get; }
 
         /// <summary>
-        /// Gets the <see cref="IIdGenerator{T}"/>.
-        /// </summary>
-        protected IIdGenerator<TEntity> IdGenerator { get; }
-
-        /// <summary>
-        /// Gets the <see cref="ITimestampProvider"/>.
-        /// </summary>
-        protected ITimestampProvider TimestampProvider { get; }
-
-        /// <summary>
         /// Gets the <see cref="ICosmosEntityMapper{TEntity}"/>.
         /// </summary>
-        protected ICosmosEntityMapper<TEntity> Mapper { get; }
-
-        /// <summary>
-        /// Gets the <see cref="ILogger"/>.
-        /// </summary>
-        protected ILogger Logger { get; }
+        protected ICosmosEntityMapper<TEntity> Mapper => ServiceProvider.GetRequiredService<ICosmosEntityMapper<TEntity>>();
 
         /// <summary>
         /// Gets the SQL query <see cref="Compiler"/>.
         /// </summary>
-        protected CosmosQueryCompiler QueryCompiler { get; }
+        protected CosmosQueryCompiler QueryCompiler => ServiceProvider.GetRequiredService<CosmosQueryCompiler>();
 
         /// <summary>
         /// Gets the <see cref="Container"/>.
@@ -94,7 +65,7 @@ namespace Pantry.Azure.Cosmos
         protected Container Container => CosmosContainerFor.Container;
 
         /// <inheritdoc/>
-        public virtual async Task<TEntity> AddAsync(TEntity entity, CancellationToken cancellationToken = default)
+        public override async Task<TEntity> AddAsync(TEntity entity, CancellationToken cancellationToken = default)
         {
             if (entity is null)
             {
@@ -141,31 +112,7 @@ namespace Pantry.Azure.Cosmos
         }
 
         /// <inheritdoc/>
-        public virtual async Task<(TEntity, bool)> AddOrUpdateAsync(TEntity entity, CancellationToken cancellationToken = default)
-        {
-            if (entity is null)
-            {
-                throw new ArgumentNullException(nameof(entity));
-            }
-
-            if (string.IsNullOrEmpty(entity.Id))
-            {
-                return (await AddAsync(entity, cancellationToken).ConfigureAwait(false), true);
-            }
-
-            var existingEntity = await TryGetByIdAsync(entity.Id, cancellationToken).ConfigureAwait(false);
-            if (existingEntity is null)
-            {
-                return (await AddAsync(entity, cancellationToken).ConfigureAwait(false), true);
-            }
-            else
-            {
-                return (await UpdateAsync(entity, cancellationToken).ConfigureAwait(false), false);
-            }
-        }
-
-        /// <inheritdoc/>
-        public virtual async Task<TEntity?> TryGetByIdAsync(string id, CancellationToken cancellationToken = default)
+        public override async Task<TEntity?> TryGetByIdAsync(string id, CancellationToken cancellationToken = default)
         {
             try
             {
@@ -196,7 +143,7 @@ namespace Pantry.Azure.Cosmos
         }
 
         /// <inheritdoc/>
-        public virtual async Task<TEntity> UpdateAsync(TEntity entity, CancellationToken cancellationToken = default)
+        public override async Task<TEntity> UpdateAsync(TEntity entity, CancellationToken cancellationToken = default)
         {
             if (entity is null)
             {
@@ -257,7 +204,7 @@ namespace Pantry.Azure.Cosmos
         }
 
         /// <inheritdoc/>
-        public virtual async Task<bool> TryRemoveAsync(string id, CancellationToken cancellationToken = default)
+        public override async Task<bool> TryRemoveAsync(string id, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrEmpty(id))
             {
@@ -295,7 +242,7 @@ namespace Pantry.Azure.Cosmos
         }
 
         /// <inheritdoc/>
-        public virtual async Task<IContinuationEnumerable<TEntity>> FindAllAsync(string? continuationToken, int limit = Query.DefaultLimit, CancellationToken cancellationToken = default)
+        public override async Task<IContinuationEnumerable<TEntity>> FindAllAsync(string? continuationToken, int limit = Query.DefaultLimit, CancellationToken cancellationToken = default)
         {
             if (limit <= 0)
             {
@@ -317,7 +264,7 @@ namespace Pantry.Azure.Cosmos
         }
 
         /// <inheritdoc/>
-        public virtual async Task<IContinuationEnumerable<TEntity>> FindAsync(ICriteriaQuery<TEntity> query, CancellationToken cancellationToken = default)
+        public override async Task<IContinuationEnumerable<TEntity>> FindAsync(ICriteriaQuery<TEntity> query, CancellationToken cancellationToken = default)
         {
             if (query is null)
             {
