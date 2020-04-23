@@ -27,7 +27,7 @@ namespace Pantry.Queries
                 throw new ArgumentNullException(nameof(query));
             }
 
-            if (values != null)
+            if (values != null && values.Any())
             {
                 query.AddCriterions(new NotInPropertyCriterion(propertyPath, values));
             }
