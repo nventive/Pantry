@@ -387,6 +387,37 @@ namespace Pantry.Azure.Cosmos
                 throw new ArgumentNullException(nameof(queryDefinition));
             }
 
+            var response = await RawExecuteQueryAsync(query, queryDefinition, cancellationToken).ConfigureAwait(false);
+            var result = response.Resource.Select(x => Mapper.MapToSource(x)).ToContinuationEnumerable(response.ContinuationToken);
+
+            Logger.LogFind(query, result);
+
+            return result;
+        }
+
+        /// <summary>
+        /// Executes a <paramref name="query"/> using a <paramref name="queryDefinition"/>
+        /// and returns the raw <see cref="FeedResponse{CosmosDocument}"/>.
+        /// </summary>
+        /// <param name="query">The pantry query.</param>
+        /// <param name="queryDefinition">The <see cref="QueryDefinition"/>.</param>
+        /// <param name="cancellationToken">The <see cref="CancellationToken"/>.</param>
+        /// <returns>The execution result.</returns>
+        protected virtual async Task<FeedResponse<CosmosDocument>> RawExecuteQueryAsync(
+            IQuery<TEntity> query,
+            QueryDefinition queryDefinition,
+            CancellationToken cancellationToken)
+        {
+            if (query is null)
+            {
+                throw new ArgumentNullException(nameof(query));
+            }
+
+            if (queryDefinition is null)
+            {
+                throw new ArgumentNullException(nameof(queryDefinition));
+            }
+
             Logger.LogTrace("ExecuteQueryAsync() {CosmosDbQueryText}", queryDefinition.QueryText);
 
             var response = await Container.GetItemQueryIterator<CosmosDocument>(
@@ -394,12 +425,7 @@ namespace Pantry.Azure.Cosmos
                 continuationToken: query.ContinuationToken,
                 requestOptions: new QueryRequestOptions { MaxItemCount = query.Limit })
                 .ReadNextAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
-
-            var result = response.Resource.Select(x => Mapper.MapToSource(x)).ToContinuationEnumerable(response.ContinuationToken);
-
-            Logger.LogFind(query, result);
-
-            return result;
+            return response;
         }
     }
 }
