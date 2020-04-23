@@ -3,16 +3,16 @@
 namespace Pantry.Queries.Criteria
 {
     /// <summary>
-    /// Criterion that represents property inclusion in a set.
+    /// Criterion that represents property exclusion from a set.
     /// </summary>
-    public class InPropertyCriterion : PropertyCriterion
+    public class NotInPropertyCriterion : PropertyCriterion
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="InPropertyCriterion"/> class.
+        /// Initializes a new instance of the <see cref="NotInPropertyCriterion"/> class.
         /// </summary>
         /// <param name="propertyPath">The property path.</param>
         /// <param name="values">The target values set.</param>
-        public InPropertyCriterion(string propertyPath, IEnumerable<object> values)
+        public NotInPropertyCriterion(string propertyPath, IEnumerable<object> values)
             : base(propertyPath)
         {
             Values = values;
@@ -24,6 +24,6 @@ namespace Pantry.Queries.Criteria
         public IEnumerable<object> Values { get; set; }
 
         /// <inheritdoc/>
-        public override string ToString() => $"[{GetType().Name}] {PropertyPath} IN ({string.Join(", ", Values)})";
+        public override string ToString() => $"[{GetType().Name}] {PropertyPath} NOT IN ({string.Join(", ", Values)})";
     }
 }

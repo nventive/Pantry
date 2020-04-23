@@ -39,6 +39,7 @@ namespace Pantry.Tests.StandardTestSupport
                     x => new StandardEntityCriteriaQuery { AgeLt = x.Age + 1 },
                     x => new StandardEntityCriteriaQuery { AgeLte = x.Age },
                     x => new StandardEntityCriteriaQuery { AgeIn = new[] { x.Age, x.Age + 2 } },
+                    x => new StandardEntityCriteriaQuery { AgeNotIn = new[] { x.Age + 2 } },
                     x => new StandardEntityCriteriaQuery { NotarizedAtEq = x.NotarizedAt },
                     x => new StandardEntityCriteriaQuery { NotarizedAtGt = x.NotarizedAt!.Value.AddDays(-1) },
                     x => new StandardEntityCriteriaQuery { NotarizedAtGte = x.NotarizedAt!.Value.AddDays(-1) },
@@ -48,6 +49,7 @@ namespace Pantry.Tests.StandardTestSupport
                     x => new StandardEntityCriteriaQuery { RelatedNameEq = x.Related!.Name },
                     x => new StandardEntityCriteriaQuery { RelatedNameLike = x.Related!.Name!.Substring(0, 1) },
                     x => new StandardEntityCriteriaQuery { RelatedNameIn = new[] { x.Related!.Name, $"{x.Related!.Name}withother" } },
+                    x => new StandardEntityCriteriaQuery { RelatedNameNotIn = new[] { $"{x.Related!.Name}withother" } },
                     x => new StandardEntityCriteriaQuery { LinesNameEq = x.Lines[0].Name },
                     x => new StandardEntityCriteriaQuery { LinesNameLike = x.Lines[0].Name!.Substring(0, 1) },
                 }.Select(x => new object[] { x });
