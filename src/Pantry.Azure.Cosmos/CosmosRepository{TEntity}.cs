@@ -291,8 +291,9 @@ namespace Pantry.Azure.Cosmos
                 {
                     EqualToPropertyCriterion equalTo => queryBuilder.Where($"e.{Mapper.ResolveQueryPropertyPaths(equalTo.PropertyPath)}", equalTo.Value),
                     NotEqualToPropertyCriterion notEqualTo => queryBuilder.Where($"e.{Mapper.ResolveQueryPropertyPaths(notEqualTo.PropertyPath)}", "!=", notEqualTo.Value),
-                    NullPropertyCriterion nullCrit => queryBuilder.WhereRaw(
-                        $"IS_NULL(e.{Mapper.ResolveQueryPropertyPaths(nullCrit.PropertyPath)}) = {nullCrit.IsNull.ToString(CultureInfo.InvariantCulture).ToLowerInvariant()}"),
+                    NullPropertyCriterion nullCrit => nullCrit.IsNull
+                        ? queryBuilder.WhereRaw($"(IS_DEFINED(e.ReleasedAt) = false OR IS_NULL(e.{Mapper.ResolveQueryPropertyPaths(nullCrit.PropertyPath)}))")
+                        : queryBuilder.WhereRaw($"IS_NULL(e.{Mapper.ResolveQueryPropertyPaths(nullCrit.PropertyPath)}) = false"),
                     GreaterThanPropertyCriterion gt => queryBuilder.Where($"e.{Mapper.ResolveQueryPropertyPaths(gt.PropertyPath)}", ">", gt.Value),
                     GreaterThanOrEqualToPropertyCriterion gte => queryBuilder.Where($"e.{Mapper.ResolveQueryPropertyPaths(gte.PropertyPath)}", ">=", gte.Value),
                     LessThanPropertyCriterion lt => queryBuilder.Where($"e.{Mapper.ResolveQueryPropertyPaths(lt.PropertyPath)}", "<", lt.Value),
