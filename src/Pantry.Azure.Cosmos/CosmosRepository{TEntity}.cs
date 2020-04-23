@@ -399,12 +399,13 @@ namespace Pantry.Azure.Cosmos
         /// Executes a <paramref name="query"/> using a <paramref name="queryDefinition"/>
         /// and returns the raw <see cref="FeedResponse{CosmosDocument}"/>.
         /// </summary>
+        /// <typeparam name="TResult">The query result type.</typeparam>
         /// <param name="query">The pantry query.</param>
         /// <param name="queryDefinition">The <see cref="QueryDefinition"/>.</param>
         /// <param name="cancellationToken">The <see cref="CancellationToken"/>.</param>
         /// <returns>The execution result.</returns>
-        protected virtual async Task<FeedResponse<CosmosDocument>> RawExecuteQueryAsync(
-            IQuery<TEntity> query,
+        protected virtual async Task<FeedResponse<CosmosDocument>> RawExecuteQueryAsync<TResult>(
+            IQuery<TResult> query,
             QueryDefinition queryDefinition,
             CancellationToken cancellationToken)
         {
