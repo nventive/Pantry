@@ -21,14 +21,9 @@ namespace Pantry.Queries
         /// <returns>The updated <see cref="ICriteriaQuery{TResult}"/>.</returns>
         public static ICriteriaQuery<TResult> StringContains<TResult>(this ICriteriaQuery<TResult> query, string propertyPath, string? value)
         {
-            if (query is null)
-            {
-                throw new ArgumentNullException(nameof(query));
-            }
-
             if (!string.IsNullOrEmpty(value))
             {
-                query.AddCriterions(new StringContainsPropertyCriterion(propertyPath, value));
+                query.AddOrReplacePropertyCriterion(new StringContainsPropertyCriterion(propertyPath, value));
             }
 
             return query;
@@ -58,18 +53,7 @@ namespace Pantry.Queries
         /// <param name="propertyPath">The property path.</param>
         /// <returns>The found value, or default if not found.</returns>
         public static TValue StringContainsValue<TResult, TValue>(this ICriteriaQuery<TResult> query, string propertyPath)
-        {
-            if (query is null)
-            {
-                throw new ArgumentNullException(nameof(query));
-            }
-
-            return (TValue)query
-                .GetCriterions()
-                .OfType<StringContainsPropertyCriterion>()
-                .FirstOrDefault(x => x.PropertyPath == propertyPath)?
-                .Value!;
-        }
+            => (TValue)query.FirstOrDefaultPropertyCriterion<TResult, StringContainsPropertyCriterion>(propertyPath)?.Value!;
 
         /// <summary>
         /// Finds the first set value for equality comparison of <paramref name="propertyPath"/>.

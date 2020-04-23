@@ -18,12 +18,12 @@ namespace Pantry.Queries
         /// Adds criterion.
         /// </summary>
         /// <param name="criterions">The <see cref="ICriterion"/> to add.</param>
-        void AddCriterions(params ICriterion[] criterions);
+        void Add(params ICriterion[] criterions);
 
         /// <summary>
         /// Removes a specific criterion.
         /// </summary>
         /// <param name="criterion">The <see cref="ICriterion"/> to remove.</param>
-        void RemoveCriterion(ICriterion criterion);
+        void Remove(ICriterion criterion);
     }
 }

@@ -20,16 +20,7 @@ namespace Pantry.Queries
         /// <param name="value">The equality value to compare to.</param>
         /// <returns>The updated <see cref="ICriteriaQuery{TResult}"/>.</returns>
         public static ICriteriaQuery<TResult> NotEqualTo<TResult>(this ICriteriaQuery<TResult> query, string propertyPath, object? value)
-        {
-            if (query is null)
-            {
-                throw new ArgumentNullException(nameof(query));
-            }
-
-            query.AddCriterions(new NotEqualToPropertyCriterion(propertyPath, value));
-
-            return query;
-        }
+            => query.AddOrReplacePropertyCriterion(new NotEqualToPropertyCriterion(propertyPath, value));
 
         /// <summary>
         /// Adds a criterion for property inequality.
@@ -56,18 +47,7 @@ namespace Pantry.Queries
         /// <param name="propertyPath">The property path.</param>
         /// <returns>The found value, or default if not found.</returns>
         public static TValue NotEqualToValue<TResult, TValue>(this ICriteriaQuery<TResult> query, string propertyPath)
-        {
-            if (query is null)
-            {
-                throw new ArgumentNullException(nameof(query));
-            }
-
-            return (TValue)query
-                .GetCriterions()
-                .OfType<NotEqualToPropertyCriterion>()
-                .FirstOrDefault(x => x.PropertyPath == propertyPath)?
-                .Value!;
-        }
+            => (TValue)query.FirstOrDefaultPropertyCriterion<TResult, NotEqualToPropertyCriterion>(propertyPath)?.Value!;
 
         /// <summary>
         /// Finds the first set value for inequality comparison of <paramref name="propertyPath"/>.

@@ -14,6 +14,7 @@ namespace Pantry.Queries
     {
         /// <summary>
         /// Adds a criterion for property inclusion in a set.
+        /// Will add to any existing list and de-duplicates.
         /// </summary>
         /// <typeparam name="TResult">The type of result for the query.</typeparam>
         /// <param name="query">The <see cref="ICriteriaQuery{TResult}"/>.</param>
@@ -29,7 +30,15 @@ namespace Pantry.Queries
 
             if (values != null)
             {
-                query.AddCriterions(new InPropertyCriterion(propertyPath, values));
+                var existing = query.FirstOrDefaultPropertyCriterion<TResult, InPropertyCriterion>(propertyPath);
+                if (existing is null)
+                {
+                    query.Add(new InPropertyCriterion(propertyPath, values));
+                }
+                else
+                {
+                    existing.Values = existing.Values.Concat(values).Distinct().ToList();
+                }
             }
 
             return query;
@@ -60,18 +69,7 @@ namespace Pantry.Queries
         /// <param name="propertyPath">The property path.</param>
         /// <returns>The found value, or default if not found.</returns>
         public static IEnumerable<TValue> InValue<TResult, TValue>(this ICriteriaQuery<TResult> query, string propertyPath)
-        {
-            if (query is null)
-            {
-                throw new ArgumentNullException(nameof(query));
-            }
-
-            return (IEnumerable<TValue>)query
-                .GetCriterions()
-                .OfType<InPropertyCriterion>()
-                .FirstOrDefault(x => x.PropertyPath == propertyPath)?
-                .Values!;
-        }
+            => (IEnumerable<TValue>)query.FirstOrDefaultPropertyCriterion<TResult, InPropertyCriterion>(propertyPath)?.Values!;
 
         /// <summary>
         /// Finds the first set value for inclusion in a set of <paramref name="propertyPath"/>.

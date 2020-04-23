@@ -17,13 +17,13 @@ namespace Pantry.Queries
         public string? ContinuationToken { get; set; }
 
         /// <inheritdoc/>
-        public void AddCriterions(params ICriterion[] criterions) => _criterions.AddRange(criterions);
+        public void Add(params ICriterion[] criterions) => _criterions.AddRange(criterions);
 
         /// <inheritdoc/>
         public IEnumerable<ICriterion> GetCriterions() => _criterions;
 
         /// <inheritdoc/>
-        public void RemoveCriterion(ICriterion criterion) => _criterions.Remove(criterion);
+        public void Remove(ICriterion criterion) => _criterions.Remove(criterion);
 
         /// <inheritdoc/>
         public override string ToString() => $"[{GetType().Name}]: {string.Join(", ", _criterions)}";

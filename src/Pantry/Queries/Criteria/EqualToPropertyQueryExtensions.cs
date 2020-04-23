@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Linq.Expressions;
 using Pantry.Queries.Criteria;
 using Pantry.Reflection;
@@ -20,16 +19,7 @@ namespace Pantry.Queries
         /// <param name="value">The equality value to compare to.</param>
         /// <returns>The updated <see cref="ICriteriaQuery{TResult}"/>.</returns>
         public static ICriteriaQuery<TResult> EqualTo<TResult>(this ICriteriaQuery<TResult> query, string propertyPath, object? value)
-        {
-            if (query is null)
-            {
-                throw new ArgumentNullException(nameof(query));
-            }
-
-            query.AddCriterions(new EqualToPropertyCriterion(propertyPath, value));
-
-            return query;
-        }
+             => query.AddOrReplacePropertyCriterion(new EqualToPropertyCriterion(propertyPath, value));
 
         /// <summary>
         /// Adds a criterion for property equality.
@@ -56,18 +46,7 @@ namespace Pantry.Queries
         /// <param name="propertyPath">The property path.</param>
         /// <returns>The found value, or default if not found.</returns>
         public static TValue EqualToValue<TResult, TValue>(this ICriteriaQuery<TResult> query, string propertyPath)
-        {
-            if (query is null)
-            {
-                throw new ArgumentNullException(nameof(query));
-            }
-
-            return (TValue)query
-                .GetCriterions()
-                .OfType<EqualToPropertyCriterion>()
-                .FirstOrDefault(x => x.PropertyPath == propertyPath)?
-                .Value!;
-        }
+            => (TValue)query.FirstOrDefaultPropertyCriterion<TResult, EqualToPropertyCriterion>(propertyPath)?.Value!;
 
         /// <summary>
         /// Finds the first set value for equality comparison of <paramref name="propertyPath"/>.

@@ -12,7 +12,7 @@ namespace Pantry.Queries
     public static class OrderQueryExtensions
     {
         /// <summary>
-        /// Adds a criterion for ordering.
+        /// Adds a criterion for ordering. Will replace any other <see cref="OrderCriterion"/>.
         /// </summary>
         /// <typeparam name="TResult">The type of result for the query.</typeparam>
         /// <param name="query">The <see cref="ICriteriaQuery{TResult}"/>.</param>
@@ -26,7 +26,13 @@ namespace Pantry.Queries
                 throw new ArgumentNullException(nameof(query));
             }
 
-            query.AddCriterions(new OrderCriterion(propertyPath, ascending));
+            var existing = query.GetCriterions().OfType<OrderCriterion>().ToList();
+            foreach (var item in existing)
+            {
+                query.Remove(item);
+            }
+
+            query.Add(new OrderCriterion(propertyPath, ascending));
 
             return query;
         }
@@ -45,19 +51,25 @@ namespace Pantry.Queries
                 throw new ArgumentNullException(nameof(query));
             }
 
+            var existing = query.GetCriterions().OfType<OrderCriterion>().ToList();
+            foreach (var item in existing)
+            {
+                query.Remove(item);
+            }
+
             if (!string.IsNullOrEmpty(propertyPathAndAscending))
             {
                 var firstLetter = propertyPathAndAscending[0];
                 switch (firstLetter)
                 {
                     case '+':
-                        query.AddCriterions(new OrderCriterion(propertyPathAndAscending.Substring(1), true));
+                        query.Add(new OrderCriterion(propertyPathAndAscending.Substring(1), true));
                         break;
                     case '-':
-                        query.AddCriterions(new OrderCriterion(propertyPathAndAscending.Substring(1), false));
+                        query.Add(new OrderCriterion(propertyPathAndAscending.Substring(1), false));
                         break;
                     default:
-                        query.AddCriterions(new OrderCriterion(propertyPathAndAscending));
+                        query.Add(new OrderCriterion(propertyPathAndAscending));
                         break;
                 }
             }

@@ -21,14 +21,9 @@ namespace Pantry.Queries
         /// <returns>The updated <see cref="ICriteriaQuery{TResult}"/>.</returns>
         public static ICriteriaQuery<TResult> IsNull<TResult>(this ICriteriaQuery<TResult> query, string propertyPath, bool? isNull = true)
         {
-            if (query is null)
-            {
-                throw new ArgumentNullException(nameof(query));
-            }
-
             if (isNull.HasValue)
             {
-                query.AddCriterions(new NullPropertyCriterion(propertyPath, isNull.Value));
+                query.AddOrReplacePropertyCriterion(new NullPropertyCriterion(propertyPath, isNull.Value));
             }
 
             return query;
@@ -59,18 +54,7 @@ namespace Pantry.Queries
         /// <param name="propertyPath">The property path.</param>
         /// <returns>The found value, or default if not found.</returns>
         public static bool? IsNullValue<TResult, TValue>(this ICriteriaQuery<TResult> query, string propertyPath)
-        {
-            if (query is null)
-            {
-                throw new ArgumentNullException(nameof(query));
-            }
-
-            return query
-                .GetCriterions()
-                .OfType<NullPropertyCriterion>()
-                .FirstOrDefault(x => x.PropertyPath == propertyPath)?
-                .IsNull;
-        }
+            => query.FirstOrDefaultPropertyCriterion<TResult, NullPropertyCriterion>(propertyPath)?.IsNull;
 
         /// <summary>
         /// Finds the first set value for inequality comparison of <paramref name="propertyPath"/>.
