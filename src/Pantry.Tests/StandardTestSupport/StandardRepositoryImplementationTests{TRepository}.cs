@@ -97,6 +97,27 @@ namespace Pantry.Tests.StandardTestSupport
         }
 
         [SkippableTheory(typeof(UnsupportedFeatureException))]
+        [MemberData(nameof(ItShouldFindWithASimpleCriteriaQueryData))]
+        public virtual async Task ItShouldFindRemainingWithASimpleCriteriaQuery(Func<StandardEntity, StandardEntityCriteriaQuery> queryFactory)
+        {
+            if (queryFactory is null)
+            {
+                throw new ArgumentNullException(nameof(queryFactory));
+            }
+
+            var repo = GetRepositoryAs<IRepositoryFindByCriteria<StandardEntity>>();
+            var entities = TestEntityGenerator.Generate(5);
+            using var scope = new TemporaryEntitiesScope<StandardEntity>(repo, entities);
+
+            var targetEntity = Faker.PickRandom(entities);
+            var query = queryFactory(targetEntity);
+            var result = await repo.FindRemainingAsync(query).ToListAsync();
+
+            result.Should().HaveCountGreaterOrEqualTo(1);
+            result.Select(x => x.Id).Should().Contain(targetEntity.Id);
+        }
+
+        [SkippableTheory(typeof(UnsupportedFeatureException))]
         [MemberData(nameof(ItShouldFindWithACombinedCriteriaQueryData))]
         public virtual async Task ItShouldFindWithACombinedCriteriaQuery(Func<StandardEntity, StandardEntityCriteriaQuery> queryFactory)
         {
