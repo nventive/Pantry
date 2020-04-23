@@ -79,11 +79,6 @@ namespace Pantry.Azure.Cosmos
         protected ICosmosEntityMapper<TEntity> Mapper { get; }
 
         /// <summary>
-        /// Gets the <see cref="Container"/>.
-        /// </summary>
-        protected Container Container => CosmosContainerFor.Container;
-
-        /// <summary>
         /// Gets the <see cref="ILogger"/>.
         /// </summary>
         protected ILogger Logger { get; }
@@ -91,7 +86,12 @@ namespace Pantry.Azure.Cosmos
         /// <summary>
         /// Gets the SQL query <see cref="Compiler"/>.
         /// </summary>
-        private CosmosQueryCompiler QueryCompiler { get; }
+        protected CosmosQueryCompiler QueryCompiler { get; }
+
+        /// <summary>
+        /// Gets the <see cref="Container"/>.
+        /// </summary>
+        protected Container Container => CosmosContainerFor.Container;
 
         /// <inheritdoc/>
         public virtual async Task<TEntity> AddAsync(TEntity entity, CancellationToken cancellationToken = default)
