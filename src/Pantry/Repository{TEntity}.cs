@@ -66,7 +66,7 @@ namespace Pantry
         public virtual Task<TEntity> AddAsync(TEntity entity, CancellationToken cancellationToken = default)
         {
             var currentMethod = MethodBase.GetCurrentMethod();
-            throw new UnsupportedFeatureException($"This feature is not supported ({currentMethod.DeclaringType.FullName}.{currentMethod.Name}).");
+            throw new UnsupportedFeatureException($"This feature is not supported ({GetType().FullName}.{currentMethod.Name}).");
         }
 
         /// <inheritdoc/>
@@ -96,36 +96,31 @@ namespace Pantry
         /// <inheritdoc/>
         public virtual Task<IContinuationEnumerable<TEntity>> FindAllAsync(string? continuationToken, int limit = 50, CancellationToken cancellationToken = default)
         {
-            var currentMethod = MethodBase.GetCurrentMethod();
-            throw new UnsupportedFeatureException($"This feature is not supported ({currentMethod.DeclaringType.FullName}.{currentMethod.Name}).");
+            throw new UnsupportedFeatureException($"This feature is not supported ({GetType().FullName}.{MethodBase.GetCurrentMethod().Name}).");
         }
 
         /// <inheritdoc/>
         public virtual Task<IContinuationEnumerable<TEntity>> FindAsync(ICriteriaQuery<TEntity> query, CancellationToken cancellationToken = default)
         {
-            var currentMethod = MethodBase.GetCurrentMethod();
-            throw new UnsupportedFeatureException($"This feature is not supported ({currentMethod.DeclaringType.FullName}.{currentMethod.Name}).");
+            throw new UnsupportedFeatureException($"This feature is not supported ({GetType().FullName}.{MethodBase.GetCurrentMethod().Name}).");
         }
 
         /// <inheritdoc/>
         public virtual Task<TEntity?> TryGetByIdAsync(string id, CancellationToken cancellationToken = default)
         {
-            var currentMethod = MethodBase.GetCurrentMethod();
-            throw new UnsupportedFeatureException($"This feature is not supported ({currentMethod.DeclaringType.FullName}.{currentMethod.Name}).");
+            throw new UnsupportedFeatureException($"This feature is not supported ({GetType().FullName}.{MethodBase.GetCurrentMethod().Name}).");
         }
 
         /// <inheritdoc/>
         public virtual Task<bool> TryRemoveAsync(string id, CancellationToken cancellationToken = default)
         {
-            var currentMethod = MethodBase.GetCurrentMethod();
-            throw new UnsupportedFeatureException($"This feature is not supported ({currentMethod.DeclaringType.FullName}.{currentMethod.Name}).");
+            throw new UnsupportedFeatureException($"This feature is not supported ({GetType().FullName}.{MethodBase.GetCurrentMethod().Name}).");
         }
 
         /// <inheritdoc/>
         public virtual Task<TEntity> UpdateAsync(TEntity entity, CancellationToken cancellationToken = default)
         {
-            var currentMethod = MethodBase.GetCurrentMethod();
-            throw new UnsupportedFeatureException($"This feature is not supported ({currentMethod.DeclaringType.FullName}.{currentMethod.Name}).");
+            throw new UnsupportedFeatureException($"This feature is not supported ({GetType().FullName}.{MethodBase.GetCurrentMethod().Name}).");
         }
     }
 }

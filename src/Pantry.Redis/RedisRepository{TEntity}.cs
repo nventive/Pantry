@@ -284,12 +284,6 @@ namespace Pantry.Redis
         }
 
         /// <inheritdoc/>
-        public override Task<IContinuationEnumerable<TEntity>> FindAsync(ICriteriaQuery<TEntity> query, CancellationToken cancellationToken = default)
-        {
-            throw new UnsupportedFeatureException("Not supported yet.");
-        }
-
-        /// <inheritdoc/>
         public virtual async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
         {
             var endpoints = Database.Multiplexer.GetEndPoints();
