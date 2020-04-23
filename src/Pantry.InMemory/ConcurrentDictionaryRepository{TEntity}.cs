@@ -306,6 +306,15 @@ namespace Pantry.InMemory
                                 inProp.Values.Select((val, i) => $"({inProp.PropertyPath} == @{i})")),
                             inProp.Values.ToArray())
                         : queryable,
+                    NotInPropertyCriterion notInProp => notInProp.Values != null && notInProp.Values.Any()
+                    ? queryable.Where(
+                        "!(" +
+                        string.Join(
+                            " && ",
+                            notInProp.Values.Select((val, i) => $"({notInProp.PropertyPath} == @{i})")) +
+                        ")",
+                        notInProp.Values.ToArray())
+                    : queryable,
                     OrderCriterion order => queryable.OrderBy($"{order.PropertyPath} {(order.Ascending ? "ASC" : "DESC")}"),
                     _ => throw new UnsupportedFeatureException($"The {criterion} criterion is not supported by {this}."),
                 };

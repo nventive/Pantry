@@ -79,11 +79,6 @@ namespace Pantry.Azure.Cosmos
         protected ICosmosEntityMapper<TEntity> Mapper { get; }
 
         /// <summary>
-        /// Gets the <see cref="Container"/>.
-        /// </summary>
-        protected Container Container => CosmosContainerFor.Container;
-
-        /// <summary>
         /// Gets the <see cref="ILogger"/>.
         /// </summary>
         protected ILogger Logger { get; }
@@ -91,7 +86,12 @@ namespace Pantry.Azure.Cosmos
         /// <summary>
         /// Gets the SQL query <see cref="Compiler"/>.
         /// </summary>
-        private CosmosQueryCompiler QueryCompiler { get; }
+        protected CosmosQueryCompiler QueryCompiler { get; }
+
+        /// <summary>
+        /// Gets the <see cref="Container"/>.
+        /// </summary>
+        protected Container Container => CosmosContainerFor.Container;
 
         /// <inheritdoc/>
         public virtual async Task<TEntity> AddAsync(TEntity entity, CancellationToken cancellationToken = default)
@@ -352,6 +352,7 @@ namespace Pantry.Azure.Cosmos
                     LessThanOrEqualToPropertyCriterion lte => queryBuilder.Where($"e.{Mapper.ResolveQueryPropertyPaths(lte.PropertyPath)}", "<=", lte.Value),
                     StringContainsPropertyCriterion strCont => queryBuilder.WhereRaw($"CONTAINS(e.{Mapper.ResolveQueryPropertyPaths(strCont.PropertyPath)}, ?)", strCont.Value),
                     InPropertyCriterion inProp => queryBuilder.WhereIn($"e.{Mapper.ResolveQueryPropertyPaths(inProp.PropertyPath)}", inProp.Values),
+                    NotInPropertyCriterion notInProp => queryBuilder.WhereNotIn($"e.{Mapper.ResolveQueryPropertyPaths(notInProp.PropertyPath)}", notInProp.Values),
                     OrderCriterion order => queryBuilder.OrderByRaw($"e.{Mapper.ResolveQueryPropertyPaths(order.PropertyPath)} {(order.Ascending ? "ASC" : "DESC")}"),
                     _ => throw new UnsupportedFeatureException($"The {criterion} criterion is not supported by {this}."),
                 };

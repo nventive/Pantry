@@ -360,6 +360,25 @@ namespace Pantry.Azure.TableStorage
                 return tblQuery;
             }
 
+            TableQuery<DynamicTableEntity> AddNotInCriterion(TableQuery<DynamicTableEntity> tblQuery, NotInPropertyCriterion criterion)
+            {
+                if (criterion.Values is null || !criterion.Values.Any())
+                {
+                    return tblQuery;
+                }
+
+                var targetPropertyPaths = Mapper.ResolveQueryPropertyPaths(criterion.PropertyPath);
+                foreach (var targetPropertyPath in targetPropertyPaths)
+                {
+                    foreach (var value in criterion.Values)
+                    {
+                        tblQuery = tblQuery.Where(GenerateFilterCondtion(targetPropertyPath, QueryComparisons.NotEqual, value));
+                    }
+                }
+
+                return tblQuery;
+            }
+
             TableQuery<DynamicTableEntity> AddOrderBy(TableQuery<DynamicTableEntity> tblQuery, OrderCriterion order)
             {
                 var targetPropertyPaths = Mapper.ResolveQueryPropertyPaths(order.PropertyPath);
@@ -393,6 +412,7 @@ namespace Pantry.Azure.TableStorage
                             LessThanPropertyCriterion lt => AddFilterCondition(tableQuery, lt, QueryComparisons.LessThan),
                             LessThanOrEqualToPropertyCriterion lte => AddFilterCondition(tableQuery, lte, QueryComparisons.LessThanOrEqual),
                             InPropertyCriterion inProp => AddInCriterion(tableQuery, inProp),
+                            NotInPropertyCriterion notInProp => AddNotInCriterion(tableQuery, notInProp),
                             OrderCriterion order => AddOrderBy(tableQuery, order),
                             _ => throw new UnsupportedFeatureException($"The {criterion} criterion is not supported by {this}."),
                         };

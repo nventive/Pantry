@@ -408,6 +408,7 @@ namespace Pantry.PetaPoco
                             LessThanOrEqualToPropertyCriterion lte => queryBuilder.WhereRaw($"{column} <= ?", lte.Value),
                             StringContainsPropertyCriterion strCont => queryBuilder.WhereRaw($"{column} LIKE ?", $"%{strCont.Value}%"),
                             InPropertyCriterion inProp => queryBuilder.WhereRaw($"{column} IN (?)", inProp.Values.ToArray()),
+                            NotInPropertyCriterion notInProp => queryBuilder.WhereRaw($"{column} NOT IN (?)", notInProp.Values.ToArray()),
                             OrderCriterion order => queryBuilder.OrderByRaw($"{column} {(order.Ascending ? "ASC" : "DESC")}"),
                             _ => throw new UnsupportedFeatureException($"The {criterion} criterion is not supported by {this}."),
                         };

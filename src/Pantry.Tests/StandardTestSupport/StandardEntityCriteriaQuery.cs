@@ -67,6 +67,12 @@ namespace Pantry.Tests.StandardTestSupport
             set => this.In(x => x.Age, value);
         }
 
+        public IEnumerable<int>? AgeNotIn
+        {
+            get => this.NotInValue(x => x.Age);
+            set => this.NotIn(x => x.Age, value);
+        }
+
         public DateTimeOffset? NotarizedAtEq
         {
             get => this.EqualToValue(x => x.NotarizedAt);
@@ -119,6 +125,12 @@ namespace Pantry.Tests.StandardTestSupport
         {
             get => this.InValue(x => x.Related!.Name);
             set => this.In(x => x.Related!.Name, value);
+        }
+
+        public IEnumerable<string?>? RelatedNameNotIn
+        {
+            get => this.NotInValue(x => x.Related!.Name);
+            set => this.NotIn(x => x.Related!.Name, value);
         }
 
         public string? LinesNameEq
