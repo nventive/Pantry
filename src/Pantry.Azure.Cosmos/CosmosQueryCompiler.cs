@@ -35,7 +35,7 @@ namespace Pantry.Azure.Cosmos
         /// </summary>
         /// <param name="query">The <see cref="SqlKata.Query"/>.</param>
         /// <returns>The CosmosDb query definition.</returns>
-        public QueryDefinition ToQueryDefinition(SqlKata.Query query)
+        public virtual QueryDefinition ToQueryDefinition(SqlKata.Query query)
         {
             var sqlQuery = Compile(query);
 
