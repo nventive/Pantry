@@ -8,27 +8,24 @@ using Refit;
 namespace Pantry.AspNetCore.Tests
 {
 #nullable disable
-    public interface IRepositoryApiClient<TEntity, TEntityAttributesModel>
-        where TEntityAttributesModel : class
+    public interface IRepositoryApiClient<TResultModel, TResultsModel, TCreateModel, TUpdateModel, TQueryModel>
     {
         [Post("")]
-        Task<ApiResponse<TEntity>> Create([Body] TEntityAttributesModel attributes);
+        Task<ApiResponse<TResultModel>> Create([Body] TCreateModel attributes);
 
         [Get("/{id}")]
-        Task<ApiResponse<TEntity>> GetById(
+        Task<ApiResponse<TResultModel>> GetById(
             string id,
             [Header("If-Modified-Since")] string ifModifiedSince = null,
             [Header("If-None-Match")] string ifNoneMatch = null);
 
         [Get("")]
-        Task<ApiResponse<ContinuationEnumerableModel<TEntity>>> FindAll(
-            [Query] string continuationToken = null,
-            [Query] int? limit = null);
+        Task<ApiResponse<ContinuationEnumerableModel<TResultsModel>>> Find(TQueryModel model);
 
         [Put("/{id}")]
-        Task<ApiResponse<TEntity>> Update(
+        Task<ApiResponse<TResultModel>> Update(
             string id,
-            [Body] TEntityAttributesModel attributes,
+            [Body] TUpdateModel attributes,
             [Header("If-Match")] string ifMatch = null);
 
         [Delete("/{id}")]

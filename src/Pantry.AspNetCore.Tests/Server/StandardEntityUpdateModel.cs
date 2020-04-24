@@ -2,12 +2,9 @@
 
 namespace Pantry.AspNetCore.Tests.Server
 {
-    public class StandardEntityAttributes
+    public class StandardEntityUpdateModel
     {
         [Required]
         public string Name { get; set; } = string.Empty;
-
-        [Required]
-        public int Age { get; set; }
     }
 }

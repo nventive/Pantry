@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Pantry.AspNetCore.Controllers;
 
@@ -22,7 +21,7 @@ namespace Pantry.AspNetCore.ApplicationModels
             foreach (var controller in application.Controllers.Where(x => typeof(ICapabilitiesProvider).IsAssignableFrom(x.ControllerType)))
             {
                 var exposeCapabilitiesAttribute = controller.Attributes.OfType<ExposeCapabilitiesAttribute>().FirstOrDefault();
-                var exposeCapabilities = exposeCapabilitiesAttribute?.Capabilities ?? Capabilities.CRUD;
+                var exposeCapabilities = exposeCapabilitiesAttribute?.Capabilities ?? Capabilities.All;
 
                 var actionsToRemove = controller
                     .Actions

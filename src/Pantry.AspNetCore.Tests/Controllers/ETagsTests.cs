@@ -23,7 +23,7 @@ namespace Pantry.AspNetCore.Tests.Controllers
                 .RuleFor(x => x.ETag, "W/\"00000000-0000-0000-181f-459d634201d6\"")
                 .Generate();
             await Factory.Services.GetRequiredService<IRepositoryAdd<StandardEntity>>().AddAsync(entity);
-            var client = GetRepositoryApiClient("/api/standard-entities-all");
+            var client = GetRepositoryApiClient<StandardEntityModel, StandardEntityModel, StandardEntityModel, StandardEntityModel, StandardEntityModel>("/api/standard-entities-all");
 
             var result = await client.GetById(entity.Id);
 
@@ -41,7 +41,7 @@ namespace Pantry.AspNetCore.Tests.Controllers
                 .RuleFor(x => x.ETag, "\"00000000-0000-0000-181f-459d634201d6\"")
                 .Generate();
             await Factory.Services.GetRequiredService<IRepositoryAdd<StandardEntity>>().AddAsync(entity);
-            var client = GetRepositoryApiClient("/api/standard-entities-all");
+            var client = GetRepositoryApiClient<StandardEntityModel, StandardEntityModel, StandardEntityModel, StandardEntityModel, StandardEntityModel>("/api/standard-entities-all");
 
             var result = await client.GetById(entity.Id);
 

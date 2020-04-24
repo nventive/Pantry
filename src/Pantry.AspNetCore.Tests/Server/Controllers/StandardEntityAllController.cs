@@ -4,8 +4,7 @@ using Pantry.AspNetCore.Controllers;
 namespace Pantry.AspNetCore.Tests.Server.Controllers
 {
     [Route("api/standard-entities-all")]
-    [ExposeCapabilities(Capabilities.CRUD | Capabilities.FindAll)]
-    public class StandardEntityAllController : RepositoryController<StandardEntity, StandardEntityAttributes>
+    public class StandardEntityAllController : RepositoryController<StandardEntity, StandardEntityModel, SummaryStandardEntityModel, StandardEntityCreateModel, StandardEntityUpdateModel, StandardEntityCriteriaQuery>
     {
     }
 }

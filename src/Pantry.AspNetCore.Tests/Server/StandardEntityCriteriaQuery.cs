@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using Pantry.Queries;
-using Pantry.Queries.Criteria;
 
 namespace Pantry.AspNetCore.Tests.Server
 {

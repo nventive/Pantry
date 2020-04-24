@@ -5,7 +5,7 @@ namespace Pantry.AspNetCore.Tests.Server.Controllers
 {
     [Route("api/standard-entities-get")]
     [ExposeCapabilities(Capabilities.GetById)]
-    public class StandardEntityGetController : RepositoryController<StandardEntity, StandardEntityAttributes>
+    public class StandardEntityGetController : RepositoryController<StandardEntity, StandardEntityCreateModel>
     {
     }
 }

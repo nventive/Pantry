@@ -25,9 +25,12 @@ namespace Pantry.AspNetCore.Tests
         /// </summary>
         protected TestWebApplicationFactory Factory { get; }
 
-        protected Faker<StandardEntityAttributes> StandardEntityAttributesGenerator => new Faker<StandardEntityAttributes>()
+        protected Faker<StandardEntityCreateModel> StandardEntityCreateModelGenerator => new Faker<StandardEntityCreateModel>()
             .RuleFor(x => x.Name, f => f.Person.UserName)
             .RuleFor(x => x.Age, f => f.Random.Int(1, 100));
+
+        protected Faker<StandardEntityUpdateModel> StandardEntityUpdateModelGenerator => new Faker<StandardEntityUpdateModel>()
+            .RuleFor(x => x.Name, f => f.Person.UserName);
 
         protected Faker<StandardEntity> StandardEntityGenerator => new Faker<StandardEntity>()
             .RuleFor(x => x.Id, f => f.Random.Guid().ToString("n", CultureInfo.InvariantCulture))
@@ -36,10 +39,10 @@ namespace Pantry.AspNetCore.Tests
             .RuleFor(x => x.Name, f => f.Person.UserName)
             .RuleFor(x => x.Age, f => f.Random.Int(1, 100));
 
-        protected IRepositoryApiClient<StandardEntity, StandardEntityAttributes> GetRepositoryApiClient(string relativeUri)
-            => Factory.GetApiClient<IRepositoryApiClient<StandardEntity, StandardEntityAttributes>>(relativeUri);
+        protected IRepositoryApiClient<TResultModel, TResultsModel, TCreateModel, TUpdateModel, TQueryModel> GetRepositoryApiClient<TResultModel, TResultsModel, TCreateModel, TUpdateModel, TQueryModel>(string relativeUri)
+            => Factory.GetApiClient<IRepositoryApiClient<TResultModel, TResultsModel, TCreateModel, TUpdateModel, TQueryModel>>(relativeUri);
 
-        protected void AssertEntityAttributesAreOk(StandardEntity entity, StandardEntityAttributes attributes)
+        protected void AssertEntityAttributesAreOk(StandardEntityModel entity, StandardEntityCreateModel attributes)
         {
             if (entity is null)
             {
@@ -52,10 +55,24 @@ namespace Pantry.AspNetCore.Tests
             }
 
             entity.Id.Should().NotBeNullOrEmpty();
-            entity.ETag.Should().NotBeNullOrEmpty();
-            entity.Timestamp.Should().NotBeNull();
             entity.Name.Should().Be(attributes.Name);
             entity.Age.Should().Be(attributes.Age);
+        }
+
+        protected void AssertEntityAttributesAreOk(StandardEntityModel entity, StandardEntityUpdateModel attributes)
+        {
+            if (entity is null)
+            {
+                throw new ArgumentNullException(nameof(entity));
+            }
+
+            if (attributes is null)
+            {
+                throw new ArgumentNullException(nameof(attributes));
+            }
+
+            entity.Id.Should().NotBeNullOrEmpty();
+            entity.Name.Should().Be(attributes.Name);
         }
     }
 }
