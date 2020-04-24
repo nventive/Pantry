@@ -23,12 +23,8 @@ namespace Pantry.AspNetCore.Tests.Server
         {
             services.AddConcurrentDictionaryRepository<StandardEntity>();
             services
-                .AddControllers(options =>
-                {
-                    options.Conventions.Add(new CapabilitiesApplicationModelConvention());
-                    options.Filters.Add<EntityHttpCacheResponseHeadersAttribute>();
-                })
-                .AddRepositoryController<StandardEntity>("/api/standard-entities-2", Capabilities.GetById);
+                .AddControllers()
+                .AddPantry();
             services.AddOpenApiDocument();
         }
 

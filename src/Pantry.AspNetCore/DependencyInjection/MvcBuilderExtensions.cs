@@ -1,7 +1,5 @@
-﻿using System;
-using System.Diagnostics.CodeAnalysis;
-using Pantry;
-using Pantry.AspNetCore.Controllers;
+﻿using Pantry.AspNetCore.ApplicationModels;
+using Pantry.AspNetCore.Filters;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -11,19 +9,18 @@ namespace Microsoft.Extensions.DependencyInjection
     public static class MvcBuilderExtensions
     {
         /// <summary>
-        /// Adds a generic repository controller for <typeparamref name="TEntity"/> and <paramref name="capabilities"/>.
+        /// Configure MVC to support Pantry Generic controllers and HTTP cache.
         /// </summary>
-        /// <typeparam name="TEntity">The entity type.</typeparam>
         /// <param name="builder">The <see cref="IMvcBuilder"/>.</param>
-        /// <param name="baseUri">The base uri where the controller is invoked.</param>
-        /// <param name="capabilities">The actions exposed.</param>
         /// <returns>The updated <see cref="IMvcBuilder"/>.</returns>
-        [SuppressMessage("Design", "CA1054:Uri parameters should not be strings", Justification = "Better / easier API design, aligned with ASP.NET Core routing.")]
-        public static IMvcBuilder AddRepositoryController<TEntity>(this IMvcBuilder builder, string baseUri, Capabilities capabilities)
-            where TEntity : class, IIdentifiable
+        public static IMvcBuilder AddPantry(this IMvcBuilder builder)
         {
-            var u = baseUri;
-            var c = capabilities;
+            builder.AddMvcOptions(options =>
+            {
+                options.Conventions.Add(new CapabilitiesApplicationModelConvention());
+                options.Filters.Add<EntityHttpCacheResponseHeadersAttribute>();
+            });
+
             return builder;
         }
     }
