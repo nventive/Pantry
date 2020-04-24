@@ -10,6 +10,7 @@ using Omu.ValueInjecter;
 using Pantry.AspNetCore.ApplicationModels;
 using Pantry.AspNetCore.Mapping;
 using Pantry.AspNetCore.Models;
+using Pantry.Continuation;
 using Pantry.Exceptions;
 using Pantry.Queries;
 using Pantry.Traits;
@@ -26,7 +27,7 @@ namespace Pantry.AspNetCore.Controllers
     /// <typeparam name="TUpdateModel">The model that is used on Update body.</typeparam>
     /// <typeparam name="TQueryModel">The model that is used for query parameters.</typeparam>
     [ApiController]
-    public abstract class RepositoryController<TEntity, TResultModel, TResultsModel, TCreateModel, TUpdateModel, TQueryModel> : ControllerBase
+    public abstract class RepositoryController<TEntity, TResultModel, TResultsModel, TCreateModel, TUpdateModel, TQueryModel> : ControllerBase, ICapabilitiesProvider
         where TEntity : class, IIdentifiable
         where TResultModel : class, IIdentifiable
         where TResultsModel : class, IIdentifiable
@@ -45,7 +46,7 @@ namespace Pantry.AspNetCore.Controllers
         /// <summary>
         /// Gets the capabilities.
         /// </summary>
-        protected Capabilities Capabilities { get; }
+        public Capabilities Capabilities { get; }
 
         /// <summary>
         /// Gets the <see cref="IServiceProvider"/>.
@@ -113,8 +114,18 @@ namespace Pantry.AspNetCore.Controllers
         {
             query ??= new TQueryModel();
 
-            var repository = Services.GetRequiredService<IRepositoryFind<TEntity, TEntity, TQueryModel>>();
-            var entityResults = await repository.FindAsync(query).ConfigureAwait(false);
+            IContinuationEnumerable<TEntity> entityResults;
+            if (query is ICriteriaQuery<TEntity> critQuery)
+            {
+                var repository = Services.GetRequiredService<IRepositoryFindByCriteria<TEntity>>();
+                entityResults = await repository.FindAsync(critQuery).ConfigureAwait(false);
+            }
+            else
+            {
+                var repository = Services.GetRequiredService<IRepositoryFind<TEntity, TEntity, TQueryModel>>();
+                entityResults = await repository.FindAsync(query).ConfigureAwait(false);
+            }
+
             var results = await MapMultipleResults(entityResults).ConfigureAwait(false);
 
             return Ok(
