@@ -82,7 +82,7 @@ namespace Pantry.AspNetCore.Controllers
             TEntity entity;
             if (mapper != null)
             {
-                entity = await mapper.Map(model);
+                entity = await mapper.Map(model, HttpContext);
             }
             else
             {
@@ -281,7 +281,7 @@ namespace Pantry.AspNetCore.Controllers
 
             if (mapper != null)
             {
-                return await mapper.Map(entity);
+                return await mapper.Map(entity, HttpContext);
             }
 
             return Mapper.Map<TEntity, TResultModel>(entity);
@@ -302,7 +302,7 @@ namespace Pantry.AspNetCore.Controllers
             var mapper = Services.GetService<IApiModelMapper<TEntity, TResultsModel>>();
             if (mapper != null)
             {
-                return await mapper.Map(entities);
+                return await mapper.Map(entities, HttpContext);
             }
 
             return entities.Select(x => Mapper.Map<TEntity, TResultsModel>(x));
