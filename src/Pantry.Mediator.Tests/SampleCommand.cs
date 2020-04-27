@@ -5,6 +5,8 @@ namespace Pantry.Mediator.Tests
 {
     public class SampleCommand : IDomainQuery<SampleEntity>
     {
+        public string? Name { get; set; }
+
         public class Handler : IDomainRequestHandler<SampleCommand, SampleEntity>
         {
             public async Task<SampleEntity> HandleAsync(SampleCommand request, CancellationToken cancellationToken)
