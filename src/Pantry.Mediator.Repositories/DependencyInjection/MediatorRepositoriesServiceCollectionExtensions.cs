@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Linq;
+using System.Reflection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Pantry.Exceptions;
 using Pantry.Mediator;
@@ -46,6 +48,24 @@ namespace Microsoft.Extensions.DependencyInjection
                         services.TryAdd(new ServiceDescriptor(serviceType, implementationType, ServiceLifetime.Transient));
                         return services;
                     }
+
+                    if (typeof(UpdateCommand<,>) == genericTypeDefinition)
+                    {
+                        var commandArgs = currentRequestType.GenericTypeArguments;
+                        var serviceType = typeof(IDomainRequestHandler<,>).MakeGenericType(requestType, commandArgs[1]);
+                        var implementationType = typeof(UpdateCommandRepositoryHandler<,,>).MakeGenericType(commandArgs[0], requestType, commandArgs[1]);
+                        services.TryAdd(new ServiceDescriptor(serviceType, implementationType, ServiceLifetime.Transient));
+                        return services;
+                    }
+
+                    if (typeof(DeleteCommand<>) == genericTypeDefinition)
+                    {
+                        var commandArgs = currentRequestType.GenericTypeArguments;
+                        var serviceType = typeof(IDomainRequestHandler<,>).MakeGenericType(requestType, typeof(bool));
+                        var implementationType = typeof(DeleteCommandRepositoryHandler<,>).MakeGenericType(commandArgs[0], requestType);
+                        services.TryAdd(new ServiceDescriptor(serviceType, implementationType, ServiceLifetime.Transient));
+                        return services;
+                    }
                 }
 
                 currentRequestType = currentRequestType.BaseType;
@@ -64,5 +84,35 @@ namespace Microsoft.Extensions.DependencyInjection
         public static IServiceCollection TryAddRepositoryHandler<TRequest>(this IServiceCollection services)
             where TRequest : IRepositoryRequest
             => services.TryAddRepositoryHandler(typeof(TRequest));
+
+        /// <summary>
+        /// Tries to register the corresponding repository handler for all <see cref="IRepositoryRequest"/> in <paramref name="assembly"/>.
+        /// </summary>
+        /// <param name="services">The <see cref="IServiceCollection"/>.</param>
+        /// <param name="assembly">The assembly to scan.</param>
+        /// <returns>The updated <see cref="IServiceCollection"/>.</returns>
+        public static IServiceCollection TryAddRepositoryHandlerForRequestsInAssembly(this IServiceCollection services, Assembly assembly)
+        {
+            var requestTypes = assembly.GetTypes()
+                .Where(x => !x.IsGenericType && !x.IsAbstract)
+                .Where(x => typeof(IRepositoryRequest).IsAssignableFrom(x));
+
+            foreach (var requestType in requestTypes)
+            {
+                services.TryAddRepositoryHandler(requestType);
+            }
+
+            return services;
+        }
+
+        /// <summary>
+        /// Tries to register the corresponding repository handlers for all <see cref="IRepositoryRequest"/> in
+        /// the assembly of <typeparamref name="T"/>.
+        /// </summary>
+        /// <typeparam name="T">The type in the assembly to scan.</typeparam>
+        /// <param name="services">The <see cref="IServiceCollection"/>.</param>
+        /// <returns>The updated <see cref="IServiceCollection"/>.</returns>
+        public static IServiceCollection TryAddRepositoryHandlerForRequestsInAssemblyContaining<T>(this IServiceCollection services)
+            => services.TryAddRepositoryHandlerForRequestsInAssembly(typeof(T).Assembly);
     }
 }

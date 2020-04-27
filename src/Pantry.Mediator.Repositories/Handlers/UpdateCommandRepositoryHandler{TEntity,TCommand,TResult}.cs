@@ -4,28 +4,27 @@ using System.Threading.Tasks;
 using Omu.ValueInjecter;
 using Pantry.Mediator.Repositories.Commands;
 using Pantry.Mediator.Repositories.DomainEvents;
-using Pantry.Traits;
 
 namespace Pantry.Mediator.Repositories.Handlers
 {
     /// <summary>
-    /// Standard handler for <see cref="CreateCommand{TEntity, TModel}"/> that use a <see cref="IRepositoryAdd{TEntity}"/>
+    /// Standard handler for <see cref="UpdateCommand{TEntity, TModel}"/> that use a <see cref="ICrudRepository{TEntity}"/>
     /// and pubish <see cref="EntityAddedDomainEvent{TEntity}"/>.
     /// </summary>
     /// <typeparam name="TEntity">The entity type.</typeparam>
     /// <typeparam name="TCommand">The command type.</typeparam>
     /// <typeparam name="TResult">The result type.</typeparam>
-    public class CreateCommandRepositoryHandler<TEntity, TCommand, TResult> : IDomainRequestHandler<TCommand, TResult>
+    public class UpdateCommandRepositoryHandler<TEntity, TCommand, TResult> : IDomainRequestHandler<TCommand, TResult>
         where TEntity : class, IIdentifiable
-        where TCommand : CreateCommand<TEntity, TResult>
+        where TCommand : UpdateCommand<TEntity, TResult>
     {
-        private readonly IRepositoryAdd<TEntity> _repository;
+        private readonly ICrudRepository<TEntity> _repository;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="CreateCommandRepositoryHandler{TEntity, TRequest, TResult}"/> class.
+        /// Initializes a new instance of the <see cref="UpdateCommandRepositoryHandler{TEntity, TRequest, TResult}"/> class.
         /// </summary>
         /// <param name="repository">The repository.</param>
-        public CreateCommandRepositoryHandler(IRepositoryAdd<TEntity> repository)
+        public UpdateCommandRepositoryHandler(ICrudRepository<TEntity> repository)
         {
             _repository = repository ?? throw new ArgumentNullException(nameof(repository));
         }
@@ -33,8 +32,14 @@ namespace Pantry.Mediator.Repositories.Handlers
         /// <inheritdoc/>
         public async Task<TResult> HandleAsync(TCommand request, CancellationToken cancellationToken)
         {
-            var entity = Mapper.Map<TCommand, TEntity>(request);
-            var entityResult = await _repository.AddAsync(entity).ConfigureAwait(false);
+            if (request is null)
+            {
+                throw new ArgumentNullException(nameof(request));
+            }
+
+            var entity = await _repository.GetByIdAsync(request.Id, cancellationToken: cancellationToken).ConfigureAwait(false);
+            entity.InjectFrom(request);
+            var entityResult = await _repository.UpdateAsync(entity, cancellationToken: cancellationToken).ConfigureAwait(false);
             return Mapper.Map<TEntity, TResult>(entityResult);
         }
     }

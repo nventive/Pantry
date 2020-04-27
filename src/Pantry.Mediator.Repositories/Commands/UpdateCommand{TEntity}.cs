@@ -1,10 +1,10 @@
 ﻿namespace Pantry.Mediator.Repositories.Commands
 {
     /// <summary>
-    /// Standard command to create an entity.
+    /// Standard command to update an entity.
     /// </summary>
     /// <typeparam name="TEntity">The entity type.</typeparam>
-    public abstract class CreateCommand<TEntity> : CreateCommand<TEntity, TEntity>
+    public abstract class UpdateCommand<TEntity> : UpdateCommand<TEntity, TEntity>
         where TEntity : class, IIdentifiable
     {
     }

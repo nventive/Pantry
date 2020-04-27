@@ -12,7 +12,7 @@ namespace Pantry.Mediator.Repositories.DomainEvents
         /// <summary>
         /// Initializes a new instance of the <see cref="EntityAddedDomainEvent{TEntity}"/> class.
         /// </summary>
-        /// <param name="entity">The entity added.</param>
+        /// <param name="entity">The added entity.</param>
         public EntityAddedDomainEvent(TEntity entity)
         {
             Entity = entity ?? throw new ArgumentNullException(nameof(entity));

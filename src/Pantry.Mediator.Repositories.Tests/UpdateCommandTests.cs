@@ -11,17 +11,17 @@ using Xunit.Abstractions;
 
 namespace Pantry.Mediator.Repositories.Tests
 {
-    public class CreateCommandTests
+    public class UpdateCommandTests
     {
         private readonly ITestOutputHelper _outputHelper;
 
-        public CreateCommandTests(ITestOutputHelper outputHelper)
+        public UpdateCommandTests(ITestOutputHelper outputHelper)
         {
             _outputHelper = outputHelper;
         }
 
         [Fact]
-        public async Task ItShouldCreateAndReturnEntity()
+        public async Task ItShouldUpdateAndReturnEntity()
         {
             var services = new ServiceCollection()
                 .AddLogging(logging =>
@@ -35,7 +35,10 @@ namespace Pantry.Mediator.Repositories.Tests
                 .TryAddRepositoryHandlerForRequestsInAssemblyContaining<CreateCommandTests>()
                 .BuildServiceProvider();
 
-            var command = new CreateStandardEntity { Name = "Foo", Age = 23 };
+            var entity = new StandardEntity { Name = "Bar", Age = 23 };
+            entity = await services.GetRequiredService<IRepositoryAdd<StandardEntity>>().AddAsync(entity);
+
+            var command = new UpdateStandardEntity { Id = entity.Id, Name = "Foo" };
             var mediator = services.GetRequiredService<IMediator>();
 
             var result = await mediator.ExecuteAsync(command);
@@ -43,14 +46,11 @@ namespace Pantry.Mediator.Repositories.Tests
             result.Should().NotBeNull();
             result.Id.Should().NotBeNull();
             result.Name.Should().Be(command.Name);
-            result.Age.Should().Be(command.Age);
-
-            var entity = await services.GetRequiredService<IRepositoryGet<StandardEntity>>().GetByIdAsync(result.Id);
-            result.Should().BeEquivalentTo(entity);
+            result.Age.Should().Be(23);
         }
 
         [Fact]
-        public async Task ItShouldCreateAndReturnModel()
+        public async Task ItShouldUpdateAndReturnModel()
         {
             var services = new ServiceCollection()
                 .AddLogging(logging =>
@@ -64,35 +64,31 @@ namespace Pantry.Mediator.Repositories.Tests
                 .TryAddRepositoryHandlerForRequestsInAssemblyContaining<CreateCommandTests>()
                 .BuildServiceProvider();
 
-            var command = new CreateAndProjectStandardEntity { Name = "Foo", Age = 23 };
+            var entity = new StandardEntity { Name = "Bar", Age = 23 };
+            entity = await services.GetRequiredService<IRepositoryAdd<StandardEntity>>().AddAsync(entity);
+
+            var command = new UpdateAndProjectStandardEntity { Id = entity.Id, Name = "Foo" };
             var mediator = services.GetRequiredService<IMediator>();
 
             var result = await mediator.ExecuteAsync(command);
 
             result.Should().NotBeNull();
-            result.Name.Should().Be(command.Name);
-
-            var entity = (await services.GetRequiredService<IRepositoryFindAll<StandardEntity>>().FindAllAsync(null)).First();
-            result.Name.Should().Be(entity.Name);
+            result.Age.Should().Be(23);
         }
 
-        public class CreateStandardEntity : CreateCommand<StandardEntity>
+        public class UpdateStandardEntity : UpdateCommand<StandardEntity>
         {
             public string? Name { get; set; }
+        }
 
+        public class UpdateAndProjectStandardEntity : UpdateCommand<StandardEntity, UpdateStandardEntityModel>
+        {
+            public string? Name { get; set; }
+        }
+
+        public class UpdateStandardEntityModel
+        {
             public int Age { get; set; }
-        }
-
-        public class CreateAndProjectStandardEntity : CreateCommand<StandardEntity, CreateStandardEntityModel>
-        {
-            public string? Name { get; set; }
-
-            public int Age { get; set; }
-        }
-
-        public class CreateStandardEntityModel
-        {
-            public string? Name { get; set; }
         }
     }
 }
