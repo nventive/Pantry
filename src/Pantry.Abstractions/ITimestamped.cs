@@ -8,7 +8,7 @@ namespace Pantry
     public interface ITimestamped
     {
         /// <summary>
-        /// Gets or sets the last tyime the data was updated in UTC.
+        /// Gets or sets the last time the data was updated in UTC.
         /// </summary>
         public DateTimeOffset? Timestamp { get; set; }
     }
