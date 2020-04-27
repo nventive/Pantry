@@ -1,7 +1,7 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 
-namespace Pantry.Mediator.Invocations
+namespace Pantry.Mediator.Pipeline
 {
     /// <summary>
     /// Encapsulates pipeline invocations.

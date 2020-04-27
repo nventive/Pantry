@@ -7,7 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Pantry.Mediator.Exceptions;
-using Pantry.Mediator.Invocations;
+using Pantry.Mediator.Pipeline;
 using Pantry.Providers;
 
 namespace Pantry.Mediator
@@ -65,18 +65,15 @@ namespace Pantry.Mediator
             }
 
             var handlerInterfaceType = typeof(IDomainRequestHandler<,>).MakeGenericType(request.GetType(), typeof(TResult));
-            var handler = ServiceProvider.GetService(handlerInterfaceType) as IDomainRequestHandler;
-            if (handler is null)
+            if (!(ServiceProvider.GetService(handlerInterfaceType) is IDomainRequestHandler handler))
             {
                 Logger.LogWarning("No hander for {@Request}", request);
                 throw new MediatorException($"Unable to find a handler for {request}.");
             }
 
-            ExecuteRequestInvocation invocation = new HandlerExecuteRequestInvocation(handler, handlerInterfaceType);
-            foreach (var middleware in ReversedRequestsMiddlewares)
-            {
-                invocation = new MiddlewareExecuteRequestInvocation(middleware, invocation);
-            }
+            var invocation = ReversedRequestsMiddlewares.Aggregate(
+                (ExecuteRequestInvocation)new HandlerExecuteRequestInvocation(handler, handlerInterfaceType),
+                (agg, value) => new MiddlewareExecuteRequestInvocation(value, agg));
 
             var result = await invocation.ProceedAsync(request, cancellationToken).ConfigureAwait(false);
 
