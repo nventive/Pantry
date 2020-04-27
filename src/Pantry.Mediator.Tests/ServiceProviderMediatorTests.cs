@@ -94,5 +94,26 @@ namespace Pantry.Mediator.Tests
             handler1.Verify(x => x.HandleAsync(domainEvent));
             handler2.Verify(x => x.HandleAsync(domainEvent));
         }
+
+        [Fact]
+        public async Task ItShouldRegisterHandlers()
+        {
+            var services = new ServiceCollection()
+                .AddMediator()
+                .AddDomainHandlersInAssemblyContaining<ServiceProviderMediatorTests>()
+                .BuildServiceProvider();
+
+            var command = new SampleCommand();
+            var query = new SampleQuery();
+            var mediator = services.GetRequiredService<IMediator>();
+
+            Func<Task> act = async () =>
+            {
+                await mediator.ExecuteAsync(command);
+                await mediator.ExecuteAsync(query);
+            };
+
+            act.Should().NotThrow();
+        }
     }
 }

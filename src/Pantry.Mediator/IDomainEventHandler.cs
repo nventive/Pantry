@@ -1,19 +1,9 @@
-﻿using System.Threading.Tasks;
-
-namespace Pantry.Mediator
+﻿namespace Pantry.Mediator
 {
     /// <summary>
-    /// Handles <see cref="IDomainEvent"/>.
+    /// Marker interface for domain event handlers.
     /// </summary>
-    /// <typeparam name="TDomainEvent">The <see cref="IDomainEvent"/> type to handle.</typeparam>
-    public interface IDomainEventHandler<TDomainEvent>
-        where TDomainEvent : class, IDomainEvent
+    public interface IDomainEventHandler
     {
-        /// <summary>
-        /// Handles the <paramref name="domainEvent"/>.
-        /// </summary>
-        /// <param name="domainEvent">The <see cref="IDomainEvent"/> to handle.</param>
-        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-        Task HandleAsync(TDomainEvent domainEvent);
     }
 }

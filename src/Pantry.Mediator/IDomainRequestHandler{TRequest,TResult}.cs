@@ -8,7 +8,7 @@ namespace Pantry.Mediator
     /// </summary>
     /// <typeparam name="TRequest">The type of request.</typeparam>
     /// <typeparam name="TResult">The type of result.</typeparam>
-    public interface IDomainRequestHandler<in TRequest, TResult>
+    public interface IDomainRequestHandler<in TRequest, TResult> : IDomainRequestHandler
         where TRequest : IDomainRequest<TResult>
     {
         /// <summary>
