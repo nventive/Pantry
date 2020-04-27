@@ -205,7 +205,7 @@ namespace Pantry.InMemory
         }
 
         /// <inheritdoc/>
-        public override async Task<IContinuationEnumerable<TEntity>> FindAllAsync(string? continuationToken, int limit = Query.DefaultLimit, CancellationToken cancellationToken = default)
+        public override async Task<IContinuationEnumerable<TEntity>> FindAllAsync(string? continuationToken, int limit = RepositoryQuery.DefaultLimit, CancellationToken cancellationToken = default)
         {
             var result = await ContinuationTokenEncoder.ToContinuationEnumerable(
                 Storage.Values,
@@ -216,7 +216,7 @@ namespace Pantry.InMemory
         }
 
         /// <inheritdoc/>
-        public override async Task<IContinuationEnumerable<TEntity>> FindAsync(ICriteriaQuery<TEntity> query, CancellationToken cancellationToken = default)
+        public override async Task<IContinuationEnumerable<TEntity>> FindAsync(ICriteriaRepositoryQuery<TEntity> query, CancellationToken cancellationToken = default)
         {
             if (query is null)
             {

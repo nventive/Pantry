@@ -4,7 +4,7 @@ using System.Linq;
 namespace Pantry.Queries.Criteria
 {
     /// <summary>
-    /// <see cref="ICriteriaQuery{TResult}"/> extension methods.
+    /// <see cref="ICriteriaRepositoryQuery{TResult}"/> extension methods.
     /// </summary>
     public static class CriteriaQueryExtensions
     {
@@ -17,7 +17,7 @@ namespace Pantry.Queries.Criteria
         /// <param name="query">The query.</param>
         /// <param name="propertyPath">The proeprty path to search for.</param>
         /// <returns>The first criterion, or null if not found.</returns>
-        public static TCriterion? FirstOrDefaultPropertyCriterion<TResult, TCriterion>(this ICriteriaQuery<TResult> query, string propertyPath)
+        public static TCriterion? FirstOrDefaultPropertyCriterion<TResult, TCriterion>(this ICriteriaRepositoryQuery<TResult> query, string propertyPath)
             where TCriterion : PropertyCriterion
         {
             if (query is null)
@@ -39,8 +39,8 @@ namespace Pantry.Queries.Criteria
         /// <param name="query">The query.</param>
         /// <param name="criterion">The criterion to add or replace.</param>
         /// <returns>The first criterion, or null if not found.</returns>
-        public static ICriteriaQuery<TResult> AddOrReplacePropertyCriterion<TResult, TCriterion>(
-            this ICriteriaQuery<TResult> query,
+        public static ICriteriaRepositoryQuery<TResult> AddOrReplacePropertyCriterion<TResult, TCriterion>(
+            this ICriteriaRepositoryQuery<TResult> query,
             TCriterion criterion)
             where TCriterion : PropertyCriterion
         {

@@ -246,7 +246,7 @@ namespace Pantry.Redis
         }
 
         /// <inheritdoc/>
-        public override async Task<IContinuationEnumerable<TEntity>> FindAllAsync(string? continuationToken, int limit = Query.DefaultLimit, CancellationToken cancellationToken = default)
+        public override async Task<IContinuationEnumerable<TEntity>> FindAllAsync(string? continuationToken, int limit = RepositoryQuery.DefaultLimit, CancellationToken cancellationToken = default)
         {
             if (limit <= 0)
             {

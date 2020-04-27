@@ -256,16 +256,16 @@ namespace Pantry.PetaPoco
         }
 
         /// <inheritdoc/>
-        public override Task<IContinuationEnumerable<TEntity>> FindAllAsync(string? continuationToken, int limit = Query.DefaultLimit, CancellationToken cancellationToken = default)
+        public override Task<IContinuationEnumerable<TEntity>> FindAllAsync(string? continuationToken, int limit = RepositoryQuery.DefaultLimit, CancellationToken cancellationToken = default)
         {
             return ExecuteFindAsync(
-                new FindAllQuery<TEntity> { ContinuationToken = continuationToken, Limit = limit },
+                new FindAllRepositoryQuery<TEntity> { ContinuationToken = continuationToken, Limit = limit },
                 _ => { },
                 cancellationToken);
         }
 
         /// <inheritdoc/>
-        public override async Task<IContinuationEnumerable<TEntity>> FindAsync(ICriteriaQuery<TEntity> query, CancellationToken cancellationToken = default)
+        public override async Task<IContinuationEnumerable<TEntity>> FindAsync(ICriteriaRepositoryQuery<TEntity> query, CancellationToken cancellationToken = default)
         {
             if (query is null)
             {
@@ -401,12 +401,12 @@ namespace Pantry.PetaPoco
         /// Executes a query with proper pagination.
         /// Prepares the SqlKata query with the proper select statement.
         /// </summary>
-        /// <param name="query">The <see cref="IQuery{TResult}"/>.</param>
+        /// <param name="query">The <see cref="IRepositoryQuery{TResult}"/>.</param>
         /// <param name="queryBuilder">Builds additional criterias.</param>
         /// <param name="cancellationToken">The <see cref="CancellationToken"/>.</param>
         /// <returns>The <see cref="IContinuationEnumerable{TEntity}"/> with continuation token set.</returns>
         protected virtual Task<IContinuationEnumerable<TEntity>> ExecuteFindAsync(
-            IQuery<TEntity> query,
+            IRepositoryQuery<TEntity> query,
             Action<SqlKata.Query> queryBuilder,
             CancellationToken cancellationToken)
         {
@@ -424,12 +424,12 @@ namespace Pantry.PetaPoco
         /// <summary>
         /// Executes a query with proper pagination.
         /// </summary>
-        /// <param name="query">The <see cref="IQuery{TResult}"/>.</param>
+        /// <param name="query">The <see cref="IRepositoryQuery{TResult}"/>.</param>
         /// <param name="sqlQuery">The SQLKata query to execute.</param>
         /// <param name="cancellationToken">The <see cref="CancellationToken"/>.</param>
         /// <returns>The <see cref="IContinuationEnumerable{TEntity}"/> with continuation token set.</returns>
         protected virtual async Task<IContinuationEnumerable<TEntity>> ExecuteFindAsync(
-            IQuery<TEntity> query,
+            IRepositoryQuery<TEntity> query,
             SqlKata.Query sqlQuery,
             CancellationToken cancellationToken)
         {

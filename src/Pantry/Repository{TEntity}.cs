@@ -100,7 +100,7 @@ namespace Pantry
         }
 
         /// <inheritdoc/>
-        public virtual Task<IContinuationEnumerable<TEntity>> FindAsync(ICriteriaQuery<TEntity> query, CancellationToken cancellationToken = default)
+        public virtual Task<IContinuationEnumerable<TEntity>> FindAsync(ICriteriaRepositoryQuery<TEntity> query, CancellationToken cancellationToken = default)
         {
             throw new UnsupportedFeatureException($"This feature is not supported ({GetType().FullName}.{MethodBase.GetCurrentMethod().Name}).");
         }

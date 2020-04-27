@@ -7,7 +7,7 @@ namespace Pantry.Azure.TableStorage.Queries
     /// Base class for Azure Table Storage that uses <see cref="TableQuery"/>.
     /// </summary>
     /// <typeparam name="TResult">The query result type.</typeparam>
-    public abstract class AzureTableStorageTableQuery<TResult> : Query<TResult>
+    public abstract class AzureTableStorageTableQuery<TResult> : RepositoryQuery<TResult>
     {
         /// <summary>
         /// Apply the query to the <paramref name="tableQuery"/>.

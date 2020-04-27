@@ -10,7 +10,7 @@ namespace Pantry.Continuation
         /// <summary>
         /// Gets or sets the number of item per page.
         /// </summary>
-        public int PerPage { get; set; } = Query.DefaultLimit;
+        public int PerPage { get; set; } = RepositoryQuery.DefaultLimit;
 
         /// <summary>
         /// Gets or sets the page number. Starts at 1.

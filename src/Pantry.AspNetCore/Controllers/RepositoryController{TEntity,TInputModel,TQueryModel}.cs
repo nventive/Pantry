@@ -11,7 +11,7 @@ namespace Pantry.AspNetCore.Controllers
     public abstract class RepositoryController<TEntity, TInputModel, TQueryModel> : RepositoryController<TEntity, TEntity, TEntity, TInputModel, TInputModel, TQueryModel>
         where TEntity : class, IIdentifiable
         where TInputModel : class
-        where TQueryModel : IQuery<TEntity>, new()
+        where TQueryModel : IRepositoryQuery<TEntity>, new()
     {
     }
 }

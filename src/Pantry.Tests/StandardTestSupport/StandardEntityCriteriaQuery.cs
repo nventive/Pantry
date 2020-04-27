@@ -5,7 +5,7 @@ using Pantry.Queries.Criteria;
 
 namespace Pantry.Tests.StandardTestSupport
 {
-    public class StandardEntityCriteriaQuery : CriteriaQuery<StandardEntity>
+    public class StandardEntityCriteriaQuery : CriteriaRepositoryQuery<StandardEntity>
     {
         public string? IdEq
         {

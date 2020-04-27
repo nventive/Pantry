@@ -3,7 +3,7 @@ using Pantry.Queries;
 
 namespace Pantry.AspNetCore.Tests.Server
 {
-    public class StandardEntityCriteriaQuery : CriteriaQuery<StandardEntity>
+    public class StandardEntityCriteriaQuery : CriteriaRepositoryQuery<StandardEntity>
     {
         public string? IdEq
         {

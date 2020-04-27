@@ -10,7 +10,7 @@ namespace Pantry.Continuation
         /// <summary>
         /// Gets or sets the limit.
         /// </summary>
-        public int Limit { get; set; } = Query.DefaultLimit;
+        public int Limit { get; set; } = RepositoryQuery.DefaultLimit;
 
         /// <summary>
         /// Gets or sets the offset.

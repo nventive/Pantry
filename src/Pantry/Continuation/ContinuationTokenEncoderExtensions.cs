@@ -24,7 +24,7 @@ namespace Pantry.Continuation
             this IContinuationTokenEncoder<LimitOffsetContinuationToken> encoder,
             IEnumerable<TEntity> values,
             string? continuationToken,
-            int limit = Query.DefaultLimit)
+            int limit = RepositoryQuery.DefaultLimit)
         {
             if (encoder is null)
             {

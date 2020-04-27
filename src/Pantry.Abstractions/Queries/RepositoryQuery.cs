@@ -3,7 +3,7 @@
     /// <summary>
     /// Holds static values for queries.
     /// </summary>
-    public static class Query
+    public static class RepositoryQuery
     {
         /// <summary>
         /// Gets the default query limit to apply when none provided.

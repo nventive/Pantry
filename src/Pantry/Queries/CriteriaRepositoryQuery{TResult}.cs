@@ -3,15 +3,15 @@
 namespace Pantry.Queries
 {
     /// <summary>
-    /// <see cref="ICriteriaQuery{TResult}"/> implementation.
+    /// <see cref="ICriteriaRepositoryQuery{TResult}"/> implementation.
     /// </summary>
     /// <typeparam name="TResult">The return type.</typeparam>
-    public class CriteriaQuery<TResult> : ICriteriaQuery<TResult>
+    public class CriteriaRepositoryQuery<TResult> : ICriteriaRepositoryQuery<TResult>
     {
         private readonly List<ICriterion> _criterions = new List<ICriterion>();
 
         /// <inheritdoc/>
-        public int Limit { get; set; } = Query.DefaultLimit;
+        public int Limit { get; set; } = RepositoryQuery.DefaultLimit;
 
         /// <inheritdoc/>
         public string? ContinuationToken { get; set; }

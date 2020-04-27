@@ -8,7 +8,7 @@ using Pantry.Reflection;
 namespace Pantry.Queries
 {
     /// <summary>
-    /// <see cref="ICriteriaQuery{TResult}"/> extension methods.
+    /// <see cref="ICriteriaRepositoryQuery{TResult}"/> extension methods.
     /// </summary>
     public static class InPropertyQueryExtensions
     {
@@ -17,11 +17,11 @@ namespace Pantry.Queries
         /// Will add to any existing list and de-duplicates.
         /// </summary>
         /// <typeparam name="TResult">The type of result for the query.</typeparam>
-        /// <param name="query">The <see cref="ICriteriaQuery{TResult}"/>.</param>
+        /// <param name="query">The <see cref="ICriteriaRepositoryQuery{TResult}"/>.</param>
         /// <param name="propertyPath">The property path.</param>
         /// <param name="values">The values set.</param>
-        /// <returns>The updated <see cref="ICriteriaQuery{TResult}"/>.</returns>
-        public static ICriteriaQuery<TResult> In<TResult>(this ICriteriaQuery<TResult> query, string propertyPath, IEnumerable<object>? values)
+        /// <returns>The updated <see cref="ICriteriaRepositoryQuery{TResult}"/>.</returns>
+        public static ICriteriaRepositoryQuery<TResult> In<TResult>(this ICriteriaRepositoryQuery<TResult> query, string propertyPath, IEnumerable<object>? values)
         {
             if (query is null)
             {
@@ -49,39 +49,39 @@ namespace Pantry.Queries
         /// </summary>
         /// <typeparam name="TResult">The type of result for the query.</typeparam>
         /// <typeparam name="TProperty">The type of property.</typeparam>
-        /// <param name="query">The <see cref="ICriteriaQuery{TResult}"/>.</param>
+        /// <param name="query">The <see cref="ICriteriaRepositoryQuery{TResult}"/>.</param>
         /// <param name="propertyPath">The property path.</param>
         /// <param name="values">The values set.</param>
-        /// <returns>The updated <see cref="ICriteriaQuery{TResult}"/>.</returns>
-        public static ICriteriaQuery<TResult> In<TResult, TProperty>(
-            this ICriteriaQuery<TResult> query,
+        /// <returns>The updated <see cref="ICriteriaRepositoryQuery{TResult}"/>.</returns>
+        public static ICriteriaRepositoryQuery<TResult> In<TResult, TProperty>(
+            this ICriteriaRepositoryQuery<TResult> query,
             Expression<Func<TResult, TProperty>> propertyPath,
             IEnumerable<TProperty>? values)
             => query.In(PropertyVisitor.GetPropertyPath(propertyPath), values.Cast<object>());
 
         /// <summary>
         /// Finds the first set value for inclusion in a set of <paramref name="propertyPath"/>.
-        /// This is the "inverse" of <see cref="In{TResult}(ICriteriaQuery{TResult}, string, IEnumerable{object})"/>.
+        /// This is the "inverse" of <see cref="In{TResult}(ICriteriaRepositoryQuery{TResult}, string, IEnumerable{object})"/>.
         /// </summary>
         /// <typeparam name="TResult">The type of result for the query.</typeparam>
         /// <typeparam name="TValue">The type of value.</typeparam>
-        /// <param name="query">The <see cref="ICriteriaQuery{TResult}"/>.</param>
+        /// <param name="query">The <see cref="ICriteriaRepositoryQuery{TResult}"/>.</param>
         /// <param name="propertyPath">The property path.</param>
         /// <returns>The found value, or default if not found.</returns>
-        public static IEnumerable<TValue> InValue<TResult, TValue>(this ICriteriaQuery<TResult> query, string propertyPath)
+        public static IEnumerable<TValue> InValue<TResult, TValue>(this ICriteriaRepositoryQuery<TResult> query, string propertyPath)
             => (IEnumerable<TValue>)query.FirstOrDefaultPropertyCriterion<TResult, InPropertyCriterion>(propertyPath)?.Values!;
 
         /// <summary>
         /// Finds the first set value for inclusion in a set of <paramref name="propertyPath"/>.
-        /// This is the "inverse" of <see cref="In{TResult, TProperty}(ICriteriaQuery{TResult}, Expression{Func{TResult, TProperty}}, IEnumerable{TProperty})"/>.
+        /// This is the "inverse" of <see cref="In{TResult, TProperty}(ICriteriaRepositoryQuery{TResult}, Expression{Func{TResult, TProperty}}, IEnumerable{TProperty})"/>.
         /// </summary>
         /// <typeparam name="TResult">The type of result for the query.</typeparam>
         /// <typeparam name="TValue">The type of value.</typeparam>
-        /// <param name="query">The <see cref="ICriteriaQuery{TResult}"/>.</param>
+        /// <param name="query">The <see cref="ICriteriaRepositoryQuery{TResult}"/>.</param>
         /// <param name="propertyPath">The property path.</param>
         /// <returns>The found value, or default if not found.</returns>
         public static IEnumerable<TValue> InValue<TResult, TValue>(
-            this ICriteriaQuery<TResult> query,
+            this ICriteriaRepositoryQuery<TResult> query,
             Expression<Func<TResult, TValue>> propertyPath)
             => query.InValue<TResult, TValue>(PropertyVisitor.GetPropertyPath(propertyPath));
     }

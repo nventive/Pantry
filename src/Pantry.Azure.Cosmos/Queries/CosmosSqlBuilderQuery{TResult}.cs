@@ -6,7 +6,7 @@ namespace Pantry.Azure.Cosmos.Queries
     /// Base class for CosmosDb Queries using Sql builder.
     /// </summary>
     /// <typeparam name="TResult">The query result.</typeparam>
-    public abstract class CosmosSqlBuilderQuery<TResult> : Query<TResult>
+    public abstract class CosmosSqlBuilderQuery<TResult> : RepositoryQuery<TResult>
     {
         /// <summary>
         /// Gets the SqlKata <see cref="SqlKata.Query"/>.

@@ -44,7 +44,7 @@ namespace Pantry.Decorators
             => GetRepo<IRepositoryFindAll<TEntity>>().FindAllAsync(continuationToken, limit, cancellationToken);
 
         /// <inheritdoc/>
-        public virtual Task<IContinuationEnumerable<TEntity>> FindAsync(ICriteriaQuery<TEntity> query, CancellationToken cancellationToken = default)
+        public virtual Task<IContinuationEnumerable<TEntity>> FindAsync(ICriteriaRepositoryQuery<TEntity> query, CancellationToken cancellationToken = default)
             => GetRepo<IRepositoryFindByCriteria<TEntity>>().FindAsync(query, cancellationToken);
 
         /// <inheritdoc/>

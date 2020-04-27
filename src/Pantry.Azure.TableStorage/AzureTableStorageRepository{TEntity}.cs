@@ -241,7 +241,7 @@ namespace Pantry.Azure.TableStorage
         }
 
         /// <inheritdoc/>
-        public override Task<IContinuationEnumerable<TEntity>> FindAllAsync(string? continuationToken, int limit = Query.DefaultLimit, CancellationToken cancellationToken = default)
+        public override Task<IContinuationEnumerable<TEntity>> FindAllAsync(string? continuationToken, int limit = RepositoryQuery.DefaultLimit, CancellationToken cancellationToken = default)
         {
             if (limit <= 0)
             {
@@ -249,13 +249,13 @@ namespace Pantry.Azure.TableStorage
             }
 
             return PrepareQueryAndExecuteAsync(
-                new FindAllQuery<TEntity> { ContinuationToken = continuationToken, Limit = limit },
+                new FindAllRepositoryQuery<TEntity> { ContinuationToken = continuationToken, Limit = limit },
                 _ => { },
                 cancellationToken);
         }
 
         /// <inheritdoc/>
-        public override Task<IContinuationEnumerable<TEntity>> FindAsync(ICriteriaQuery<TEntity> query, CancellationToken cancellationToken = default)
+        public override Task<IContinuationEnumerable<TEntity>> FindAsync(ICriteriaRepositoryQuery<TEntity> query, CancellationToken cancellationToken = default)
         {
             if (query is null)
             {
@@ -458,7 +458,7 @@ namespace Pantry.Azure.TableStorage
         /// <param name="cancellationToken">the <see cref="CancellationToken"/>.</param>
         /// <returns>The mapped out results.</returns>
         protected virtual async Task<IContinuationEnumerable<TEntity>> PrepareQueryAndExecuteAsync(
-            IQuery<TEntity> query,
+            IRepositoryQuery<TEntity> query,
             Action<TableQuery<DynamicTableEntity>> apply,
             CancellationToken cancellationToken)
         {

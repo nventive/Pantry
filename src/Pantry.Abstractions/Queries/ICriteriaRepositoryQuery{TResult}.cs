@@ -6,7 +6,7 @@ namespace Pantry.Queries
     /// Type of query that supports <see cref="ICriterion"/>.
     /// </summary>
     /// <typeparam name="TResult">The return type.</typeparam>
-    public interface ICriteriaQuery<TResult> : IQuery<TResult>
+    public interface ICriteriaRepositoryQuery<TResult> : IRepositoryQuery<TResult>
     {
         /// <summary>
         /// Gets the <see cref="ICriterion"/>.

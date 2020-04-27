@@ -33,7 +33,7 @@ namespace Pantry.AspNetCore.Controllers
         where TResultsModel : class, IIdentifiable
         where TCreateModel : class
         where TUpdateModel : class
-        where TQueryModel : IQuery<TEntity>, new()
+        where TQueryModel : IRepositoryQuery<TEntity>, new()
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="RepositoryController{TEntity, TResultModel, TResultsModel, TCreateModel, TUpdateModel, TQueryModel}"/> class.
@@ -115,7 +115,7 @@ namespace Pantry.AspNetCore.Controllers
             query ??= new TQueryModel();
 
             IContinuationEnumerable<TEntity> entityResults;
-            if (query is ICriteriaQuery<TEntity> critQuery)
+            if (query is ICriteriaRepositoryQuery<TEntity> critQuery)
             {
                 var repository = Services.GetRequiredService<IRepositoryFindByCriteria<TEntity>>();
                 entityResults = await repository.FindAsync(critQuery).ConfigureAwait(false);
@@ -196,7 +196,7 @@ namespace Pantry.AspNetCore.Controllers
             TEntity entity;
             if (mapper != null)
             {
-                entity = await mapper.Map(model);
+                entity = await mapper.Map(model, HttpContext);
             }
             else
             {

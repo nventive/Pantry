@@ -242,7 +242,7 @@ namespace Pantry.Azure.Cosmos
         }
 
         /// <inheritdoc/>
-        public override async Task<IContinuationEnumerable<TEntity>> FindAllAsync(string? continuationToken, int limit = Query.DefaultLimit, CancellationToken cancellationToken = default)
+        public override async Task<IContinuationEnumerable<TEntity>> FindAllAsync(string? continuationToken, int limit = RepositoryQuery.DefaultLimit, CancellationToken cancellationToken = default)
         {
             if (limit <= 0)
             {
@@ -258,13 +258,13 @@ namespace Pantry.Azure.Cosmos
             var response = await iterator.ReadNextAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
             var result = response.Resource.Select(x => Mapper.MapToSource(x)).ToContinuationEnumerable(response.ContinuationToken);
 
-            Logger.LogFind(new FindAllQuery<TEntity> { ContinuationToken = continuationToken, Limit = limit }, result);
+            Logger.LogFind(new FindAllRepositoryQuery<TEntity> { ContinuationToken = continuationToken, Limit = limit }, result);
 
             return result;
         }
 
         /// <inheritdoc/>
-        public override async Task<IContinuationEnumerable<TEntity>> FindAsync(ICriteriaQuery<TEntity> query, CancellationToken cancellationToken = default)
+        public override async Task<IContinuationEnumerable<TEntity>> FindAsync(ICriteriaRepositoryQuery<TEntity> query, CancellationToken cancellationToken = default)
         {
             if (query is null)
             {
@@ -374,7 +374,7 @@ namespace Pantry.Azure.Cosmos
         /// <param name="cancellationToken">The <see cref="CancellationToken"/>.</param>
         /// <returns>The execution result.</returns>
         protected virtual async Task<IContinuationEnumerable<TEntity>> ExecuteQueryAsync(
-            IQuery<TEntity> query,
+            IRepositoryQuery<TEntity> query,
             QueryDefinition queryDefinition,
             CancellationToken cancellationToken)
         {
@@ -406,7 +406,7 @@ namespace Pantry.Azure.Cosmos
         /// <param name="cancellationToken">The <see cref="CancellationToken"/>.</param>
         /// <returns>The execution result.</returns>
         protected virtual async Task<FeedResponse<CosmosDocument>> RawExecuteQueryAsync<TResult>(
-            IQuery<TResult> query,
+            IRepositoryQuery<TResult> query,
             QueryDefinition queryDefinition,
             CancellationToken cancellationToken)
         {

@@ -6,7 +6,7 @@ namespace Pantry.Queries
     /// Query for entities.
     /// </summary>
     /// <typeparam name="TResult">The entity type.</typeparam>
-    public interface IQuery<TResult> : IContinuation
+    public interface IRepositoryQuery<TResult> : IContinuation
     {
         /// <summary>
         /// Gets or sets the number of items to fetch.

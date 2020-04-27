@@ -6,7 +6,7 @@ namespace Pantry.PetaPoco.Queries
     /// Base class for CosmosDb Queries using Sql builder.
     /// </summary>
     /// <typeparam name="TResult">The query result.</typeparam>
-    public abstract class PetaPocoSqlBuilderQuery<TResult> : Query<TResult>
+    public abstract class PetaPocoSqlBuilderQuery<TResult> : RepositoryQuery<TResult>
     {
         /// <summary>
         /// Applies the query.

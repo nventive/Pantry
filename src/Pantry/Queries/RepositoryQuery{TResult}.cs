@@ -1,13 +1,13 @@
 ﻿namespace Pantry.Queries
 {
     /// <summary>
-    /// Base class for <see cref="IQuery{TResult}"/> implementation.
+    /// Base class for <see cref="IRepositoryQuery{TResult}"/> implementation.
     /// </summary>
     /// <typeparam name="TResult">The return type.</typeparam>
-    public abstract class Query<TResult> : IQuery<TResult>
+    public abstract class RepositoryQuery<TResult> : IRepositoryQuery<TResult>
     {
         /// <inheritdoc />
-        public int Limit { get; set; } = Query.DefaultLimit;
+        public int Limit { get; set; } = RepositoryQuery.DefaultLimit;
 
         /// <inheritdoc />
         public string? ContinuationToken { get; set; }

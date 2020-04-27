@@ -34,7 +34,7 @@ namespace Pantry.Continuation
         /// <returns>The <see cref="IContinuationEnumerable{T}"/>.</returns>
         public static async ValueTask<IContinuationEnumerable<TEntity>> ToContinuationEnumerable<TEntity>(
             this IEnumerable<TEntity> values,
-            IQuery<TEntity> query,
+            IRepositoryQuery<TEntity> query,
             IContinuationTokenEncoder<LimitOffsetContinuationToken> encoder)
         {
             if (values is null)

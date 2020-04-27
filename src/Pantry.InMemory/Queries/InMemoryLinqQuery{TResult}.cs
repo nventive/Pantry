@@ -7,7 +7,7 @@ namespace Pantry.InMemory.Queries
     /// Base class for in-memory queries using linq.
     /// </summary>
     /// <typeparam name="TResult">The result type.</typeparam>
-    public abstract class InMemoryLinqQuery<TResult> : Query<TResult>
+    public abstract class InMemoryLinqQuery<TResult> : RepositoryQuery<TResult>
     {
         /// <summary>
         /// Applies the query to the <paramref name="queryable"/> and returns the resulting <see cref="IQueryable{TResult}"/>.

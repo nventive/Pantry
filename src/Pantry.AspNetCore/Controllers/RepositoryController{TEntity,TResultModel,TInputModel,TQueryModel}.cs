@@ -13,7 +13,7 @@ namespace Pantry.AspNetCore.Controllers
         where TEntity : class, IIdentifiable
         where TResultModel : class, IIdentifiable
         where TInputModel : class
-        where TQueryModel : IQuery<TEntity>, new()
+        where TQueryModel : IRepositoryQuery<TEntity>, new()
     {
     }
 }

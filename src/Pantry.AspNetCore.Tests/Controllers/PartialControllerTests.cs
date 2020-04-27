@@ -20,7 +20,7 @@ namespace Pantry.AspNetCore.Tests.Controllers
         [Fact]
         public async Task ItShouldOnlyExposeCreate()
         {
-            var client = GetRepositoryApiClient<StandardEntity, StandardEntity, StandardEntityCreateModel, StandardEntityCreateModel, CriteriaQuery<StandardEntity>>("/api/standard-entities-create");
+            var client = GetRepositoryApiClient<StandardEntity, StandardEntity, StandardEntityCreateModel, StandardEntityCreateModel, CriteriaRepositoryQuery<StandardEntity>>("/api/standard-entities-create");
             var entity = StandardEntityGenerator.Generate();
             await Factory.Services.GetRequiredService<IRepositoryAdd<StandardEntity>>().AddAsync(entity);
 
@@ -30,7 +30,7 @@ namespace Pantry.AspNetCore.Tests.Controllers
             result = await client.GetById(entity.Id);
             result.StatusCode.Should().Be(HttpStatusCode.NotFound);
 
-            var collectionResult = await client.Find(new CriteriaQuery<StandardEntity>());
+            var collectionResult = await client.Find(new CriteriaRepositoryQuery<StandardEntity>());
             collectionResult.StatusCode.Should().Be(HttpStatusCode.MethodNotAllowed);
 
             result = await client.Update(
@@ -45,7 +45,7 @@ namespace Pantry.AspNetCore.Tests.Controllers
         [Fact]
         public async Task ItShouldOnlyExposeGet()
         {
-            var client = GetRepositoryApiClient<StandardEntity, StandardEntity, StandardEntityCreateModel, StandardEntityCreateModel, CriteriaQuery<StandardEntity>>("/api/standard-entities-get");
+            var client = GetRepositoryApiClient<StandardEntity, StandardEntity, StandardEntityCreateModel, StandardEntityCreateModel, CriteriaRepositoryQuery<StandardEntity>>("/api/standard-entities-get");
             var entity = StandardEntityGenerator.Generate();
             await Factory.Services.GetRequiredService<IRepositoryAdd<StandardEntity>>().AddAsync(entity);
 
@@ -55,7 +55,7 @@ namespace Pantry.AspNetCore.Tests.Controllers
             result = await client.GetById(entity.Id);
             result.StatusCode.Should().Be(HttpStatusCode.OK);
 
-            var collectionResult = await client.Find(new CriteriaQuery<StandardEntity>());
+            var collectionResult = await client.Find(new CriteriaRepositoryQuery<StandardEntity>());
             collectionResult.StatusCode.Should().Be(HttpStatusCode.NotFound);
 
             result = await client.Update(
@@ -70,7 +70,7 @@ namespace Pantry.AspNetCore.Tests.Controllers
         [Fact]
         public async Task ItShouldOnlyExposeUpdate()
         {
-            var client = GetRepositoryApiClient<StandardEntity, StandardEntity, StandardEntityCreateModel, StandardEntityCreateModel, CriteriaQuery<StandardEntity>>("/api/standard-entities-update");
+            var client = GetRepositoryApiClient<StandardEntity, StandardEntity, StandardEntityCreateModel, StandardEntityCreateModel, CriteriaRepositoryQuery<StandardEntity>>("/api/standard-entities-update");
 
             var entity = StandardEntityGenerator.Generate();
             await Factory.Services.GetRequiredService<IRepositoryAdd<StandardEntity>>().AddAsync(entity);
@@ -81,7 +81,7 @@ namespace Pantry.AspNetCore.Tests.Controllers
             result = await client.GetById(entity.Id);
             result.StatusCode.Should().Be(HttpStatusCode.MethodNotAllowed);
 
-            var collectionResult = await client.Find(new CriteriaQuery<StandardEntity>());
+            var collectionResult = await client.Find(new CriteriaRepositoryQuery<StandardEntity>());
             collectionResult.StatusCode.Should().Be(HttpStatusCode.NotFound);
 
             result = await client.Update(
@@ -96,7 +96,7 @@ namespace Pantry.AspNetCore.Tests.Controllers
         [Fact]
         public async Task ItShouldOnlyExposeDelete()
         {
-            var client = GetRepositoryApiClient<StandardEntity, StandardEntity, StandardEntityCreateModel, StandardEntityCreateModel, CriteriaQuery<StandardEntity>>("/api/standard-entities-delete");
+            var client = GetRepositoryApiClient<StandardEntity, StandardEntity, StandardEntityCreateModel, StandardEntityCreateModel, CriteriaRepositoryQuery<StandardEntity>>("/api/standard-entities-delete");
 
             var entity = StandardEntityGenerator.Generate();
             await Factory.Services.GetRequiredService<IRepositoryAdd<StandardEntity>>().AddAsync(entity);
@@ -107,7 +107,7 @@ namespace Pantry.AspNetCore.Tests.Controllers
             result = await client.GetById(entity.Id);
             result.StatusCode.Should().Be(HttpStatusCode.MethodNotAllowed);
 
-            var collectionResult = await client.Find(new CriteriaQuery<StandardEntity>());
+            var collectionResult = await client.Find(new CriteriaRepositoryQuery<StandardEntity>());
             collectionResult.StatusCode.Should().Be(HttpStatusCode.NotFound);
 
             result = await client.Update(
@@ -122,7 +122,7 @@ namespace Pantry.AspNetCore.Tests.Controllers
         [Fact]
         public async Task ItShouldOnlyExposeCrud()
         {
-            var client = GetRepositoryApiClient<StandardEntity, StandardEntity, StandardEntityCreateModel, StandardEntityCreateModel, CriteriaQuery<StandardEntity>>("/api/standard-entities-crud");
+            var client = GetRepositoryApiClient<StandardEntity, StandardEntity, StandardEntityCreateModel, StandardEntityCreateModel, CriteriaRepositoryQuery<StandardEntity>>("/api/standard-entities-crud");
 
             var entity = StandardEntityGenerator.Generate();
             await Factory.Services.GetRequiredService<IRepositoryAdd<StandardEntity>>().AddAsync(entity);
@@ -133,7 +133,7 @@ namespace Pantry.AspNetCore.Tests.Controllers
             result = await client.GetById(entity.Id);
             result.StatusCode.Should().Be(HttpStatusCode.OK);
 
-            var collectionResult = await client.Find(new CriteriaQuery<StandardEntity>());
+            var collectionResult = await client.Find(new CriteriaRepositoryQuery<StandardEntity>());
             collectionResult.StatusCode.Should().Be(HttpStatusCode.MethodNotAllowed);
 
             result = await client.Update(
@@ -148,7 +148,7 @@ namespace Pantry.AspNetCore.Tests.Controllers
         [Fact]
         public async Task ItShouldOnlyExposeAll()
         {
-            var client = GetRepositoryApiClient<StandardEntity, StandardEntity, StandardEntityCreateModel, StandardEntityCreateModel, CriteriaQuery<StandardEntity>>("/api/standard-entities-all");
+            var client = GetRepositoryApiClient<StandardEntity, StandardEntity, StandardEntityCreateModel, StandardEntityCreateModel, CriteriaRepositoryQuery<StandardEntity>>("/api/standard-entities-all");
 
             var entity = StandardEntityGenerator.Generate();
             await Factory.Services.GetRequiredService<IRepositoryAdd<StandardEntity>>().AddAsync(entity);
@@ -159,7 +159,7 @@ namespace Pantry.AspNetCore.Tests.Controllers
             result = await client.GetById(entity.Id);
             result.StatusCode.Should().Be(HttpStatusCode.OK);
 
-            var collectionResult = await client.Find(new CriteriaQuery<StandardEntity>());
+            var collectionResult = await client.Find(new CriteriaRepositoryQuery<StandardEntity>());
             collectionResult.StatusCode.Should().Be(HttpStatusCode.OK);
 
             result = await client.Update(
