@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -6,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Pantry.Mediator.Exceptions;
+using Pantry.Mediator.Invocations;
 using Pantry.Providers;
 
 namespace Pantry.Mediator
@@ -20,14 +22,17 @@ namespace Pantry.Mediator
         /// </summary>
         /// <param name="serviceProvider">The <see cref="IServiceProvider"/>.</param>
         /// <param name="timestampProvider">The <see cref="ITimestampProvider"/>.</param>
+        /// <param name="requestsMiddlewares">The requests middleware, if any.</param>
         /// <param name="logger">The <see cref="ILogger"/>.</param>
         public ServiceProviderMediator(
             IServiceProvider serviceProvider,
             ITimestampProvider timestampProvider,
+            IEnumerable<IDomainRequestMiddleware>? requestsMiddlewares = null,
             ILogger<ServiceProviderMediator>? logger = null)
         {
             ServiceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
             TimestampProvider = timestampProvider ?? throw new ArgumentNullException(nameof(timestampProvider));
+            ReversedRequestsMiddlewares = (requestsMiddlewares ?? Enumerable.Empty<IDomainRequestMiddleware>()).Reverse();
             Logger = logger ?? NullLogger<ServiceProviderMediator>.Instance;
         }
 
@@ -40,6 +45,11 @@ namespace Pantry.Mediator
         /// Gets the <see cref="IServiceProvider"/>.
         /// </summary>
         protected ITimestampProvider TimestampProvider { get; }
+
+        /// <summary>
+        /// Gets the <see cref="IDomainRequestMiddleware"/> in reverse order.
+        /// </summary>
+        protected IEnumerable<IDomainRequestMiddleware> ReversedRequestsMiddlewares { get; }
 
         /// <summary>
         /// Gets the <see cref="ILogger"/>.
@@ -55,25 +65,24 @@ namespace Pantry.Mediator
             }
 
             var handlerInterfaceType = typeof(IDomainRequestHandler<,>).MakeGenericType(request.GetType(), typeof(TResult));
-            var handler = ServiceProvider.GetService(handlerInterfaceType);
+            var handler = ServiceProvider.GetService(handlerInterfaceType) as IDomainRequestHandler;
             if (handler is null)
             {
                 Logger.LogWarning("No hander for {@Request}", request);
                 throw new MediatorException($"Unable to find a handler for {request}.");
             }
 
-            var handleMethod = handler.GetType().GetInterfaceMap(handlerInterfaceType).TargetMethods.FirstOrDefault(x => x.Name == "HandleAsync");
-            if (handleMethod is null)
+            ExecuteRequestInvocation invocation = new HandlerExecuteRequestInvocation(handler, handlerInterfaceType);
+            foreach (var middleware in ReversedRequestsMiddlewares)
             {
-                Logger.LogWarning("No hander method for {@Request} in {HandlerType} for {HandlerInterfaceType}", request, handler.GetType(), handlerInterfaceType);
-                throw new MediatorException($"Unable to find proper handle method in {handler.GetType()} for {request}.");
+                invocation = new MiddlewareExecuteRequestInvocation(middleware, invocation);
             }
 
-            var result = await ((Task<TResult>)handleMethod.Invoke(handler, new object[] { request, cancellationToken })).ConfigureAwait(false);
+            var result = await invocation.ProceedAsync(request, cancellationToken).ConfigureAwait(false);
 
             Logger.LogTrace("Executed {@Request} by {Handler} -> {@Result}", request, handler, result);
 
-            return result;
+            return (TResult)result;
         }
 
         /// <inheritdoc/>

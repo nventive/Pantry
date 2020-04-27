@@ -115,5 +115,39 @@ namespace Pantry.Mediator.Tests
 
             act.Should().NotThrow();
         }
+
+        [Fact]
+        public async Task ItShouldInvokeMiddlewares()
+        {
+            var services = new ServiceCollection()
+                .AddMediator()
+                .AddDomainHandlersInAssemblyContaining<ServiceProviderMediatorTests>()
+                .AddSingleton<IDomainRequestMiddleware>(new SampleMiddleware("Add1"))
+                .AddSingleton<IDomainRequestMiddleware>(new SampleMiddleware("Add2"))
+                .BuildServiceProvider();
+
+            var command = new SampleCommand();
+            var mediator = services.GetRequiredService<IMediator>();
+
+            var result = await mediator.ExecuteAsync(command);
+            result.Id.Should().Be(typeof(SampleCommand.Handler).Name + "Add2Add1");
+        }
+
+        [Fact]
+        public async Task ItShouldInvokeMiddlewaresWithShortcut()
+        {
+            var services = new ServiceCollection()
+                .AddMediator()
+                .AddDomainHandlersInAssemblyContaining<ServiceProviderMediatorTests>()
+                .AddSingleton<IDomainRequestMiddleware>(new SampleMiddleware(string.Empty))
+                .AddSingleton<IDomainRequestMiddleware>(new SampleMiddleware("Add2"))
+                .BuildServiceProvider();
+
+            var command = new SampleCommand();
+            var mediator = services.GetRequiredService<IMediator>();
+
+            var result = await mediator.ExecuteAsync(command);
+            result.Id.Should().Be("shortcut");
+        }
     }
 }
