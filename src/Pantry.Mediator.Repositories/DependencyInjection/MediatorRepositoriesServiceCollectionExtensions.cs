@@ -7,6 +7,7 @@ using Pantry.Mediator;
 using Pantry.Mediator.Repositories;
 using Pantry.Mediator.Repositories.Commands;
 using Pantry.Mediator.Repositories.Handlers;
+using Pantry.Mediator.Repositories.Queries;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -42,19 +43,19 @@ namespace Microsoft.Extensions.DependencyInjection
                     var genericTypeDefinition = currentRequestType.GetGenericTypeDefinition();
                     if (typeof(CreateCommand<,>) == genericTypeDefinition)
                     {
-                        var commandArgs = currentRequestType.GenericTypeArguments;
-                        var serviceType = typeof(IDomainRequestHandler<,>).MakeGenericType(requestType, commandArgs[1]);
-                        var implementationType = typeof(CreateCommandRepositoryHandler<,,>).MakeGenericType(commandArgs[0], requestType, commandArgs[1]);
-                        services.TryAdd(new ServiceDescriptor(serviceType, implementationType, ServiceLifetime.Transient));
+                        AddStandardHandler(services, requestType, currentRequestType, typeof(CreateCommandRepositoryHandler<,,>));
+                        return services;
+                    }
+
+                    if (typeof(GetByIdDomainQuery<,>) == genericTypeDefinition)
+                    {
+                        AddStandardHandler(services, requestType, currentRequestType, typeof(GetByIdDomainQueryRepositoryHandler<,,>));
                         return services;
                     }
 
                     if (typeof(UpdateCommand<,>) == genericTypeDefinition)
                     {
-                        var commandArgs = currentRequestType.GenericTypeArguments;
-                        var serviceType = typeof(IDomainRequestHandler<,>).MakeGenericType(requestType, commandArgs[1]);
-                        var implementationType = typeof(UpdateCommandRepositoryHandler<,,>).MakeGenericType(commandArgs[0], requestType, commandArgs[1]);
-                        services.TryAdd(new ServiceDescriptor(serviceType, implementationType, ServiceLifetime.Transient));
+                        AddStandardHandler(services, requestType, currentRequestType, typeof(UpdateCommandRepositoryHandler<,,>));
                         return services;
                     }
 
@@ -114,5 +115,13 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <returns>The updated <see cref="IServiceCollection"/>.</returns>
         public static IServiceCollection TryAddRepositoryHandlerForRequestsInAssemblyContaining<T>(this IServiceCollection services)
             => services.TryAddRepositoryHandlerForRequestsInAssembly(typeof(T).Assembly);
+
+        private static void AddStandardHandler(IServiceCollection services, Type requestType, Type genericRequestType, Type genericHandlerType)
+        {
+            var commandArgs = genericRequestType.GenericTypeArguments;
+            var serviceType = typeof(IDomainRequestHandler<,>).MakeGenericType(requestType, commandArgs[1]);
+            var implementationType = genericHandlerType.MakeGenericType(commandArgs[0], requestType, commandArgs[1]);
+            services.TryAdd(new ServiceDescriptor(serviceType, implementationType, ServiceLifetime.Transient));
+        }
     }
 }
