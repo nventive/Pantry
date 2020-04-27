@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -21,18 +22,12 @@ namespace Pantry.Mediator
         /// Initializes a new instance of the <see cref="ServiceProviderMediator"/> class.
         /// </summary>
         /// <param name="serviceProvider">The <see cref="IServiceProvider"/>.</param>
-        /// <param name="timestampProvider">The <see cref="ITimestampProvider"/>.</param>
-        /// <param name="requestsMiddlewares">The requests middleware, if any.</param>
         /// <param name="logger">The <see cref="ILogger"/>.</param>
         public ServiceProviderMediator(
             IServiceProvider serviceProvider,
-            ITimestampProvider timestampProvider,
-            IEnumerable<IDomainRequestMiddleware>? requestsMiddlewares = null,
             ILogger<ServiceProviderMediator>? logger = null)
         {
             ServiceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-            TimestampProvider = timestampProvider ?? throw new ArgumentNullException(nameof(timestampProvider));
-            ReversedRequestsMiddlewares = (requestsMiddlewares ?? Enumerable.Empty<IDomainRequestMiddleware>()).Reverse();
             Logger = logger ?? NullLogger<ServiceProviderMediator>.Instance;
         }
 
@@ -44,12 +39,12 @@ namespace Pantry.Mediator
         /// <summary>
         /// Gets the <see cref="IServiceProvider"/>.
         /// </summary>
-        protected ITimestampProvider TimestampProvider { get; }
+        protected ITimestampProvider TimestampProvider => ServiceProvider.GetRequiredService<ITimestampProvider>();
 
         /// <summary>
         /// Gets the <see cref="IDomainRequestMiddleware"/> in reverse order.
         /// </summary>
-        protected IEnumerable<IDomainRequestMiddleware> ReversedRequestsMiddlewares { get; }
+        protected IEnumerable<IDomainRequestMiddleware> ReversedRequestsMiddlewares => ServiceProvider.GetServices<IDomainRequestMiddleware>().Reverse();
 
         /// <summary>
         /// Gets the <see cref="ILogger"/>.
@@ -67,17 +62,27 @@ namespace Pantry.Mediator
             var handlerInterfaceType = typeof(IDomainRequestHandler<,>).MakeGenericType(request.GetType(), typeof(TResult));
             if (!(ServiceProvider.GetService(handlerInterfaceType) is IDomainRequestHandler handler))
             {
-                Logger.LogWarning("No hander for {@Request}", request);
-                throw new MediatorException($"Unable to find a handler for {request}.");
+                Logger.LogWarning("No hander for {@Request} - Looking for {HandlerInterfaceType}", request, handlerInterfaceType);
+                throw new MediatorException($"Unable to find a handler for {request} using {handlerInterfaceType}.");
             }
 
             var invocation = ReversedRequestsMiddlewares.Aggregate(
                 (ExecuteRequestInvocation)new HandlerExecuteRequestInvocation(handler, handlerInterfaceType),
                 (agg, value) => new MiddlewareExecuteRequestInvocation(value, agg));
 
+            Stopwatch? stopWatch = null;
+            if (Logger.IsEnabled(LogLevel.Trace))
+            {
+                Logger.LogTrace("Executing {@Request} by {Handler}", request, handler);
+                stopWatch = Stopwatch.StartNew();
+            }
+
             var result = await invocation.ProceedAsync(request, cancellationToken).ConfigureAwait(false);
 
-            Logger.LogTrace("Executed {@Request} by {Handler} -> {@Result}", request, handler, result);
+            if (Logger.IsEnabled(LogLevel.Trace))
+            {
+                Logger.LogTrace("Executed {@Request} by {Handler} -> {@Result} in {Elapsed} ms.", request, handler, result, stopWatch!.ElapsedMilliseconds);
+            }
 
             return (TResult)result;
         }
@@ -90,6 +95,8 @@ namespace Pantry.Mediator
                 throw new ArgumentNullException(nameof(domainEvent));
             }
 
+            Logger.LogTrace("Publishing {@DomainEvent}", domainEvent);
+
             if (domainEvent.Timestamp is null)
             {
                 domainEvent.Timestamp = TimestampProvider.CurrentTimestamp();
@@ -100,15 +107,20 @@ namespace Pantry.Mediator
             var handlers = ServiceProvider.GetServices(handlerInterfaceType);
             foreach (var handler in handlers)
             {
-                var handleMethod = handler.GetType().GetInterfaceMap(handlerInterfaceType).TargetMethods.FirstOrDefault(x => x.Name == "HandleAsync");
-                if (handleMethod is null)
+                var handleMethod = handler.GetType().GetInterfaceMap(handlerInterfaceType).TargetMethods.First(x => x.Name == "HandleAsync");
+
+                Stopwatch? stopWatch = null;
+                if (Logger.IsEnabled(LogLevel.Trace))
                 {
-                    Logger.LogWarning("No hander method for {@DomainEvent} in {HandlerType} for {HandlerInterfaceType}", domainEvent, handler.GetType(), handlerInterfaceType);
-                    throw new MediatorException($"Unable to find proper handle method in {handler.GetType()}.");
+                    stopWatch = Stopwatch.StartNew();
                 }
 
                 await ((Task)handleMethod.Invoke(handler, new object[] { domainEvent })).ConfigureAwait(false);
-                Logger.LogTrace("Executed {@DomainEvent} by {Handler}", domainEvent, handler);
+
+                if (Logger.IsEnabled(LogLevel.Trace))
+                {
+                    Logger.LogTrace("Executed {@DomainEvent} by {Handler} in {Elapsed} ms.", domainEvent, handler, stopWatch!.ElapsedMilliseconds);
+                }
             }
         }
     }
