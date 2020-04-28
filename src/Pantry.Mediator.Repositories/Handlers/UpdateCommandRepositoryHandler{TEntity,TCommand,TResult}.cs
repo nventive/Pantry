@@ -3,13 +3,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using Omu.ValueInjecter;
 using Pantry.Mediator.Repositories.Commands;
-using Pantry.Mediator.Repositories.DomainEvents;
 
 namespace Pantry.Mediator.Repositories.Handlers
 {
     /// <summary>
-    /// Standard handler for <see cref="UpdateCommand{TEntity, TModel}"/> that use a <see cref="ICrudRepository{TEntity}"/>
-    /// and pubish <see cref="EntityAddedDomainEvent{TEntity}"/>.
+    /// Standard handler for <see cref="UpdateCommand{TEntity, TModel}"/> that use a <see cref="ICrudRepository{TEntity}"/>.
     /// </summary>
     /// <typeparam name="TEntity">The entity type.</typeparam>
     /// <typeparam name="TCommand">The command type.</typeparam>

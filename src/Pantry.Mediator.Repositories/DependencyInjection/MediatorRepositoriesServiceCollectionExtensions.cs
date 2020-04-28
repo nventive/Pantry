@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Pantry.Continuation;
 using Pantry.Exceptions;
 using Pantry.Mediator;
 using Pantry.Mediator.Repositories;
@@ -53,6 +54,16 @@ namespace Microsoft.Extensions.DependencyInjection
                         return services;
                     }
 
+                    if (typeof(FindByCriteriaDomainQuery<,>) == genericTypeDefinition)
+                    {
+                        var commandArgs = currentRequestType.GenericTypeArguments;
+                        var continuationType = typeof(IContinuationEnumerable<>).MakeGenericType(commandArgs[1]);
+                        var serviceType = typeof(IDomainRequestHandler<,>).MakeGenericType(requestType, continuationType);
+                        var implementationType = typeof(FindByCriteriaDomainQueryRepositoryHandler<,,>).MakeGenericType(commandArgs[0], requestType, commandArgs[1]);
+                        services.TryAdd(new ServiceDescriptor(serviceType, implementationType, ServiceLifetime.Transient));
+                        return services;
+                    }
+
                     if (typeof(UpdateCommand<,>) == genericTypeDefinition)
                     {
                         AddStandardHandler(services, requestType, currentRequestType, typeof(UpdateCommandRepositoryHandler<,,>));
@@ -92,7 +103,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <param name="services">The <see cref="IServiceCollection"/>.</param>
         /// <param name="assembly">The assembly to scan.</param>
         /// <returns>The updated <see cref="IServiceCollection"/>.</returns>
-        public static IServiceCollection TryAddRepositoryHandlerForRequestsInAssembly(this IServiceCollection services, Assembly assembly)
+        public static IServiceCollection TryAddRepositoryHandlersForRequestsInAssembly(this IServiceCollection services, Assembly assembly)
         {
             var requestTypes = assembly.GetTypes()
                 .Where(x => !x.IsGenericType && !x.IsAbstract)
@@ -113,8 +124,8 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <typeparam name="T">The type in the assembly to scan.</typeparam>
         /// <param name="services">The <see cref="IServiceCollection"/>.</param>
         /// <returns>The updated <see cref="IServiceCollection"/>.</returns>
-        public static IServiceCollection TryAddRepositoryHandlerForRequestsInAssemblyContaining<T>(this IServiceCollection services)
-            => services.TryAddRepositoryHandlerForRequestsInAssembly(typeof(T).Assembly);
+        public static IServiceCollection TryAddRepositoryHandlersForRequestsInAssemblyContaining<T>(this IServiceCollection services)
+            => services.TryAddRepositoryHandlersForRequestsInAssembly(typeof(T).Assembly);
 
         private static void AddStandardHandler(IServiceCollection services, Type requestType, Type genericRequestType, Type genericHandlerType)
         {

@@ -2,15 +2,13 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Omu.ValueInjecter;
-using Pantry.Mediator.Repositories.DomainEvents;
 using Pantry.Mediator.Repositories.Queries;
 using Pantry.Traits;
 
 namespace Pantry.Mediator.Repositories.Handlers
 {
     /// <summary>
-    /// Standard handler for <see cref="GetByIdDomainQuery{TEntity, TResult}"/> that use a <see cref="IRepositoryGet{TEntity}"/>
-    /// and pubish <see cref="EntityAddedDomainEvent{TEntity}"/>.
+    /// Standard handler for <see cref="GetByIdDomainQuery{TEntity, TResult}"/> that use a <see cref="IRepositoryGet{TEntity}"/>.
     /// </summary>
     /// <typeparam name="TEntity">The entity type.</typeparam>
     /// <typeparam name="TQuery">The query type.</typeparam>

@@ -3,14 +3,12 @@ using System.Threading;
 using System.Threading.Tasks;
 using Omu.ValueInjecter;
 using Pantry.Mediator.Repositories.Commands;
-using Pantry.Mediator.Repositories.DomainEvents;
 using Pantry.Traits;
 
 namespace Pantry.Mediator.Repositories.Handlers
 {
     /// <summary>
-    /// Standard handler for <see cref="CreateCommand{TEntity, TModel}"/> that use a <see cref="IRepositoryAdd{TEntity}"/>
-    /// and pubish <see cref="EntityAddedDomainEvent{TEntity}"/>.
+    /// Standard handler for <see cref="CreateCommand{TEntity, TModel}"/> that use a <see cref="IRepositoryAdd{TEntity}"/>.
     /// </summary>
     /// <typeparam name="TEntity">The entity type.</typeparam>
     /// <typeparam name="TCommand">The command type.</typeparam>

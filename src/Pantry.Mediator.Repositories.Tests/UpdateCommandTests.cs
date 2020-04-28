@@ -32,7 +32,7 @@ namespace Pantry.Mediator.Repositories.Tests
                 .EmitDomainEvents()
                 .Services
                 .AddMediator()
-                .TryAddRepositoryHandlerForRequestsInAssemblyContaining<CreateCommandTests>()
+                .TryAddRepositoryHandlersForRequestsInAssemblyContaining<UpdateCommandTests>()
                 .BuildServiceProvider();
 
             var entity = new StandardEntity { Name = "Bar", Age = 23 };
@@ -61,7 +61,7 @@ namespace Pantry.Mediator.Repositories.Tests
                 .EmitDomainEvents()
                 .Services
                 .AddMediator()
-                .TryAddRepositoryHandlerForRequestsInAssemblyContaining<CreateCommandTests>()
+                .TryAddRepositoryHandlersForRequestsInAssemblyContaining<UpdateCommandTests>()
                 .BuildServiceProvider();
 
             var entity = new StandardEntity { Name = "Bar", Age = 23 };

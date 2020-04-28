@@ -31,7 +31,7 @@ namespace Pantry.Mediator.Repositories.Tests
                 .EmitDomainEvents()
                 .Services
                 .AddMediator()
-                .TryAddRepositoryHandlerForRequestsInAssemblyContaining<DeleteCommandTests>()
+                .TryAddRepositoryHandlersForRequestsInAssemblyContaining<DeleteCommandTests>()
                 .BuildServiceProvider();
 
             var entity = new StandardEntity();

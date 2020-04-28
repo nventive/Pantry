@@ -31,7 +31,7 @@ namespace Pantry.Mediator.Repositories.Tests
                 .EmitDomainEvents()
                 .Services
                 .AddMediator()
-                .TryAddRepositoryHandlerForRequestsInAssemblyContaining<DeleteCommandTests>()
+                .TryAddRepositoryHandlersForRequestsInAssemblyContaining<GetByIdQueryTests>()
                 .BuildServiceProvider();
 
             var entity = new StandardEntity { Name = "Foo" };
@@ -56,7 +56,7 @@ namespace Pantry.Mediator.Repositories.Tests
                 .EmitDomainEvents()
                 .Services
                 .AddMediator()
-                .TryAddRepositoryHandlerForRequestsInAssemblyContaining<DeleteCommandTests>()
+                .TryAddRepositoryHandlersForRequestsInAssemblyContaining<GetByIdQueryTests>()
                 .BuildServiceProvider();
 
             var entity = new StandardEntity { Name = "Foo" };
