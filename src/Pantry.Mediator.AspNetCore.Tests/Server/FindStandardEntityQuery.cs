@@ -1,4 +1,5 @@
-﻿using Pantry.Mediator.Repositories.Queries;
+﻿using System.Collections.Generic;
+using Pantry.Mediator.Repositories.Queries;
 using Pantry.Queries;
 
 namespace Pantry.Mediator.AspNetCore.Tests.Server
@@ -15,6 +16,12 @@ namespace Pantry.Mediator.AspNetCore.Tests.Server
         {
             get => this.EqualToValue(x => x.Name);
             set => this.EqualTo(x => x.Name, value);
+        }
+
+        public IEnumerable<string> IdIn
+        {
+            get => this.InValue(x => x.Id);
+            set => this.In(x => x.Id, value);
         }
 
         //public int? AgeEq

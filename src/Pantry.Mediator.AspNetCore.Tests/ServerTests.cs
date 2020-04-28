@@ -82,6 +82,25 @@ namespace Pantry.Mediator.AspNetCore.Tests
         }
 
         [Fact]
+        public async Task ItShouldFindWithEnumerables()
+        {
+            var entities = StandardEntityGenerator.Generate(10);
+            var repoAdd = Factory.Services.GetRequiredService<IRepositoryAdd<StandardEntity>>();
+            foreach (var entity in entities)
+            {
+                await repoAdd.AddAsync(entity);
+            }
+
+            var client = Factory.GetApiClient<IServerApi>();
+            var query = new FindStandardEntityQuery { IdIn = new[] { entities.First().Id, entities.Last().Id } };
+
+            var result = await client.FindStandardEntities(query);
+
+            result.StatusCode.Should().Be(HttpStatusCode.OK);
+            result.Content.Items.Should().HaveCount(2);
+        }
+
+        [Fact]
         public async Task ItShouldCreate()
         {
             var client = Factory.GetApiClient<IServerApi>();

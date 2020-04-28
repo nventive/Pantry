@@ -36,6 +36,7 @@ namespace Pantry.Mediator.AspNetCore.Tests
                 {
                     ContentSerializer = new SystemTextJsonContentSerializer(
                         Services.GetRequiredService<IOptions<JsonOptions>>().Value.JsonSerializerOptions),
+                    CollectionFormat = CollectionFormat.Multi,
                 });
         }
 

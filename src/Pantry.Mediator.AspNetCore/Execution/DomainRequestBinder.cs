@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -72,7 +73,10 @@ namespace Pantry.Mediator.AspNetCore.Execution
             {
                 if (allDomainRequestProperties.ContainsKey(queryValue.Key.ToUpperInvariant()))
                 {
-                    SetProperty(domainRequest, allDomainRequestProperties[queryValue.Key.ToUpperInvariant()], queryValue.Value.ToString());
+                    SetProperty(
+                        domainRequest,
+                        allDomainRequestProperties[queryValue.Key.ToUpperInvariant()],
+                        queryValue.Value.Count == 1 ? (object)queryValue.Value.ToString() : queryValue.Value);
                 }
             }
 
@@ -137,11 +141,27 @@ namespace Pantry.Mediator.AspNetCore.Execution
 
         private static void SetProperty(IDomainRequest domainRequest, PropertyInfo targetProperty, object value)
         {
-            var typeConverter = TypeDescriptor.GetConverter(targetProperty.PropertyType);
-            var targetValue = value is string valueStr
-                 ? typeConverter.ConvertFromString(valueStr)
-                 : typeConverter.ConvertFrom(value);
-            targetProperty.GetSetMethod() !.Invoke(domainRequest, new object[] { targetValue });
+            var enumerablePropertyType = targetProperty.PropertyType.IsGenericType && targetProperty.PropertyType.GetGenericTypeDefinition() == typeof(IEnumerable<>);
+            if (enumerablePropertyType)
+            {
+                var enumeratedType = targetProperty.PropertyType.GetGenericArguments()[0];
+                var typeConverter = TypeDescriptor.GetConverter(enumeratedType);
+                // Container for the enumeration
+                var targetValue = value is IEnumerable enumerable && !(value is string)
+                    ? enumerable.Cast<object>().Select(x => typeConverter.ConvertFrom(x)).ToArray()
+                    : new object[] { typeConverter.ConvertFrom(value) };
+                var finalValue = Array.CreateInstance(enumeratedType, targetValue.Length);
+                targetValue.CopyTo(finalValue, 0);
+                targetProperty.GetSetMethod() !.Invoke(domainRequest, new object[] { finalValue });
+            }
+            else
+            {
+                var typeConverter = TypeDescriptor.GetConverter(targetProperty.PropertyType);
+                var targetValue = value is string valueStr
+                     ? typeConverter.ConvertFromString(valueStr)
+                     : typeConverter.ConvertFrom(value);
+                targetProperty.GetSetMethod() !.Invoke(domainRequest, new object[] { targetValue });
+            }
         }
     }
 }
