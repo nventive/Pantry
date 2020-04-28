@@ -34,7 +34,9 @@ namespace Pantry.Mediator.Repositories.Handlers
                 throw new ArgumentNullException(nameof(request));
             }
 
-            return await _repository.TryRemoveAsync(request.Id, cancellationToken).ConfigureAwait(false);
+            await _repository.RemoveAsync(request.Id, cancellationToken).ConfigureAwait(false);
+
+            return true;
         }
     }
 }

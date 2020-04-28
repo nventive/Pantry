@@ -1,4 +1,6 @@
-﻿using System.Text.Json;
+﻿using System.Linq;
+using System.Text.Json;
+using FluentValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
@@ -19,7 +21,11 @@ namespace Pantry.Mediator.AspNetCore.Tests.Server
 
             services
                 .AddMediator()
-                .TryAddRepositoryHandlersForRequestsInAssemblyContaining<Startup>();
+                .TryAddRepositoryHandlersForRequestsInAssemblyContaining<Startup>()
+                .AddFluentValidationRequestMiddleware()
+                .AddValidatorsFromAssemblyContaining<Startup>()
+                .AddDomainRequestRestApiExecution();
+
             // services.AddOpenApiDocument();
         }
 
@@ -44,6 +50,15 @@ namespace Pantry.Mediator.AspNetCore.Tests.Server
                             Instance = $"{notFoundException.TargetType}/{notFoundException.TargetId}",
                             Status = StatusCodes.Status404NotFound,
                         },
+                        ValidationException validationException => new ValidationProblemDetails(
+                            validationException.Errors
+                                .GroupBy(x => x.PropertyName)
+                                .ToDictionary(
+                                x => x.Key,
+                                x => x.Select(y => y.ErrorMessage).ToArray()))
+                        {
+                            Status = StatusCodes.Status400BadRequest,
+                        },
                         _ => new ProblemDetails
                         {
                             Title = "Internal server error.",
@@ -54,14 +69,17 @@ namespace Pantry.Mediator.AspNetCore.Tests.Server
 
                     context.Response.ContentType = "application/problem+json";
                     context.Response.StatusCode = responseModel.Status ?? StatusCodes.Status500InternalServerError;
-                    await JsonSerializer.SerializeAsync(context.Response.Body, responseModel, jsonOptions.JsonSerializerOptions);
+                    await JsonSerializer.SerializeAsync(context.Response.Body, responseModel, responseModel.GetType(), jsonOptions.JsonSerializerOptions);
                 });
             });
 
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapGet<FindStandardEntityQuery>("api/v1/standard-entities");
+                endpoints.MapPost<CreateStandardEntityCommand>("api/v1/standard-entities", createdAtRedirectPattern: "api/v1/standard-entities/{Id}");
                 endpoints.MapGet<GetStandardEntityByIdQuery>("api/v1/standard-entities/{id}");
+                endpoints.MapPut<UpdateStandardEntityCommand>("api/v1/standard-entities/{id}");
+                endpoints.MapDelete<DeleteStandardEntityCommand>("api/v1/standard-entities/{id}");
             });
 
             app.UseOpenApi();

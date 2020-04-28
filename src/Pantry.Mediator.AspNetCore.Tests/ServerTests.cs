@@ -80,5 +80,63 @@ namespace Pantry.Mediator.AspNetCore.Tests
             result.StatusCode.Should().Be(HttpStatusCode.OK);
             result.Content.Items.First().Should().BeEquivalentTo(entities.Last());
         }
+
+        [Fact]
+        public async Task ItShouldCreate()
+        {
+            var client = Factory.GetApiClient<IServerApi>();
+            var result = await client.CreateStandardEntity(new CreateStandardEntityCommand { Name = "Foo" });
+
+            result.StatusCode.Should().Be(HttpStatusCode.Created);
+            result.Content.Name.Should().Be("Foo");
+            result.Headers.Location.ToString().Should().NotBeNullOrEmpty().And.Contain(result.Content.Id);
+        }
+
+        [Fact]
+        public async Task ItShouldValidateCreation()
+        {
+            var client = Factory.GetApiClient<IServerApi>();
+            var result = await client.CreateStandardEntity(new CreateStandardEntityCommand());
+
+            result.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+            result.Error.Should().NotBeNull();
+        }
+
+        [Fact]
+        public async Task ItShouldUpdate()
+        {
+            var entity = StandardEntityGenerator.Generate();
+            var repoAdd = Factory.Services.GetRequiredService<IRepositoryAdd<StandardEntity>>();
+            entity = await repoAdd.AddAsync(entity);
+
+            var client = Factory.GetApiClient<IServerApi>();
+            var result = await client.UpdateStandardEntity(entity.Id, new UpdateStandardEntityCommand { Age = 50 });
+
+            result.StatusCode.Should().Be(HttpStatusCode.OK);
+            result.Content.Name.Should().Be(entity.Name);
+            result.Content.Age.Should().Be(50);
+        }
+
+        [Fact]
+        public async Task ItShouldDelete()
+        {
+            var entity = StandardEntityGenerator.Generate();
+            var repoAdd = Factory.Services.GetRequiredService<IRepositoryAdd<StandardEntity>>();
+            entity = await repoAdd.AddAsync(entity);
+
+            var client = Factory.GetApiClient<IServerApi>();
+            var result = await client.DeleteStandardEntity(entity.Id);
+
+            result.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        }
+
+        [Fact]
+        public async Task ItShouldDeleteWhenNotFound()
+        {
+            var client = Factory.GetApiClient<IServerApi>();
+            var result = await client.DeleteStandardEntity(StandardEntityGenerator.Generate().Id);
+
+            result.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        }
     }
 }

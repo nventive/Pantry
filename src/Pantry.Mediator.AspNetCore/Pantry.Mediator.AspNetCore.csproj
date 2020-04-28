@@ -17,11 +17,11 @@
 
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="FormatWith" Version="2.2.1" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Pantry.AspNetCore\Pantry.AspNetCore.csproj" />
     <ProjectReference Include="..\Pantry.Mediator.Repositories\Pantry.Mediator.Repositories.csproj" />
     <ProjectReference Include="..\Pantry.Mediator\Pantry.Mediator.csproj" />
   </ItemGroup>
