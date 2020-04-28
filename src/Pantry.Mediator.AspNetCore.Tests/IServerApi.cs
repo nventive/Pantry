@@ -1,6 +1,5 @@
 ﻿using System.Net.Http;
 using System.Threading.Tasks;
-using Pantry.AspNetCore.Models;
 using Pantry.Mediator.AspNetCore.Tests.Server;
 using Refit;
 
@@ -12,7 +11,7 @@ namespace Pantry.Mediator.AspNetCore.Tests
         Task<ApiResponse<StandardEntity>> CreateStandardEntity([Body] CreateStandardEntityCommand model);
 
         [Get("/api/v1/standard-entities")]
-        Task<ApiResponse<ContinuationEnumerableModel<StandardEntity>>> FindStandardEntities(FindStandardEntityQuery query);
+        Task<ApiResponse<Models.ContinuationEnumerableModel<StandardEntity>>> FindStandardEntities(FindStandardEntityQuery query);
 
         [Get("/api/v1/standard-entities/{id}")]
         Task<ApiResponse<StandardEntity>> GetStandardEntityById(string id);

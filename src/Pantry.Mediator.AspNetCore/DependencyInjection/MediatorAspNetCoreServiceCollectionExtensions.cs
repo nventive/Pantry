@@ -1,5 +1,7 @@
-﻿using Microsoft.Extensions.DependencyInjection.Extensions;
+﻿using Microsoft.AspNetCore.Mvc.ApiExplorer;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Pantry.Mediator;
+using Pantry.Mediator.AspNetCore.ApiExplorer;
 using Pantry.Mediator.AspNetCore.Execution;
 
 namespace Microsoft.Extensions.DependencyInjection
@@ -21,8 +23,10 @@ namespace Microsoft.Extensions.DependencyInjection
                 throw new System.ArgumentNullException(nameof(services));
             }
 
+            services.TryAddSingleton<DomainRequestApiDescriptionContainer>();
             services.TryAddSingleton<IDomainRequestBinder, DomainRequestBinder>();
             services.TryAddTransient<IDomainRequestExecutor, DomainRequestExecutor>();
+            services.TryAddEnumerable(new ServiceDescriptor(typeof(IApiDescriptionProvider), typeof(DomainRequestApiDescriptionProvider), ServiceLifetime.Transient));
 
             return services;
         }

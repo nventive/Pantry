@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Pantry.Mediator;
+using Pantry.Mediator.AspNetCore.ApiExplorer;
 using Pantry.Mediator.AspNetCore.Execution;
 
 namespace Microsoft.AspNetCore.Builder
@@ -54,6 +55,21 @@ namespace Microsoft.AspNetCore.Builder
             IEnumerable<string> httpMethods,
             DomainRequestExecutionOptions? options = null)
         {
+            if (endpoints is null)
+            {
+                throw new ArgumentNullException(nameof(endpoints));
+            }
+
+            if (domainRequestType is null)
+            {
+                throw new ArgumentNullException(nameof(domainRequestType));
+            }
+
+            if (httpMethods is null)
+            {
+                throw new ArgumentNullException(nameof(httpMethods));
+            }
+
             endpoints.MapMethods(
                 pattern,
                 httpMethods,
@@ -62,6 +78,17 @@ namespace Microsoft.AspNetCore.Builder
                     var executor = context.RequestServices.GetRequiredService<IDomainRequestExecutor>();
                     await executor.ExecuteAsync(context, domainRequestType, options).ConfigureAwait(false);
                 });
+
+            var apiDescriptionContainer = endpoints.ServiceProvider.GetService<DomainRequestApiDescriptionContainer>();
+            if (apiDescriptionContainer != null)
+            {
+                var domainRequestBinder = endpoints.ServiceProvider.GetRequiredService<IDomainRequestBinder>();
+                foreach (var httpMethod in httpMethods)
+                {
+                    apiDescriptionContainer.Add(domainRequestBinder.GetApiDescriptionFor(domainRequestType, pattern, httpMethod, options));
+                }
+            }
+
             return endpoints;
         }
 
@@ -86,10 +113,11 @@ namespace Microsoft.AspNetCore.Builder
         /// <typeparam name="TDomainRequest">The type of <see cref="IDomainRequest"/>.</typeparam>
         /// <param name="endpoints">The <see cref="IEndpointRouteBuilder"/> to add the route to.</param>
         /// <param name="pattern">The route pattern.</param>
+        /// <param name="groupName">The group name (for OpenApi).</param>
         /// <returns>A <see cref="IEndpointConventionBuilder"/> that can be used to further customize the endpoint.</returns>
-        public static IEndpointRouteBuilder MapGet<TDomainRequest>(this IEndpointRouteBuilder endpoints, string pattern)
+        public static IEndpointRouteBuilder MapGet<TDomainRequest>(this IEndpointRouteBuilder endpoints, string pattern, string? groupName = null)
             where TDomainRequest : IDomainRequest, new()
-            => endpoints.MapMethods<TDomainRequest>(pattern, GetVerb);
+            => endpoints.MapMethods<TDomainRequest>(pattern, GetVerb, options: new DomainRequestExecutionOptions { GroupName = groupName });
 
         /// <summary>
         /// Adds a <see cref="RouteEndpoint"/> to the <see cref="IEndpointRouteBuilder"/> that matches HTTP POST requests for the specified pattern,
@@ -98,11 +126,12 @@ namespace Microsoft.AspNetCore.Builder
         /// <typeparam name="TDomainRequest">The type of <see cref="IDomainRequest"/>.</typeparam>
         /// <param name="endpoints">The <see cref="IEndpointRouteBuilder"/> to add the route to.</param>
         /// <param name="pattern">The route pattern.</param>
+        /// <param name="groupName">The group name (for OpenApi).</param>
         /// <param name="createdAtRedirectPattern">When specified, the execution will return 201 CreatedAt with the location pattern.</param>
         /// <returns>A <see cref="IEndpointConventionBuilder"/> that can be used to further customize the endpoint.</returns>
-        public static IEndpointRouteBuilder MapPost<TDomainRequest>(this IEndpointRouteBuilder endpoints, string pattern, string? createdAtRedirectPattern = null)
+        public static IEndpointRouteBuilder MapPost<TDomainRequest>(this IEndpointRouteBuilder endpoints, string pattern, string? groupName = null, string? createdAtRedirectPattern = null)
             where TDomainRequest : IDomainRequest, new()
-            => endpoints.MapMethods<TDomainRequest>(pattern, PostVerb, new DomainRequestExecutionOptions { CreatedAtRedirectPattern = createdAtRedirectPattern });
+            => endpoints.MapMethods<TDomainRequest>(pattern, PostVerb, options: new DomainRequestExecutionOptions { GroupName = groupName, CreatedAtRedirectPattern = createdAtRedirectPattern });
 
         /// <summary>
         /// Adds a <see cref="RouteEndpoint"/> to the <see cref="IEndpointRouteBuilder"/> that matches HTTP PUT requests for the specified pattern,
@@ -111,10 +140,11 @@ namespace Microsoft.AspNetCore.Builder
         /// <typeparam name="TDomainRequest">The type of <see cref="IDomainRequest"/>.</typeparam>
         /// <param name="endpoints">The <see cref="IEndpointRouteBuilder"/> to add the route to.</param>
         /// <param name="pattern">The route pattern.</param>
+        /// <param name="groupName">The group name (for OpenApi).</param>
         /// <returns>A <see cref="IEndpointConventionBuilder"/> that can be used to further customize the endpoint.</returns>
-        public static IEndpointRouteBuilder MapPut<TDomainRequest>(this IEndpointRouteBuilder endpoints, string pattern)
+        public static IEndpointRouteBuilder MapPut<TDomainRequest>(this IEndpointRouteBuilder endpoints, string pattern, string? groupName = null)
             where TDomainRequest : IDomainRequest, new()
-            => endpoints.MapMethods<TDomainRequest>(pattern, PutVerb);
+            => endpoints.MapMethods<TDomainRequest>(pattern, PutVerb, options: new DomainRequestExecutionOptions { GroupName = groupName });
 
         /// <summary>
         /// Adds a <see cref="RouteEndpoint"/> to the <see cref="IEndpointRouteBuilder"/> that matches HTTP PATCH requests for the specified pattern,
@@ -123,10 +153,11 @@ namespace Microsoft.AspNetCore.Builder
         /// <typeparam name="TDomainRequest">The type of <see cref="IDomainRequest"/>.</typeparam>
         /// <param name="endpoints">The <see cref="IEndpointRouteBuilder"/> to add the route to.</param>
         /// <param name="pattern">The route pattern.</param>
+        /// <param name="groupName">The group name (for OpenApi).</param>
         /// <returns>A <see cref="IEndpointConventionBuilder"/> that can be used to further customize the endpoint.</returns>
-        public static IEndpointRouteBuilder MapPatch<TDomainRequest>(this IEndpointRouteBuilder endpoints, string pattern)
+        public static IEndpointRouteBuilder MapPatch<TDomainRequest>(this IEndpointRouteBuilder endpoints, string pattern, string? groupName = null)
             where TDomainRequest : IDomainRequest, new()
-            => endpoints.MapMethods<TDomainRequest>(pattern, PatchVerb);
+            => endpoints.MapMethods<TDomainRequest>(pattern, PatchVerb, options: new DomainRequestExecutionOptions { GroupName = groupName });
 
         /// <summary>
         /// Adds a <see cref="RouteEndpoint"/> to the <see cref="IEndpointRouteBuilder"/> that matches HTTP DELETE requests for the specified pattern,
@@ -135,9 +166,10 @@ namespace Microsoft.AspNetCore.Builder
         /// <typeparam name="TDomainRequest">The type of <see cref="IDomainRequest"/>.</typeparam>
         /// <param name="endpoints">The <see cref="IEndpointRouteBuilder"/> to add the route to.</param>
         /// <param name="pattern">The route pattern.</param>
+        /// <param name="groupName">The group name (for OpenApi).</param>
         /// <returns>A <see cref="IEndpointConventionBuilder"/> that can be used to further customize the endpoint.</returns>
-        public static IEndpointRouteBuilder MapDelete<TDomainRequest>(this IEndpointRouteBuilder endpoints, string pattern)
+        public static IEndpointRouteBuilder MapDelete<TDomainRequest>(this IEndpointRouteBuilder endpoints, string pattern, string? groupName = null)
             where TDomainRequest : IDomainRequest, new()
-            => endpoints.MapMethods<TDomainRequest>(pattern, DeleteVerb);
+            => endpoints.MapMethods<TDomainRequest>(pattern, DeleteVerb, options: new DomainRequestExecutionOptions { GroupName = groupName });
     }
 }

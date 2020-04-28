@@ -46,6 +46,27 @@ namespace Pantry.Mediator.AspNetCore.Execution
         /// </summary>
         protected IOptions<JsonOptions> JsonOptions { get; }
 
+        /// <summary>
+        /// Gets the status codes that match the good response for <paramref name="httpMethod"/> and <paramref name="options"/>.
+        /// </summary>
+        /// <param name="httpMethod">The HTTP method.</param>
+        /// <param name="options">The options, if any.</param>
+        /// <returns>The status code.</returns>
+        public static int GetStatusCode(string httpMethod, DomainRequestExecutionOptions? options)
+        {
+            if (httpMethod is null)
+            {
+                throw new ArgumentNullException(nameof(httpMethod));
+            }
+
+            return httpMethod.ToUpperInvariant() switch
+            {
+                "POST" => string.IsNullOrEmpty(options?.CreatedAtRedirectPattern) ? StatusCodes.Status200OK : StatusCodes.Status201Created,
+                "DELETE" => StatusCodes.Status204NoContent,
+                _ => StatusCodes.Status200OK,
+            };
+        }
+
         /// <inheritdoc/>
         public virtual async Task ExecuteAsync(HttpContext context, Type domainRequestType, DomainRequestExecutionOptions? options)
         {
@@ -67,12 +88,7 @@ namespace Pantry.Mediator.AspNetCore.Execution
                 };
             }
 
-            context.Response.StatusCode = context.Request.Method.ToUpperInvariant() switch
-            {
-                "POST" => string.IsNullOrEmpty(options?.CreatedAtRedirectPattern) ? StatusCodes.Status200OK : StatusCodes.Status201Created,
-                "DELETE" => StatusCodes.Status204NoContent,
-                _ => StatusCodes.Status200OK,
-            };
+            context.Response.StatusCode = GetStatusCode(context.Request.Method, options);
 
             if (!string.IsNullOrEmpty(options?.CreatedAtRedirectPattern))
             {
