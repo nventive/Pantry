@@ -16,7 +16,7 @@ namespace Pantry.Mediator
     /// <summary>
     /// <see cref="IMediator"/> implementation that uses a <see cref="IServiceProvider"/>.
     /// </summary>
-    public class ServiceProviderMediator : IMediator
+    public class ServiceProviderMediator : IMediator, IDynamicMediator
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="ServiceProviderMediator"/> class.
@@ -53,38 +53,20 @@ namespace Pantry.Mediator
 
         /// <inheritdoc/>
         public virtual async Task<TResult> ExecuteAsync<TResult>(IDomainRequest<TResult> request, CancellationToken cancellationToken)
+            => (TResult)await ExecuteAsync(request, typeof(TResult), cancellationToken: cancellationToken).ConfigureAwait(false);
+
+        /// <inheritdoc/>
+        public virtual async Task<object> ExecuteAsync(IDomainRequest request, CancellationToken cancellationToken = default)
         {
             if (request is null)
             {
                 throw new ArgumentNullException(nameof(request));
             }
 
-            var handlerInterfaceType = typeof(IDomainRequestHandler<,>).MakeGenericType(request.GetType(), typeof(TResult));
-            if (!(ServiceProvider.GetService(handlerInterfaceType) is IDomainRequestHandler handler))
-            {
-                Logger.LogWarning("No hander for {@Request} - Looking for {HandlerInterfaceType}", request, handlerInterfaceType);
-                throw new MediatorException($"Unable to find a handler for {request} using {handlerInterfaceType}.");
-            }
+            var domainRequestTypedInterface = request.GetType().GetInterface("IDomainRequest`1");
+            var resultType = domainRequestTypedInterface.GetGenericArguments()[0];
 
-            var invocation = ReversedRequestsMiddlewares.Aggregate(
-                (ExecuteRequestInvocation)new HandlerExecuteRequestInvocation(handler, handlerInterfaceType),
-                (agg, value) => new MiddlewareExecuteRequestInvocation(value, agg));
-
-            Stopwatch? stopWatch = null;
-            if (Logger.IsEnabled(LogLevel.Trace))
-            {
-                Logger.LogTrace("Executing {@Request} by {Handler}", request, handler);
-                stopWatch = Stopwatch.StartNew();
-            }
-
-            var result = await invocation.ProceedAsync(request, cancellationToken).ConfigureAwait(false);
-
-            if (Logger.IsEnabled(LogLevel.Trace))
-            {
-                Logger.LogTrace("Executed {@Request} by {Handler} -> {@Result} in {Elapsed} ms.", request, handler, result, stopWatch!.ElapsedMilliseconds);
-            }
-
-            return (TResult)result;
+            return await ExecuteAsync(request, resultType, cancellationToken: cancellationToken).ConfigureAwait(false);
         }
 
         /// <inheritdoc/>
@@ -122,6 +104,41 @@ namespace Pantry.Mediator
                     Logger.LogTrace("Executed {@DomainEvent} by {Handler} in {Elapsed} ms.", domainEvent, handler, stopWatch!.ElapsedMilliseconds);
                 }
             }
+        }
+
+        private async Task<object> ExecuteAsync(IDomainRequest request, Type resultType, CancellationToken cancellationToken)
+        {
+            if (request is null)
+            {
+                throw new ArgumentNullException(nameof(request));
+            }
+
+            var handlerInterfaceType = typeof(IDomainRequestHandler<,>).MakeGenericType(request.GetType(), resultType);
+            if (!(ServiceProvider.GetService(handlerInterfaceType) is IDomainRequestHandler handler))
+            {
+                Logger.LogWarning("No hander for {@Request} - Looking for {HandlerInterfaceType}", request, handlerInterfaceType);
+                throw new MediatorException($"Unable to find a handler for {request} using {handlerInterfaceType}.");
+            }
+
+            var invocation = ReversedRequestsMiddlewares.Aggregate(
+                (ExecuteRequestInvocation)new HandlerExecuteRequestInvocation(handler, handlerInterfaceType),
+                (agg, value) => new MiddlewareExecuteRequestInvocation(value, agg));
+
+            Stopwatch? stopWatch = null;
+            if (Logger.IsEnabled(LogLevel.Trace))
+            {
+                Logger.LogTrace("Executing {@Request} by {Handler}", request, handler);
+                stopWatch = Stopwatch.StartNew();
+            }
+
+            var result = await invocation.ProceedAsync(request, cancellationToken).ConfigureAwait(false);
+
+            if (Logger.IsEnabled(LogLevel.Trace))
+            {
+                Logger.LogTrace("Executed {@Request} by {Handler} -> {@Result} in {Elapsed} ms.", request, handler, result, stopWatch!.ElapsedMilliseconds);
+            }
+
+            return result;
         }
     }
 }

@@ -29,6 +29,22 @@ namespace Pantry.Mediator.Tests
         }
 
         [Fact]
+        public async Task ItShouldExecuteQueryHandlersDynamically()
+        {
+            var services = new ServiceCollection()
+                .AddMediator()
+                .AddTransient<IDomainRequestHandler<SampleQuery, IContinuationEnumerable<SampleEntity>>, SampleQuery.Handler>()
+                .BuildServiceProvider();
+
+            var request = new SampleQuery();
+            var mediator = services.GetRequiredService<IDynamicMediator>();
+
+            var result = (IContinuationEnumerable<SampleEntity>)await mediator.ExecuteAsync(request);
+
+            result.First().Id.Should().Be(typeof(SampleQuery.Handler).Name);
+        }
+
+        [Fact]
         public async Task ItShouldExecuteCommandHandlers()
         {
             var services = new ServiceCollection()
@@ -40,6 +56,22 @@ namespace Pantry.Mediator.Tests
             var mediator = services.GetRequiredService<IMediator>();
 
             var result = await mediator.ExecuteAsync(request);
+
+            result.Id.Should().Be(typeof(SampleCommand.Handler).Name);
+        }
+
+        [Fact]
+        public async Task ItShouldExecuteCommandHandlersDynamically()
+        {
+            var services = new ServiceCollection()
+                .AddMediator()
+                .AddTransient<IDomainRequestHandler<SampleCommand, SampleEntity>, SampleCommand.Handler>()
+                .BuildServiceProvider();
+
+            var request = new SampleCommand();
+            var mediator = services.GetRequiredService<IDynamicMediator>();
+
+            var result = (SampleEntity)await mediator.ExecuteAsync(request);
 
             result.Id.Should().Be(typeof(SampleCommand.Handler).Name);
         }

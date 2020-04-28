@@ -20,6 +20,7 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             services.TryAddTimestampProvider();
             services.TryAddTransient<IMediator, ServiceProviderMediator>();
+            services.TryAddTransient<IDynamicMediator, ServiceProviderMediator>();
             return services;
         }
 

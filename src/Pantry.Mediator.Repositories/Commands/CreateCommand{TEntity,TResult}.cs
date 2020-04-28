@@ -5,7 +5,7 @@
     /// </summary>
     /// <typeparam name="TEntity">The entity type.</typeparam>
     /// <typeparam name="TResult">The result type.</typeparam>
-    public abstract class CreateCommand<TEntity, TResult> : IDomainCommand<TResult>, IRepositoryRequest
+    public abstract class CreateCommand<TEntity, TResult> : IDomainCommand<TResult>, IDomainRepositoryRequest
         where TEntity : class, IIdentifiable
     {
     }

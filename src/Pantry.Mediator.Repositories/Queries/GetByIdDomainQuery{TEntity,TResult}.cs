@@ -5,7 +5,7 @@
     /// </summary>
     /// <typeparam name="TEntity">The entity type.</typeparam>
     /// <typeparam name="TResult">The result type.</typeparam>
-    public abstract class GetByIdDomainQuery<TEntity, TResult> : IDomainQuery<TResult>, IRepositoryRequest, IIdentifiable
+    public abstract class GetByIdDomainQuery<TEntity, TResult> : IDomainQuery<TResult>, IDomainRepositoryRequest, IIdentifiable
         where TEntity : class, IIdentifiable
     {
         /// <summary>

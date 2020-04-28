@@ -8,7 +8,7 @@ namespace Pantry.Mediator.Repositories.Queries
     /// </summary>
     /// <typeparam name="TEntity">The entity type.</typeparam>
     /// <typeparam name="TResult">The result type.</typeparam>
-    public class FindByCriteriaDomainQuery<TEntity, TResult> : CriteriaRepositoryQuery<TEntity>, IDomainQuery<IContinuationEnumerable<TResult>>, IRepositoryRequest
+    public class FindByCriteriaDomainQuery<TEntity, TResult> : CriteriaRepositoryQuery<TEntity>, IDomainQuery<IContinuationEnumerable<TResult>>, IDomainRepositoryRequest
     {
     }
 }

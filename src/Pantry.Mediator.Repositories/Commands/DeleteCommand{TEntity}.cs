@@ -4,7 +4,7 @@
     /// Standard command to delete an entity.
     /// </summary>
     /// <typeparam name="TEntity">The entity type.</typeparam>
-    public abstract class DeleteCommand<TEntity> : IDomainCommand<bool>, IRepositoryRequest, IIdentifiable
+    public abstract class DeleteCommand<TEntity> : IDomainCommand<bool>, IDomainRepositoryRequest, IIdentifiable
         where TEntity : class, IIdentifiable
     {
         /// <summary>

@@ -21,7 +21,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// Registers the corresponding repository handler for <paramref name="requestType"/>.
         /// </summary>
         /// <param name="services">The <see cref="IServiceCollection"/>.</param>
-        /// <param name="requestType">The request type. Must be a <see cref="IRepositoryRequest"/>.</param>
+        /// <param name="requestType">The request type. Must be a <see cref="IDomainRepositoryRequest"/>.</param>
         /// <returns>The updated <see cref="IServiceCollection"/>.</returns>
         public static IServiceCollection TryAddRepositoryHandler(this IServiceCollection services, Type requestType)
         {
@@ -30,7 +30,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 throw new ArgumentNullException(nameof(requestType));
             }
 
-            if (!typeof(IRepositoryRequest).IsAssignableFrom(requestType))
+            if (!typeof(IDomainRepositoryRequest).IsAssignableFrom(requestType))
             {
                 throw new ArgumentException($"Unable to add repository handlers for type {requestType} as it is not a IRepositoryRequest.", nameof(requestType));
             }
@@ -94,11 +94,11 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <param name="services">The <see cref="IServiceCollection"/>.</param>
         /// <returns>The updated <see cref="IServiceCollection"/>.</returns>
         public static IServiceCollection TryAddRepositoryHandler<TRequest>(this IServiceCollection services)
-            where TRequest : IRepositoryRequest
+            where TRequest : IDomainRepositoryRequest
             => services.TryAddRepositoryHandler(typeof(TRequest));
 
         /// <summary>
-        /// Tries to register the corresponding repository handler for all <see cref="IRepositoryRequest"/> in <paramref name="assembly"/>.
+        /// Tries to register the corresponding repository handler for all <see cref="IDomainRepositoryRequest"/> in <paramref name="assembly"/>.
         /// </summary>
         /// <param name="services">The <see cref="IServiceCollection"/>.</param>
         /// <param name="assembly">The assembly to scan.</param>
@@ -107,7 +107,7 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             var requestTypes = assembly.GetTypes()
                 .Where(x => !x.IsGenericType && !x.IsAbstract)
-                .Where(x => typeof(IRepositoryRequest).IsAssignableFrom(x));
+                .Where(x => typeof(IDomainRepositoryRequest).IsAssignableFrom(x));
 
             foreach (var requestType in requestTypes)
             {
@@ -118,7 +118,7 @@ namespace Microsoft.Extensions.DependencyInjection
         }
 
         /// <summary>
-        /// Tries to register the corresponding repository handlers for all <see cref="IRepositoryRequest"/> in
+        /// Tries to register the corresponding repository handlers for all <see cref="IDomainRepositoryRequest"/> in
         /// the assembly of <typeparamref name="T"/>.
         /// </summary>
         /// <typeparam name="T">The type in the assembly to scan.</typeparam>
