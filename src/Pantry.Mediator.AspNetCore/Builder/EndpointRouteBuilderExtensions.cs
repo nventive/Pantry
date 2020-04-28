@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Routing;
+﻿using System.Collections.Generic;
+using Microsoft.AspNetCore.Routing;
 using Pantry.Mediator;
 using Pantry.Mediator.AspNetCore.Execution;
 
@@ -10,21 +11,107 @@ namespace Microsoft.AspNetCore.Builder
     public static class EndpointRouteBuilderExtensions
     {
         /// <summary>
-        /// Maps <typeparamref name="TDomainRequest"/> to the route <paramref name="pattern"/> and <paramref name="httpMethod"/>.
+        /// GET HTTP Verb.
+        /// </summary>
+        public static readonly IEnumerable<string> GetVerb = new[] { "GET" };
+
+        /// <summary>
+        /// POST HTTP Verb.
+        /// </summary>
+        public static readonly IEnumerable<string> PostVerb = new[] { "POST" };
+
+        /// <summary>
+        /// PUT HTTP Verb.
+        /// </summary>
+        public static readonly IEnumerable<string> PutVerb = new[] { "PUT" };
+
+        /// <summary>
+        /// PATCH HTTP Verb.
+        /// </summary>
+        public static readonly IEnumerable<string> PatchVerb = new[] { "PATCH" };
+
+        /// <summary>
+        /// DELETE HTTP Verb.
+        /// </summary>
+        public static readonly IEnumerable<string> DeleteVerb = new[] { "DELETE" };
+
+        /// <summary>
+        /// Adds a <see cref="RouteEndpoint"/> to the <see cref="IEndpointRouteBuilder"/> that matches HTTP requests for the specified HTTP methods and pattern
+        /// and executes the <typeparamref name="TDomainRequest"/> on the <see cref="IMediator"/>.
         /// </summary>
         /// <typeparam name="TDomainRequest">The type of <see cref="IDomainRequest"/>.</typeparam>
         /// <param name="endpoints">The <see cref="IEndpointRouteBuilder"/> to add the route to.</param>
         /// <param name="pattern">The route pattern.</param>
-        /// <param name="httpMethod">HTTP method that the endpoint will match.</param>
+        /// <param name="httpMethods">HTTP methods that the endpoint will match.</param>
         /// <returns>A <see cref="IEndpointConventionBuilder"/> that can be used to further customize the endpoint.</returns>
-        public static IEndpointRouteBuilder MapDomainRequest<TDomainRequest>(this IEndpointRouteBuilder endpoints, string pattern, string httpMethod)
+        public static IEndpointRouteBuilder MapMethods<TDomainRequest>(this IEndpointRouteBuilder endpoints, string pattern, IEnumerable<string> httpMethods)
             where TDomainRequest : IDomainRequest, new()
         {
             endpoints.MapMethods(
                 pattern,
-                new[] { httpMethod },
+                httpMethods,
                 RequestExecution.RequestDelegate<TDomainRequest>);
             return endpoints;
         }
+
+        /// <summary>
+        /// Adds a <see cref="RouteEndpoint"/> to the <see cref="IEndpointRouteBuilder"/> that matches HTTP GET requests for the specified pattern,
+        /// and executes the <typeparamref name="TDomainRequest"/> on the <see cref="IMediator"/>.
+        /// </summary>
+        /// <typeparam name="TDomainRequest">The type of <see cref="IDomainRequest"/>.</typeparam>
+        /// <param name="endpoints">The <see cref="IEndpointRouteBuilder"/> to add the route to.</param>
+        /// <param name="pattern">The route pattern.</param>
+        /// <returns>A <see cref="IEndpointConventionBuilder"/> that can be used to further customize the endpoint.</returns>
+        public static IEndpointRouteBuilder MapGet<TDomainRequest>(this IEndpointRouteBuilder endpoints, string pattern)
+            where TDomainRequest : IDomainRequest, new()
+            => endpoints.MapMethods<TDomainRequest>(pattern, GetVerb);
+
+        /// <summary>
+        /// Adds a <see cref="RouteEndpoint"/> to the <see cref="IEndpointRouteBuilder"/> that matches HTTP POST requests for the specified pattern,
+        /// and executes the <typeparamref name="TDomainRequest"/> on the <see cref="IMediator"/>.
+        /// </summary>
+        /// <typeparam name="TDomainRequest">The type of <see cref="IDomainRequest"/>.</typeparam>
+        /// <param name="endpoints">The <see cref="IEndpointRouteBuilder"/> to add the route to.</param>
+        /// <param name="pattern">The route pattern.</param>
+        /// <returns>A <see cref="IEndpointConventionBuilder"/> that can be used to further customize the endpoint.</returns>
+        public static IEndpointRouteBuilder MapPost<TDomainRequest>(this IEndpointRouteBuilder endpoints, string pattern)
+            where TDomainRequest : IDomainRequest, new()
+            => endpoints.MapMethods<TDomainRequest>(pattern, PostVerb);
+
+        /// <summary>
+        /// Adds a <see cref="RouteEndpoint"/> to the <see cref="IEndpointRouteBuilder"/> that matches HTTP PUT requests for the specified pattern,
+        /// and executes the <typeparamref name="TDomainRequest"/> on the <see cref="IMediator"/>.
+        /// </summary>
+        /// <typeparam name="TDomainRequest">The type of <see cref="IDomainRequest"/>.</typeparam>
+        /// <param name="endpoints">The <see cref="IEndpointRouteBuilder"/> to add the route to.</param>
+        /// <param name="pattern">The route pattern.</param>
+        /// <returns>A <see cref="IEndpointConventionBuilder"/> that can be used to further customize the endpoint.</returns>
+        public static IEndpointRouteBuilder MapPut<TDomainRequest>(this IEndpointRouteBuilder endpoints, string pattern)
+            where TDomainRequest : IDomainRequest, new()
+            => endpoints.MapMethods<TDomainRequest>(pattern, PutVerb);
+
+        /// <summary>
+        /// Adds a <see cref="RouteEndpoint"/> to the <see cref="IEndpointRouteBuilder"/> that matches HTTP PATCH requests for the specified pattern,
+        /// and executes the <typeparamref name="TDomainRequest"/> on the <see cref="IMediator"/>.
+        /// </summary>
+        /// <typeparam name="TDomainRequest">The type of <see cref="IDomainRequest"/>.</typeparam>
+        /// <param name="endpoints">The <see cref="IEndpointRouteBuilder"/> to add the route to.</param>
+        /// <param name="pattern">The route pattern.</param>
+        /// <returns>A <see cref="IEndpointConventionBuilder"/> that can be used to further customize the endpoint.</returns>
+        public static IEndpointRouteBuilder MapPatch<TDomainRequest>(this IEndpointRouteBuilder endpoints, string pattern)
+            where TDomainRequest : IDomainRequest, new()
+            => endpoints.MapMethods<TDomainRequest>(pattern, PatchVerb);
+
+        /// <summary>
+        /// Adds a <see cref="RouteEndpoint"/> to the <see cref="IEndpointRouteBuilder"/> that matches HTTP DELETE requests for the specified pattern,
+        /// and executes the <typeparamref name="TDomainRequest"/> on the <see cref="IMediator"/>.
+        /// </summary>
+        /// <typeparam name="TDomainRequest">The type of <see cref="IDomainRequest"/>.</typeparam>
+        /// <param name="endpoints">The <see cref="IEndpointRouteBuilder"/> to add the route to.</param>
+        /// <param name="pattern">The route pattern.</param>
+        /// <returns>A <see cref="IEndpointConventionBuilder"/> that can be used to further customize the endpoint.</returns>
+        public static IEndpointRouteBuilder MapDelete<TDomainRequest>(this IEndpointRouteBuilder endpoints, string pattern)
+            where TDomainRequest : IDomainRequest, new()
+            => endpoints.MapMethods<TDomainRequest>(pattern, DeleteVerb);
     }
 }

@@ -1,12 +1,14 @@
 ﻿using System;
+using System.Collections;
+using System.ComponentModel;
 using System.Linq;
-using System.Reflection;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using Pantry.Continuation;
 
 namespace Pantry.Mediator.AspNetCore.Execution
 {
@@ -19,50 +21,88 @@ namespace Pantry.Mediator.AspNetCore.Execution
         /// The request delegate.
         /// </summary>
         /// <typeparam name="TDomainRequest">The type of <see cref="IDomainRequest"/>.</typeparam>
-        /// <param name="httpContext">The <see cref="HttpContext"/>.</param>
+        /// <param name="context">The <see cref="HttpContext"/>.</param>
         /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-        public static async Task RequestDelegate<TDomainRequest>(HttpContext httpContext)
+        public static async Task RequestDelegate<TDomainRequest>(HttpContext context)
             where TDomainRequest : IDomainRequest, new()
         {
-            if (httpContext is null)
+            if (context is null)
             {
-                throw new ArgumentNullException(nameof(httpContext));
+                throw new ArgumentNullException(nameof(context));
             }
 
-            var jsonSerializerOptions = httpContext.RequestServices.GetRequiredService<IOptions<JsonOptions>>().Value.JsonSerializerOptions;
-            var mediator = httpContext.RequestServices.GetRequiredService<IDynamicMediator>();
+            var jsonSerializerOptions = context.RequestServices.GetRequiredService<IOptions<JsonOptions>>().Value.JsonSerializerOptions;
+            var mediator = context.RequestServices.GetRequiredService<IDynamicMediator>();
 
-            var domainRequest = httpContext.Request.Method.ToUpperInvariant() switch
+            var domainRequest = context.Request.Method.ToUpperInvariant() switch
             {
-                "GET" => new TDomainRequest(),
-                _ => await JsonSerializer.DeserializeAsync<TDomainRequest>(httpContext.Request.Body, jsonSerializerOptions),
+                "GET" => BindQueryData<TDomainRequest>(context),
+                _ => await JsonSerializer.DeserializeAsync<TDomainRequest>(context.Request.Body, jsonSerializerOptions),
             };
 
-            BindRouteData(httpContext, domainRequest);
+            BindRouteData(context, domainRequest);
 
-            var result = await mediator.ExecuteAsync(domainRequest, httpContext.RequestAborted).ConfigureAwait(false);
+            var result = await mediator.ExecuteAsync(domainRequest, context.RequestAborted).ConfigureAwait(false);
 
-            httpContext.Response.StatusCode = httpContext.Request.Method.ToUpperInvariant() switch
+            if (result is IContinuation continuation && result is IEnumerable enumerable)
+            {
+                result = new
+                {
+                    continuationToken = continuation.ContinuationToken,
+                    items = enumerable,
+                };
+            }
+
+            context.Response.StatusCode = context.Request.Method.ToUpperInvariant() switch
             {
                 "POST" => StatusCodes.Status201Created,
                 "DELETE" => StatusCodes.Status204NoContent,
                 _ => StatusCodes.Status200OK,
             };
 
-            await JsonSerializer.SerializeAsync(httpContext.Response.Body, result, result.GetType(), options: jsonSerializerOptions, cancellationToken: httpContext.RequestAborted).ConfigureAwait(false);
+            if (context.Response.StatusCode != StatusCodes.Status204NoContent)
+            {
+                await JsonSerializer.SerializeAsync(context.Response.Body, result, result.GetType(), options: jsonSerializerOptions, cancellationToken: context.RequestAborted).ConfigureAwait(false);
+            }
         }
 
-        private static void BindRouteData<TDomainRequest>(HttpContext httpContext, TDomainRequest domainRequest)
+        private static TDomainRequest BindQueryData<TDomainRequest>(HttpContext context)
+            where TDomainRequest : IDomainRequest, new()
+        {
+            var domainRequest = new TDomainRequest();
+
+            var allDomainRequestProperties = typeof(TDomainRequest).GetProperties()
+                .Where(x => x.GetSetMethod() != null)
+                .ToDictionary(x => x.Name.ToUpperInvariant());
+
+            foreach (var queryValue in context.Request.Query)
+            {
+                if (allDomainRequestProperties.ContainsKey(queryValue.Key.ToUpperInvariant()))
+                {
+                    var targetProperty = allDomainRequestProperties[queryValue.Key.ToUpperInvariant()];
+                    var typeConverter = TypeDescriptor.GetConverter(targetProperty.PropertyType);
+                    var targetValue = typeConverter.ConvertFromString(queryValue.Value);
+                    targetProperty.GetSetMethod() !.Invoke(domainRequest, new object[] { targetValue });
+                }
+            }
+
+            return domainRequest;
+        }
+
+        private static void BindRouteData<TDomainRequest>(HttpContext context, TDomainRequest domainRequest)
         {
             var allDomainRequestProperties = typeof(TDomainRequest).GetProperties()
                 .Where(x => x.GetSetMethod() != null)
                 .ToDictionary(x => x.Name.ToUpperInvariant());
 
-            foreach (var routeValue in httpContext.Request.RouteValues)
+            foreach (var routeValue in context.Request.RouteValues)
             {
                 if (allDomainRequestProperties.ContainsKey(routeValue.Key.ToUpperInvariant()))
                 {
-                    allDomainRequestProperties[routeValue.Key.ToUpperInvariant()].GetSetMethod() !.Invoke(domainRequest, new object[] { routeValue.Value });
+                    var targetProperty = allDomainRequestProperties[routeValue.Key.ToUpperInvariant()];
+                    var typeConverter = TypeDescriptor.GetConverter(targetProperty.PropertyType);
+                    var targetValue = typeConverter.ConvertFrom(routeValue.Value);
+                    allDomainRequestProperties[routeValue.Key.ToUpperInvariant()].GetSetMethod() !.Invoke(domainRequest, new object[] { targetValue });
                 }
             }
         }

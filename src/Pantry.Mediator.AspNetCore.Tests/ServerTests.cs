@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
@@ -59,6 +60,25 @@ namespace Pantry.Mediator.AspNetCore.Tests
             var result = await client.GetStandardEntityById(entity.Id);
 
             result.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        }
+
+        [Fact]
+        public async Task ItShouldFind()
+        {
+            var entities = StandardEntityGenerator.Generate(10);
+            var repoAdd = Factory.Services.GetRequiredService<IRepositoryAdd<StandardEntity>>();
+            foreach (var entity in entities)
+            {
+                await repoAdd.AddAsync(entity);
+            }
+
+            var client = Factory.GetApiClient<IServerApi>();
+            var query = new FindStandardEntityQuery { NameEq = entities.Last().Name };
+
+            var result = await client.FindStandardEntities(query);
+
+            result.StatusCode.Should().Be(HttpStatusCode.OK);
+            result.Content.Items.First().Should().BeEquivalentTo(entities.Last());
         }
     }
 }

@@ -55,14 +55,13 @@ namespace Pantry.Mediator.AspNetCore.Tests.Server
                     context.Response.ContentType = "application/problem+json";
                     context.Response.StatusCode = responseModel.Status ?? StatusCodes.Status500InternalServerError;
                     await JsonSerializer.SerializeAsync(context.Response.Body, responseModel, jsonOptions.JsonSerializerOptions);
+                });
             });
-        });
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapDomainRequest<GetStandardEntityByIdQuery>(
-                    "api/v1/standard-entities/{id}",
-                    "GET");
+                endpoints.MapGet<FindStandardEntityQuery>("api/v1/standard-entities");
+                endpoints.MapGet<GetStandardEntityByIdQuery>("api/v1/standard-entities/{id}");
             });
 
             app.UseOpenApi();
