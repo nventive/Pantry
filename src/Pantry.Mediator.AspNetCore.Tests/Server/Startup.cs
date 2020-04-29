@@ -76,11 +76,11 @@ namespace Pantry.Mediator.AspNetCore.Tests.Server
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapGet<FindStandardEntityQuery>("api/v1/standard-entities", groupName: "Standard Entities");
-                endpoints.MapPost<CreateStandardEntityCommand>("api/v1/standard-entities", groupName: "Standard Entities", createdAtRedirectPattern: "api/v1/standard-entities/{Id}");
-                endpoints.MapGet<GetStandardEntityByIdQuery>("api/v1/standard-entities/{id}", groupName: "Standard Entities");
-                endpoints.MapPut<UpdateStandardEntityCommand>("api/v1/standard-entities/{id}", groupName: "Standard Entities");
-                endpoints.MapDelete<DeleteStandardEntityCommand>("api/v1/standard-entities/{id}", groupName: "Standard Entities");
+                endpoints.MapGet<FindStandardEntityQuery>("api/v1/standard-entities", groupName: "StandardEntities");
+                endpoints.MapPost<CreateStandardEntityCommand>("api/v1/standard-entities", groupName: "StandardEntities", createdAtRedirectPattern: "api/v1/standard-entities/{Id}");
+                endpoints.MapGet<GetStandardEntityByIdQuery>("api/v1/standard-entities/{id}", groupName: "StandardEntities");
+                endpoints.MapPut<UpdateStandardEntityCommand>("api/v1/standard-entities/{id}", groupName: "StandardEntities");
+                endpoints.MapDelete<DeleteStandardEntityCommand>("api/v1/standard-entities/{id}", groupName: "StandardEntities");
             });
 
             app.UseOpenApi();

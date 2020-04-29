@@ -77,14 +77,16 @@ namespace Pantry.Mediator.AspNetCore.Execution
                 RelativePath = pattern,
                 HttpMethod = httpMethod,
             };
+
             apiDescription.SupportedRequestFormats.Add(new ApiRequestFormat
             {
                 MediaType = "application/json",
             });
+
             apiDescription.ActionDescriptor = new ControllerActionDescriptor
             {
-                ControllerTypeInfo = typeof(DummyControllerForApiExplorer).GetTypeInfo(),
-                MethodInfo = typeof(DummyControllerForApiExplorer).GetMethod(nameof(DummyControllerForApiExplorer.Index)),
+                ControllerTypeInfo = domainRequestType.GetTypeInfo(),
+                MethodInfo = typeof(DummyControllerClass).GetMethod("Index"),
                 DisplayName = domainRequestType.Name,
                 ControllerName = apiDescription.GroupName,
                 ActionName = "Execute",
@@ -286,9 +288,9 @@ namespace Pantry.Mediator.AspNetCore.Execution
                 .First(x => x.IsGenericType && x.GetGenericTypeDefinition() == typeof(IDomainRequest<>))
                 .GetGenericArguments()[0];
 
-            var continuationEnumerableResponseType = responseType
-                .GetInterfaces()
-                .FirstOrDefault(x => x.IsGenericType && x.GetGenericTypeDefinition() == typeof(IContinuationEnumerable<>));
+            var continuationEnumerableResponseType = responseType.IsGenericType && responseType.GetGenericTypeDefinition() == typeof(IContinuationEnumerable<>)
+                ? responseType
+                : responseType.GetInterfaces().FirstOrDefault(x => x.IsGenericType && x.GetGenericTypeDefinition() == typeof(IContinuationEnumerable<>));
 
             if (continuationEnumerableResponseType != null)
             {
@@ -383,7 +385,7 @@ namespace Pantry.Mediator.AspNetCore.Execution
         }
 
 #pragma warning disable CA1812
-        private class DummyControllerForApiExplorer : ControllerBase
+        private class DummyControllerClass
         {
             public IActionResult Index()
             {
