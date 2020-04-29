@@ -55,16 +55,22 @@ namespace Pantry.Azure.Cosmos
 
         private Database BuildDatabase()
         {
-            var databaseResponse = Client.CreateDatabaseIfNotExistsAsync(_options.DatabaseName).ConfigureAwait(false).GetAwaiter().GetResult();
-            databaseResponse.Database.CreateContainerIfNotExistsAsync(
+            var database = _options.CreateDatabaseIfNotExists
+                ? Client.CreateDatabaseIfNotExistsAsync(_options.DatabaseName).ConfigureAwait(false).GetAwaiter().GetResult().Database
+                : Client.GetDatabase(_options.DatabaseName);
+
+            if (_options.CreateContainerIfNotExists)
+            {
+                database.CreateContainerIfNotExistsAsync(
                 _options.ContainerName,
                 _options.PartitionKeyPath,
                 throughput: _options.Throughput)
                 .ConfigureAwait(false)
                 .GetAwaiter()
                 .GetResult();
+            }
 
-            return databaseResponse.Database;
+            return database;
         }
     }
 }

@@ -18,7 +18,15 @@ namespace Pantry.Azure.Cosmos.Tests
 
             services
                 .AddCosmosRepository<StandardEntity>()
-                .WithConnectionStringNamed(CosmosDbConnectionString);
+                .WithConnectionStringNamed(
+                    CosmosDbConnectionString,
+                    options =>
+                    {
+                        options.DatabaseName = "pantry-tests";
+                        options.ContainerName = "pantry-tests";
+                        options.CreateDatabaseIfNotExists = true;
+                        options.CreateContainerIfNotExists = true;
+                    });
 
             services
                 .AddHealthChecks()

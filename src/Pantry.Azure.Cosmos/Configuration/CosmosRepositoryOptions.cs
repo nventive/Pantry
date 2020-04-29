@@ -30,11 +30,21 @@ namespace Pantry.Azure.Cosmos.Configuration
         public string DatabaseName { get; set; } = DefaultDatabaseName;
 
         /// <summary>
+        /// Gets or sets a value indicating whether to create the database if it does not exists.
+        /// </summary>
+        public bool CreateDatabaseIfNotExists { get; set; }
+
+        /// <summary>
         /// Gets or sets the container name.
         /// </summary>
         [Required]
         [StringLength(255)]
         public string ContainerName { get; set; } = DefaultContainerName;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether to create the container if it does not exists.
+        /// </summary>
+        public bool CreateContainerIfNotExists { get; set; }
 
         /// <summary>
         /// Gets or sets the PartitionKey path.

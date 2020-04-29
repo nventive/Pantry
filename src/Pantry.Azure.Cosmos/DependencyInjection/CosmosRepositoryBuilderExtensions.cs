@@ -43,10 +43,12 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <typeparam name="TEntity">The entity type.</typeparam>
         /// <param name="builder">The <see cref="ICosmosRepositoryBuilder{TEntity}"/>.</param>
         /// <param name="connectionString">The connection string.</param>
+        /// <param name="configure">Options configuration.</param>
         /// <returns>The udpated <see cref="ICosmosRepositoryBuilder{TEntity}"/>.</returns>
         public static ICosmosRepositoryBuilder<TEntity> WithConnectionString<TEntity>(
             this ICosmosRepositoryBuilder<TEntity> builder,
-            string connectionString)
+            string connectionString,
+            Action<CosmosRepositoryOptions>? configure = null)
             where TEntity : class, IIdentifiable
         {
             if (builder is null)
@@ -54,7 +56,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 throw new ArgumentNullException(nameof(builder));
             }
 
-            builder.Services.Configure<CosmosRepositoryOptions>(opt => { });
+            builder.Services.Configure<CosmosRepositoryOptions>(opt => { configure?.Invoke(opt); });
             builder.Services.TryAddSingleton(sp => new CosmosContainerFactory(connectionString, sp.GetRequiredService<IOptions<CosmosRepositoryOptions>>()));
             builder.Services.TryAddTransient(sp => new CosmosContainerFor<TEntity>(sp.GetRequiredService<CosmosContainerFactory>().Container));
 
@@ -67,10 +69,12 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <typeparam name="TEntity">The entity type.</typeparam>
         /// <param name="builder">The <see cref="ICosmosRepositoryBuilder{TEntity}"/>.</param>
         /// <param name="connectionStringName">The connection string name.</param>
+        /// <param name="configure">Options configuration.</param>
         /// <returns>The udpated <see cref="ICosmosRepositoryBuilder{TEntity}"/>.</returns>
         public static ICosmosRepositoryBuilder<TEntity> WithConnectionStringNamed<TEntity>(
             this ICosmosRepositoryBuilder<TEntity> builder,
-            string connectionStringName)
+            string connectionStringName,
+            Action<CosmosRepositoryOptions>? configure = null)
             where TEntity : class, IIdentifiable
         {
             if (builder is null)
@@ -78,7 +82,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 throw new ArgumentNullException(nameof(builder));
             }
 
-            builder.Services.Configure<CosmosRepositoryOptions>(opt => { });
+            builder.Services.Configure<CosmosRepositoryOptions>(opt => { configure?.Invoke(opt); });
             builder.Services.TryAddSingleton(
                 sp => new CosmosContainerFactory(
                     sp.GetRequiredService<IConfiguration>().GetConnectionString(connectionStringName),
